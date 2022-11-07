@@ -22,6 +22,10 @@ int incomingCommandEndTime = 0;
 #define INCOMING_BLUETOOTH_SIGNAL_BUFFER_SIZE 4096
 int incomingBluetoothSignal[INCOMING_BLUETOOTH_SIGNAL_BUFFER_SIZE];
 
+// OPERATION MODE
+#define OPERATIONMODE_HANDLE_INCOMING_BLUETOOTH_COMMAND "0001" 
+#define OPERATIONMODE_PERISCOPE "0002" 
+String operationMode = "0002";
 
 /*
 // INCOMING BLUETOOTH DATA
@@ -254,7 +258,7 @@ void incomingBluetoothCommandReceivedCallback(){
   // SET THE CURRENT COMMAND HEADER INFORMATION FOR MAIN THREAD
   incomingBluetoothCommandParsed = parsedCommand;
 
- 
+  operationMode = OPERATIONMODE_HANDLE_INCOMING_BLUETOOTH_COMMAND;
 
   // PARSE COMMAND
   /*
@@ -325,7 +329,6 @@ void replaySignalFromIncomingBluetoothCommand(){
   if(parsedSamples > 0){
     sendSamples(incomingBluetoothSignal, parsedSamples);
   }
-
 
   /*
   // CLEAR ANY PREVIOUS SIGNAL
@@ -411,8 +414,6 @@ void loop() {
       delay(10);
     }
     //BTN 1 CLICKED
-    CC1101_TX = false;
-    initCC1101();
     recordSignal();
   }
 
@@ -425,18 +426,41 @@ void loop() {
     replaySignal();
   }
 
-
-  // HANDLE INCOMING COMMAND
-  if(incomingBluetoothCommandParsed == "0001"){
-    // REPLAY
-    replaySignalFromIncomingBluetoothCommand();
-    incomingBluetoothCommandParsed = "";
+  
+  if(operationMode == OPERATIONMODE_PERISCOPE){
+    periscopeMode();
+  } else if(operationMode == OPERATIONMODE_HANDLE_INCOMING_BLUETOOTH_COMMAND){
+    // HANDLE INCOMING COMMAND
+    if(incomingBluetoothCommandParsed == "0001"){
+      // REPLAY
+      replaySignalFromIncomingBluetoothCommand();
+      incomingBluetoothCommandParsed = "";
+    }
+    
   }
+
+
+  
+  
 }
 
 void recordSignal(){
+  CC1101_TX = false;
+  initCC1101();
   digitalWrite(PIN_LED_ONBOARD, HIGH);  
   copy();
+  dump();
+  //SEND TO APP
+  sendSignalToBluetooth(recordedSignal, recordedSamples);
+  digitalWrite(PIN_LED_ONBOARD, LOW);  
+}
+
+
+void periscopeMode(){
+  CC1101_TX = false;
+  initCC1101();
+  digitalWrite(PIN_LED_ONBOARD, HIGH);  
+  copyPeriscope();
   dump();
   //SEND TO APP
   sendSignalToBluetooth(recordedSignal, recordedSamples);
@@ -509,6 +533,31 @@ void copy() {
     if (i < MAX_LENGHT_RECORDED_SIGNAL) recordedSignal[i+1] = 200;
   }
 }
+
+void copyPeriscope() {
+  int i, transitions = 0;
+  lastCopyTime = 0;
+  //FILTER OUT NOISE SIGNALS (too few transistions or too fast)
+  while (transitions < MINIMUM_TRANSITIONS && lastCopyTime < MINIMUM_COPYTIME_US && operationMode == OPERATIONMODE_PERISCOPE) {
+    transitions = trycopy();
+  }
+
+  if(transitions < MINIMUM_TRANSITIONS && lastCopyTime < MINIMUM_COPYTIME_US){
+    return;    
+  }
+  
+  //CLEAN LAST ELEMENTS
+  for (i=transitions-1;i>0;i--) {
+    if (recordedSignal[i] == RESET443) recordedSignal[i] = 0;
+    else break;
+  }
+  if (BOUND_SAMPLES) {
+    recordedSignal[0] = 200;
+    if (i < MAX_LENGHT_RECORDED_SIGNAL) recordedSignal[i+1] = 200;
+  }
+}
+
+
 
 int trycopy() {
   int i;
