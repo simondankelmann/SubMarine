@@ -94,6 +94,17 @@ class HomeFragment : Fragment() {
             }
         }
 
+        // PERISCOPE BUTTON
+        val periscopeButton: Button = binding.periscopeButton
+        periscopeButton.setOnClickListener { view ->
+            val command = "0002"
+            val commandId = "1234"
+
+            val commandString = command + commandId + "0002"
+
+            _bluetoothSerial!!.sendByteString(commandString + "\n", ::replayStatusCallback)
+        }
+
         return root
     }
 

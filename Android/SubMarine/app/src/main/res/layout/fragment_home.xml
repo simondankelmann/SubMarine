@@ -28,13 +28,22 @@
         app:layout_constraintTop_toBottomOf="@id/connectButton">
     </Button>
 
+    <Button
+        android:id="@+id/periscopeButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Periscope Mode"
+        app:layout_constraintStart_toEndOf="@id/replayButton"
+        app:layout_constraintTop_toBottomOf="@id/replayButton">
+    </Button>
+
     <TextView
         android:id="@+id/connectionLabel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Please connect"
-        app:layout_constraintStart_toEndOf="@id/replayButton"
-        app:layout_constraintTop_toBottomOf="@id/replayButton"
+        app:layout_constraintStart_toEndOf="@id/periscopeButton"
+        app:layout_constraintTop_toBottomOf="@id/periscopeButton"
         >
     </TextView>
 

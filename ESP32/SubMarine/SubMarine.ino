@@ -9,7 +9,6 @@ BluetoothSerial SerialBT;
 
 //INCOMING BLUETOOTH COMMAND
 #define INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH 8
-String incomingBluetoothCommandParsed = "";
 int incomingCommandLength = 0;
 bool receivingBluetoothCommand = false;
 int incomingCommandStartTime = 0;
@@ -17,6 +16,10 @@ int incomingCommandEndTime = 0;
 //#define INCOMING_BLUETOOTH_COMMAND_BUFFER_SIZE 4096
 //int incomingBluetoothCommand[INCOMING_BLUETOOTH_COMMAND_BUFFER_SIZE];
 //int incomingBluetoothCommandByteIndex = 0;
+
+#define COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND "0001" 
+#define COMMAND_SET_OPERATION_MODE "0002" 
+String incomingBluetoothCommandParsed = "";
 
 // SIGNAL FROM BLUETOOTH COMMAND
 #define INCOMING_BLUETOOTH_SIGNAL_BUFFER_SIZE 4096
@@ -359,6 +362,32 @@ void replaySignalFromIncomingBluetoothCommand(){
   }*/
 }
 
+void setOperationModeFromIncomingBluetoothCommand(){
+  Serial.println("Setting OperationMode from incoming Bluetooth Command");
+  
+  int fileIndex = 0;
+  String parsedOperationMode = "";
+
+  File file = SPIFFS.open("/incomingBluetoothCommand.txt", FILE_READ);
+  while (file.available()) {
+    char c = file.read();
+    
+    if(fileIndex >= INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH){
+      // START PARSING THE SIGNAL FROM THE DATA PORTION OF THE COMMAND
+      if(c == '\n'){
+        operationMode = parsedOperationMode;
+        Serial.println("Parsed Operation Mode: " + parsedOperationMode);
+        break;
+      } else {
+        parsedOperationMode += c;
+      }
+    }
+
+    fileIndex++;
+  }
+  file.close();
+}
+
 
 /*
 void addSampleToBluetoothSignal(String sample){
@@ -431,9 +460,14 @@ void loop() {
     periscopeMode();
   } else if(operationMode == OPERATIONMODE_HANDLE_INCOMING_BLUETOOTH_COMMAND){
     // HANDLE INCOMING COMMAND
-    if(incomingBluetoothCommandParsed == "0001"){
+    if(incomingBluetoothCommandParsed == COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND){
       // REPLAY
       replaySignalFromIncomingBluetoothCommand();
+      incomingBluetoothCommandParsed = "";
+    }
+
+    if(incomingBluetoothCommandParsed == COMMAND_SET_OPERATION_MODE){
+      setOperationModeFromIncomingBluetoothCommand();
       incomingBluetoothCommandParsed = "";
     }
     
@@ -451,7 +485,7 @@ void recordSignal(){
   copy();
   dump();
   //SEND TO APP
-  sendSignalToBluetooth(recordedSignal, recordedSamples);
+  //sendSignalToBluetooth(recordedSignal, recordedSamples);
   digitalWrite(PIN_LED_ONBOARD, LOW);  
 }
 
@@ -462,8 +496,6 @@ void periscopeMode(){
   digitalWrite(PIN_LED_ONBOARD, HIGH);  
   copyPeriscope();
   dump();
-  //SEND TO APP
-  sendSignalToBluetooth(recordedSignal, recordedSamples);
   digitalWrite(PIN_LED_ONBOARD, LOW);  
 }
 
@@ -620,6 +652,10 @@ int trycopy() {
   Serial.println(i);
   //memcpy(signal433_current,newsignal433,BUFSIZE*sizeof(uint16_t));
   recordedSamples = i;
+
+  //SEND TO APP
+  sendSignalToBluetooth(recordedSignal, recordedSamples);
+
   return i;
 }
 
