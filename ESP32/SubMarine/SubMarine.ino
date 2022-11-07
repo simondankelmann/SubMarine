@@ -14,8 +14,9 @@ String incomingSample = "";
 int incomingBluetoothSignalPosition = 0;
 
 // RECORDED SAMPLES BUFFER
-#define LENGHT_RECORDED_SIGNAL 2048
-int recordedSignal[LENGHT_RECORDED_SIGNAL];
+#define MAX_LENGHT_RECORDED_SIGNAL 2048
+int recordedSignal[MAX_LENGHT_RECORDED_SIGNAL];
+int recordedSamples = 0;
 
 // CC1101
 #include <ELECHOUSE_CC1101_SRC_DRV.h>
@@ -148,7 +149,7 @@ void sendSignalToBluetooth(int samples[], int samplesLength){
         for (int c=0;c<strlen(currentValue.c_str());c++) {
           SerialBT.write(currentValue[c]);
         }
-        if(i == (samplesLength - 1) || samples[i] == 0 ){
+        if(i == (samplesLength - 1) /*|| samples[i] == 0 */){
           SerialBT.write('\n');
           break;
         } else {
@@ -208,12 +209,12 @@ void recordSignal(){
   copy();
   dump();
   //SEND TO APP
-  sendSignalToBluetooth(recordedSignal, LENGHT_RECORDED_SIGNAL);
+  sendSignalToBluetooth(recordedSignal, recordedSamples);
   digitalWrite(PIN_LED_ONBOARD, LOW);  
 }
 
 void replaySignal(){
-  sendSamples(recordedSignal, LENGHT_RECORDED_SIGNAL, 433.92);
+  sendSamples(recordedSignal, MAX_LENGHT_RECORDED_SIGNAL, 433.92);
   dump();
 }
 
@@ -248,7 +249,7 @@ void sendSamples(int samples[], int samplesLenght, float mhz) {
 // ------------------------- COPY REPLAY STUFF --> REFACTOR THIS !!!
 #define LOOPDELAY 20
 #define HIBERNATEMS 30*1000
-#define BUFSIZE 2048
+#define BUFSIZE MAX_LENGHT_RECORDED_SIGNAL
 #define REPLAYDELAY 0
 // THESE VALUES WERE FOUND PRAGMATICALLY
 #define RESET443 32000 //32ms
@@ -290,10 +291,10 @@ void copy() {
 
 int trycopy() {
   int i;
-  //Serial.println("Copying...");
+  Serial.println("Copying...");
   uint16_t newsignal433[BUFSIZE];
   memset(newsignal433,0,BUFSIZE*sizeof(uint16_t));
-  memset(recordedSignal,0,LENGHT_RECORDED_SIGNAL*sizeof(int));
+  memset(recordedSignal,0,MAX_LENGHT_RECORDED_SIGNAL*sizeof(int));
   byte n = 0;
   int64_t startus = esp_timer_get_time();
   int64_t startread;
@@ -316,7 +317,7 @@ int trycopy() {
         i = -1;
         ttime++;
         if (ttime > WAITFORSIGNAL) {
-          //Serial.println("No signal detected!");
+          Serial.println("No signal detected!");
           return -1;
         }
       }
@@ -352,6 +353,7 @@ int trycopy() {
   Serial.print("Transitions: ");
   Serial.println(i);
   memcpy(signal433_current,newsignal433,BUFSIZE*sizeof(uint16_t));
+  recordedSamples = i;
   return i;
 }
 

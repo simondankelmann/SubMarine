@@ -44,35 +44,72 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textHome
-        homeViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
+        //CONNECTION STATUS
+        val connectionStatusTextView: TextView = binding.connectionLabel
+        homeViewModel.connectionStatus.observe(viewLifecycleOwner) {
+            connectionStatusTextView.text = it
         }
 
-        var macAddress = "C0:49:EF:D0:C4:B6"
+        //SIGNAL STATUS
+        val singalStatusTextView: TextView = binding.signalLabel
+        homeViewModel.signalStatus.observe(viewLifecycleOwner) {
+            singalStatusTextView.text = it
+        }
 
-        _bluetoothSerial = BluetoothSerial(requireContext(), ::connectionStateChangedCallback)
-        _bluetoothSerial?.connect(macAddress, ::receivedMessageCallback)
+        //REPLAY STATUS
+        val replayStatusTextView: TextView = binding.replayStatus
+        homeViewModel.replayStatus.observe(viewLifecycleOwner) {
+            replayStatusTextView.text = it
+        }
+
+        // SINGAL DATA
+        val signalDataTextView: TextView = binding.signalData
+        homeViewModel.signalData.observe(viewLifecycleOwner) {
+            signalDataTextView.text = it
+        }
+
+        // CONNECT BUTTON
+        val connectButton: Button = binding.connectButton
+        connectButton.setOnClickListener { view ->
+            resetUi()
+            var macAddress = "C0:49:EF:D0:C4:B6"
+            _bluetoothSerial = BluetoothSerial(requireContext(), ::connectionStateChangedCallback)
+            _bluetoothSerial?.connect(macAddress, ::receivedMessageCallback)
+        }
 
         // REPLAY BUTTON
         val replayButton: Button = binding.replayButton
         replayButton.setOnClickListener { view ->
             // REPLAY
+            _viewModel!!.updateReplayStatusText("Transmitting Signal to Sub Marine...")
             if(_lastIcomongSignalString != ""){
                 Log.d(_logTag, "ReTransmitting: " + _lastIcomongSignalString)
-                _bluetoothSerial!!.sendByteString(_lastIcomongSignalString + "\n")
+                _bluetoothSerial!!.sendByteString(_lastIcomongSignalString + "\n", ::replayStatusCallback)
             }
         }
 
         return root
     }
 
+    private fun replayStatusCallback(message: String){
+        _viewModel!!.updateReplayStatusText(message)
+    }
+
+    private fun resetUi(){
+        _viewModel!!.updateConnectionStatusText("Connecting...")
+        _viewModel!!.updateSignalStatusText("No Singal detected yet")
+        _viewModel!!.updateSignalData("")
+    }
 
     private fun receivedMessageCallback(message: String){
         if(message != ""){
             Log.d(_logTag, "Received: " + message)
+
             _lastIcomongSignalString = message
-            _viewModel!!.updateText(message)
+            _viewModel!!.updateSignalData(message)
+
+            var samplesCount = message.split(',').size
+            _viewModel!!.updateSignalStatusText("Detected Signal with " + samplesCount + " Samples")
         }
 
     }
@@ -82,12 +119,15 @@ class HomeFragment : Fragment() {
         when(connectionState){
             0 -> {
                 Log.d(_logTag, "Disconnected")
+                _viewModel!!.updateConnectionStatusText("Disconnected")
             }
             1 -> {
                 Log.d(_logTag, "Connecting...")
+                _viewModel!!.updateConnectionStatusText("Connecting...")
             }
             2 -> {
                 Log.d(_logTag, "Connected")
+                _viewModel!!.updateConnectionStatusText("Connected")
             }
         }
     }

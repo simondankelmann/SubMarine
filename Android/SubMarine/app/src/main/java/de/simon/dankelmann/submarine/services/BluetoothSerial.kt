@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Context
+import android.net.wifi.EasyConnectStatusCallback
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -109,7 +110,7 @@ class BluetoothSerial (context: Context, connectionChangedCallback:KFunction1<In
         isConnected = false
     }
 
-    fun sendByteString(message:String){
+    fun sendByteString(message:String, statusCallback: KFunction1<String, Unit>){
         Log.d(_logTag, "ByteSize:" + message.toByteArray().size)
         Log.d(_logTag, "StrLen:" + message.length)
 
@@ -134,6 +135,7 @@ class BluetoothSerial (context: Context, connectionChangedCallback:KFunction1<In
 
                 Log.d(_logTag, "repeatitions:  " + repeatitions)
                 var alreadySent = 0
+                val begin = System.currentTimeMillis()
                 for (i in 0..(repeatitions - 1)){
                     var offset = max * i
                     var length = max
@@ -143,18 +145,20 @@ class BluetoothSerial (context: Context, connectionChangedCallback:KFunction1<In
                     }
 
                     _bluetoothSocketOutputStream!!.write(message.toByteArray(), offset, length)
+
+                    if(i == (repeatitions - 1)){
+                        val end = System.currentTimeMillis()
+                        val duration = end - begin
+                        statusCallback("Transmisson completed after " + duration + "ms, executing Signal now.")
+                    }
+
                     Thread.sleep(delay.toLong())  // wait for 1 second
-
-
-
 
                     alreadySent += length
 
                     Log.d(_logTag, "OFFSET: " + offset)
                     Log.d(_logTag, "LENGTH: " + length)
                     Log.d(_logTag, "SENT: " + alreadySent)
-
-
                 }
 
 
@@ -162,6 +166,7 @@ class BluetoothSerial (context: Context, connectionChangedCallback:KFunction1<In
                 //_bluetoothSocketOutputStream!!.write(message.toByteArray(), 0, message.toByteArray().size)
 
                 _bluetoothSocketOutputStream!!.flush()
+
             } catch (ex: java.lang.Exception) {
                 Log.e(_logTag, ex.message.toString())
                 isConnected = false

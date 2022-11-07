@@ -4,28 +4,87 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.home.HomeFragment">
+    tools:context=".ui.home.HomeFragment"
+    android:id="@+id/homeLayout">
+
+    <Button
+        android:id="@+id/connectButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Connect"
+        app:layout_constraintStart_toStartOf="@id/homeLayout"
+        app:layout_constraintTop_toTopOf="@id/homeLayout"
+        app:layout_constraintBottom_toTopOf="@id/replayButton"
+        app:layout_constraintEnd_toStartOf="@id/replayButton"
+        >
+    </Button>
 
     <Button
         android:id="@+id/replayButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="REPLAY SIGNAL"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintStart_toEndOf="@id/connectButton"
+        app:layout_constraintTop_toBottomOf="@id/connectButton">
     </Button>
 
     <TextView
-        android:id="@+id/text_home"
+        android:id="@+id/connectionLabel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:textAlignment="center"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:text="Please connect"
         app:layout_constraintStart_toEndOf="@id/replayButton"
-        app:layout_constraintTop_toBottomOf="@id/replayButton" />
+        app:layout_constraintTop_toBottomOf="@id/replayButton"
+        >
+    </TextView>
+
+    <TextView
+        android:id="@+id/replayStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nothing replayed yet"
+        app:layout_constraintStart_toEndOf="@id/connectionLabel"
+        app:layout_constraintTop_toBottomOf="@id/connectionLabel"
+        app:layout_constraintBottom_toTopOf="@id/signalLabel"
+        app:layout_constraintEnd_toStartOf="@id/signalLabel">
+    </TextView>
+
+    <TextView
+        android:id="@+id/signalLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No Signal detected yet"
+        app:layout_constraintStart_toEndOf="@id/replayStatus"
+        app:layout_constraintTop_toBottomOf="@id/replayStatus">
+    </TextView>
+
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="@id/homeLayout"
+        app:layout_constraintEnd_toEndOf="@id/homeLayout"
+        app:layout_constraintStart_toEndOf="@id/signalLabel"
+        app:layout_constraintTop_toBottomOf="@id/signalLabel"
+        >
+
+        <TextView
+            android:id="@+id/signalData"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:textAlignment="center"
+            android:textSize="20sp"
+            app:layout_constraintStart_toEndOf="@id/scrollView"
+            app:layout_constraintTop_toBottomOf="@id/scrollView"
+
+            android:text="---"
+            />
+
+    </ScrollView>
+
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>
