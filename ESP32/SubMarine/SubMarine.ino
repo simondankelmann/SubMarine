@@ -1,8 +1,29 @@
+// SPIFFS
+#include "SPIFFS.h"
+bool spiffsMounted = false;
+
 // BLUETOOTH
 #include "Arduino.h"
 #include "BluetoothSerial.h"
 BluetoothSerial SerialBT;
 
+//INCOMING BLUETOOTH COMMAND
+#define INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH 8
+String incomingBluetoothCommandParsed = "";
+int incomingCommandLength = 0;
+bool receivingBluetoothCommand = false;
+int incomingCommandStartTime = 0;
+int incomingCommandEndTime = 0;
+//#define INCOMING_BLUETOOTH_COMMAND_BUFFER_SIZE 4096
+//int incomingBluetoothCommand[INCOMING_BLUETOOTH_COMMAND_BUFFER_SIZE];
+//int incomingBluetoothCommandByteIndex = 0;
+
+// SIGNAL FROM BLUETOOTH COMMAND
+#define INCOMING_BLUETOOTH_SIGNAL_BUFFER_SIZE 4096
+int incomingBluetoothSignal[INCOMING_BLUETOOTH_SIGNAL_BUFFER_SIZE];
+
+
+/*
 // INCOMING BLUETOOTH DATA
 #define INCOMING_BLUETOOTH_SIGNAL_BUFFER 4096
 int incomingBluetoothSignal[INCOMING_BLUETOOTH_SIGNAL_BUFFER];
@@ -12,6 +33,7 @@ int incomingTransmissionStart = 0;
 int incomingTransmissionEnd = 0;
 String incomingSample = "";
 int incomingBluetoothSignalPosition = 0;
+*/
 
 // RECORDED SAMPLES BUFFER
 #define MAX_LENGHT_RECORDED_SIGNAL 4096
@@ -47,6 +69,8 @@ void setup() {
   initBluetooth();
   //CC1101 SETUP
   initCC1101();
+  // INIT SPIFFS
+  initSpiffs();
   // PIN MODES
   pinMode(PIN_LED_ONBOARD, OUTPUT);
 }
@@ -54,6 +78,16 @@ void setup() {
 void initBluetooth(){
   SerialBT.begin("Sub Marine"); //Bluetooth device name
   SerialBT.register_callback(btCallback);
+}
+
+void initSpiffs(){
+  if(SPIFFS.begin(true)){
+    Serial.println("SPIFFS mounted successfully");
+    spiffsMounted = true;
+  } else {
+    Serial.println("An Error has occurred while mounting SPIFFS");  
+    spiffsMounted = false;  
+  }
 }
 
 void initCC1101(){
@@ -88,6 +122,56 @@ void btCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
     Serial.println("Bluetooth Client Connected!");
     delay(100);
   } else if(event == ESP_SPP_DATA_IND_EVT){
+    // RECEIVE INCOMING BLUETOOTH COMMAND
+    if(receivingBluetoothCommand == false){
+      // CLEAR ANY PREVIOUS RESULT
+      //memset(incomingBluetoothCommand,0,INCOMING_BLUETOOTH_COMMAND_BUFFER_SIZE*sizeof(int));
+      incomingCommandStartTime = millis();      
+      //incomingBluetoothCommandByteIndex = 0;
+      incomingCommandLength = 0;
+      // CLEAR PREVIOUS COMMAND FILE
+      SPIFFS.remove("/incomingBluetoothCommand.txt");
+    }    
+    receivingBluetoothCommand = true;
+    File file = SPIFFS.open("/incomingBluetoothCommand.txt", FILE_APPEND);
+
+    while(SerialBT.available()){ 
+      int incoming = SerialBT.read();
+      char incomingChar = incoming; 
+
+      if(incomingChar == '\n'){
+        // TRANSMISSION COMPLETED
+        receivingBluetoothCommand = false;
+        incomingCommandEndTime = millis();
+        //incomingCommandLength = incomingBluetoothCommandByteIndex;
+        file.print(incomingChar);
+      } else {
+        // ADD BYTE TO COMMAND BUFFER
+        //incomingBluetoothCommand[incomingBluetoothCommandByteIndex] = incoming;
+        //incomingBluetoothCommandByteIndex++;
+        incomingCommandLength++;
+        file.print(incomingChar);
+      }
+    }
+
+    //CLOSE THE FILE
+    file.close();  
+
+    // LOG INFORMATION, CALL CALLBACK     
+     
+    if(receivingBluetoothCommand == false){
+        Serial.print("Stopped after receiving ");
+        Serial.print(incomingCommandLength);
+        Serial.println(" Bytes");
+        Serial.print("in ");
+        Serial.print(incomingCommandEndTime - incomingCommandStartTime);
+        Serial.println(" Milliseconds");
+
+        // CALLBACK
+        incomingBluetoothCommandReceivedCallback();      
+    }
+        
+    /*
     if(receivingBluetoothData == false){
       // CLEAR ANY PREVIOUS RESULT
       memset(incomingBluetoothSignal,0,INCOMING_BLUETOOTH_SIGNAL_BUFFER*sizeof(int));
@@ -128,10 +212,152 @@ void btCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
         receivingPosition = 0;
         receivingBluetoothData = false;
         onReceivedCallback();      
-    }
+    }*/
   }
 }
 
+void incomingBluetoothCommandReceivedCallback(){
+  Serial.println("Incoming Bluetooth Command received successfully.");
+
+   /*
+      Command Structure:
+      Bytes:
+      0-3 => Command
+      4-7 => CommandId
+      Remaining Bytes => Data      
+  */
+
+  String parsedCommand = "";
+  String parsedCommandId = "";
+
+  int fileIndex = 0;  
+  File file = SPIFFS.open("/incomingBluetoothCommand.txt", FILE_READ);
+  while (file.available()) {
+    char c = file.read();
+
+    if(fileIndex <= 3){
+      parsedCommand += c;
+    }
+
+    if(fileIndex > 3 && fileIndex <= 7){
+      parsedCommandId += c;
+    }
+    
+
+    //Serial.write(file.read());
+    fileIndex++;
+  }
+  file.close();
+  Serial.println("Parsed Command: " + parsedCommand);
+  Serial.println("Parsed Command ID: " + parsedCommandId);
+
+  // SET THE CURRENT COMMAND HEADER INFORMATION FOR MAIN THREAD
+  incomingBluetoothCommandParsed = parsedCommand;
+
+ 
+
+  // PARSE COMMAND
+  /*
+  String parsedCommand = "";
+  int commandStartIndex = 0;
+  int commandEndIndex = 3;
+  for (int i = commandStartIndex; i <= commandEndIndex; i++) {
+    char c = incomingBluetoothCommand[i];
+    parsedCommand += c;
+  }
+  Serial.println("Parsed Command: " + parsedCommand);
+
+  // PARSE COMMAND ID
+  String parsedCommandId = "";
+  int commandIdStartIndex = 4;
+  int commandIdEndIndex = 7;
+  for (int i = commandIdStartIndex; i <= commandIdEndIndex; i++) {
+    char c = incomingBluetoothCommand[i];
+    parsedCommandId += c;
+  }
+  Serial.println("Parsed Command ID: " + parsedCommandId);
+
+  // SET THE CURRENT COMMAND HEADER INFORMATION FOR MAIN THREAD
+  incomingBluetoothCommandParsed = parsedCommand;*/
+}
+
+void replaySignalFromIncomingBluetoothCommand(){
+  Serial.println("Replaying Signal from incoming Bluetooth Command");
+
+  //int incomingBluetoothSignal[INCOMING_BLUETOOTH_SIGNAL_BUFFER_SIZE];
+  //memset(incomingBluetoothSignal,0,INCOMING_BLUETOOTH_SIGNAL_BUFFER_SIZE*sizeof(int));
+
+  int fileIndex = 0;
+  int parsedSamples = 0;
+  String currentSample = "";
+
+  Serial.println("Reading from File: ");
+  File file = SPIFFS.open("/incomingBluetoothCommand.txt", FILE_READ);
+  while (file.available()) {
+    char c = file.read();
+    
+    if(fileIndex >= INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH){
+      // START PARSING THE SIGNAL FROM THE DATA PORTION OF THE COMMAND
+      if(c == '\n' || c == ','){
+        int sample = currentSample.toInt();
+        //Serial.println("Adding Sample from File: " + String(sample));
+        if(parsedSamples < INCOMING_BLUETOOTH_SIGNAL_BUFFER_SIZE){
+          incomingBluetoothSignal[parsedSamples] = sample;
+          currentSample = "";
+          parsedSamples++;
+        } else {
+          Serial.println("Too many Samples");
+        }
+        
+        if(c == '\n'){
+          break;
+        }
+      } else {
+        currentSample += c;
+      }
+    }
+
+    fileIndex++;
+  }
+  file.close();
+  Serial.println("");
+
+  if(parsedSamples > 0){
+    sendSamples(incomingBluetoothSignal, parsedSamples);
+  }
+
+
+  /*
+  // CLEAR ANY PREVIOUS SIGNAL
+  int parsedSamplesLength = 0;
+  memset(incomingBluetoothSignal,0,INCOMING_BLUETOOTH_SIGNAL_BUFFER*sizeof(int));
+
+  String parsedSample = "";
+  for (int i = (INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH - 1); i <= incomingCommandLength; i++) {
+      char c = incomingBluetoothCommand[i];
+
+      bool addSample = false;
+      if(c == '\n'){
+        incomingBluetoothSignal[parsedSamplesLength] = parsedSample.toInt();
+        parsedSample = "";
+        parsedSamplesLength++;
+        break;
+      } else if(c == ',') {
+        incomingBluetoothSignal[parsedSamplesLength] = parsedSample.toInt();
+        parsedSample = ""; 
+        parsedSamplesLength++;
+      } else {
+        parsedSample += c;
+      }
+  }
+
+  if(parsedSamplesLength > 0){
+    sendSamples(incomingBluetoothSignal, parsedSamplesLength);
+  }*/
+}
+
+
+/*
 void addSampleToBluetoothSignal(String sample){
   int iSample = sample.toInt();
   incomingBluetoothSignal[incomingBluetoothSignalPosition] = iSample;
@@ -145,6 +371,7 @@ void onReceivedCallback(){
   Serial.println("Receive Success Callback");
   sendSamples(incomingBluetoothSignal, incomingBluetoothSignalPosition, 433.92);
 }
+*/
 
 void sendSignalToBluetooth(int samples[], int samplesLength){
   if(SerialBT.hasClient()){
@@ -197,6 +424,14 @@ void loop() {
     //BTN 2 CLICKED
     replaySignal();
   }
+
+
+  // HANDLE INCOMING COMMAND
+  if(incomingBluetoothCommandParsed == "0001"){
+    // REPLAY
+    replaySignalFromIncomingBluetoothCommand();
+    incomingBluetoothCommandParsed = "";
+  }
 }
 
 void recordSignal(){
@@ -209,11 +444,11 @@ void recordSignal(){
 }
 
 void replaySignal(){
-  sendSamples(recordedSignal, MAX_LENGHT_RECORDED_SIGNAL, 433.92);
+  sendSamples(recordedSignal, MAX_LENGHT_RECORDED_SIGNAL);
   dump();
 }
 
-void sendSamples(int samples[], int samplesLenght, float mhz) {
+void sendSamples(int samples[], int samplesLenght) {
   CC1101_TX = true;
   initCC1101();
   Serial.println("Transmitting " + String(samplesLenght) + " Samples");

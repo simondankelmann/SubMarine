@@ -84,7 +84,13 @@ class HomeFragment : Fragment() {
             _viewModel!!.updateReplayStatusText("Transmitting Signal to Sub Marine...")
             if(_lastIcomongSignalString != ""){
                 Log.d(_logTag, "ReTransmitting: " + _lastIcomongSignalString)
-                _bluetoothSerial!!.sendByteString(_lastIcomongSignalString + "\n", ::replayStatusCallback)
+
+                val command = "0001"
+                val commandId = "1234"
+
+                val commandString = command + commandId + _lastIcomongSignalString
+
+                _bluetoothSerial!!.sendByteString(commandString + "\n", ::replayStatusCallback)
             }
         }
 
