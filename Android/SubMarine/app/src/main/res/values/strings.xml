@@ -10,4 +10,8 @@
     <string name="menu_home">Home</string>
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
+
+    <string name="menu_scanbt">Scan BT</string>
+    <string name="menu_connected_device">Connected Device</string>
+    <string name="menu_periscope">Periscope</string>
 </resources>

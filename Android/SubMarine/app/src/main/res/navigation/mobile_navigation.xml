@@ -9,7 +9,38 @@
         android:id="@+id/nav_home"
         android:name="de.simon.dankelmann.submarine.ui.home.HomeFragment"
         android:label="@string/menu_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_nav_home_to_nav_scanbt"
+            app:destination="@id/nav_scanbt" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_scanbt"
+        android:name="de.simon.dankelmann.submarine.ui.scanBt.ScanBtFragment"
+        android:label="@string/menu_scanbt"
+        tools:layout="@layout/fragment_scanbt" >
+        <action
+            android:id="@+id/action_nav_scanbt_to_nav_connected_device"
+            app:destination="@id/nav_connected_device" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_connected_device"
+        android:name="de.simon.dankelmann.submarine.ui.connectedDevice.ConnectedDeviceFragment"
+        android:label="@string/menu_connected_device"
+        tools:layout="@layout/fragment_connected_device" >
+        <action
+            android:id="@+id/action_nav_connected_device_to_nav_periscope"
+            app:destination="@id/nav_periscope" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_periscope"
+        android:name="de.simon.dankelmann.submarine.ui.periscope.PeriscopeFragment"
+        android:label="@string/menu_periscope"
+        tools:layout="@layout/fragment_periscope" >
+    </fragment>
 
     <fragment
         android:id="@+id/nav_gallery"

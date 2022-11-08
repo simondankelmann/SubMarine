@@ -8,6 +8,8 @@ import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.net.wifi.EasyConnectStatusCallback
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.annotation.RequiresApi
 //import com.google.android.things.bluetooth.BluetoothConnectionManager
@@ -117,7 +119,7 @@ class BluetoothSerial (context: Context, connectionChangedCallback:KFunction1<In
         var max = 100
         var delay = 100
 
-        Thread(Runnable {
+        Handler(Looper.getMainLooper()).post(Runnable {
             try {
                 var bytes = message.toByteArray()
                 var fRepeatitions:Float = bytes.size.toFloat() / max
@@ -149,10 +151,15 @@ class BluetoothSerial (context: Context, connectionChangedCallback:KFunction1<In
                     if(i == (repeatitions - 1)){
                         val end = System.currentTimeMillis()
                         val duration = end - begin
-                        statusCallback("Transmisson completed after " + duration + "ms, executing Signal now.")
+                        statusCallback("Transmisson completed after " + duration + "ms")
                     }
 
-                    Thread.sleep(delay.toLong())  // wait for 1 second
+                    try{
+                        Thread.sleep(delay.toLong())  // wait for 1 second
+                    } catch (ex:java.lang.Exception){
+                        Log.d(_logTag, "Exception caught: " + ex.message)
+                    }
+
 
                     alreadySent += length
 
@@ -175,10 +182,8 @@ class BluetoothSerial (context: Context, connectionChangedCallback:KFunction1<In
                 connectSocket()
                 //sendString(message)
             }
-
-        }).start()
+        })
     }
-
     fun sendString(message:String) {
         try {
             if(!_bluetoothSocket!!.isConnected){

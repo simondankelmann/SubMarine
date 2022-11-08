@@ -15,6 +15,8 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
+import com.airbnb.lottie.LottieAnimationView
+import de.simon.dankelmann.submarine.R
 import de.simon.dankelmann.submarine.databinding.FragmentHomeBinding
 import de.simon.dankelmann.submarine.services.BluetoothSerial
 import org.json.JSONObject
@@ -48,6 +50,15 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+        var animation: LottieAnimationView = binding.animationHome
+        animation.setOnClickListener { view ->
+            // SHOW SCAN FRAGMENT
+            requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_home_to_nav_scanbt)
+        }
+
+        return root
+
+        /*
         //CONNECTION STATUS
         val connectionStatusTextView: TextView = binding.connectionLabel
         homeViewModel.connectionStatus.observe(viewLifecycleOwner) {
@@ -107,9 +118,7 @@ class HomeFragment : Fragment() {
             val commandString = command + commandId + "0002"
 
             _bluetoothSerial!!.sendByteString(commandString + "\n", ::replayStatusCallback)
-        }
-
-        return root
+        }*/
     }
 
     private fun replayStatusCallback(message: String){

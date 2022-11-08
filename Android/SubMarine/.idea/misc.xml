@@ -3,8 +3,14 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="app/src/main/res/drawable/ic_bluetooth_24.xml" value="0.199" />
+        <entry key="app/src/main/res/layout/app_bar_main.xml" value="0.19114583333333332" />
         <entry key="app/src/main/res/layout/content_main.xml" value="0.3703125" />
+        <entry key="app/src/main/res/layout/fragment_connected_device.xml" value="0.19114583333333332" />
         <entry key="app/src/main/res/layout/fragment_home.xml" value="0.19114583333333332" />
+        <entry key="app/src/main/res/layout/fragment_periscope.xml" value="0.19114583333333332" />
+        <entry key="app/src/main/res/layout/fragment_scanbt.xml" value="0.19114583333333332" />
+        <entry key="app/src/main/res/layout/listrow_bluetooth_device.xml" value="0.19114583333333332" />
       </map>
     </option>
   </component>

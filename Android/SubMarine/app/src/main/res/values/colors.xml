@@ -7,4 +7,14 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- DARK MODE -->
+    <color name="background_dark">#141418</color>
+    <color name="accent_color_darkmode">#2873ff</color>
+
+    <!-- DARK COMPONENT -->
+    <color name="backgroundcolor_component_dark_active">@color/accent_color_darkmode</color>
+    <color name="fontcolor_component_dark_active">#ffffff</color>
+    <color name="backgroundcolor_component_dark_inactive">#232327</color>
+    <color name="fontcolor_component_dark_inactive">#a3a3ab</color>
 </resources>

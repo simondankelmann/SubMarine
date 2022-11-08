@@ -349,11 +349,17 @@ void replaySignalFromIncomingBluetoothCommand(){
   int parsedSamples = 0;
   String currentSample = "";
 
+  String CC1101_ConfigurationString = "";
+
   File file = SPIFFS.open("/incomingBluetoothCommand.txt", FILE_READ);
   while (file.available()) {
     char c = file.read();
+
+    if(fileIndex >= INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH && fileIndex < INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH + CC1101_ADAPTER_CONGIRURATION_LENGTH){
+      CC1101_ConfigurationString += c;      
+    }
     
-    if(fileIndex >= INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH){
+    if(fileIndex >= INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH + CC1101_ADAPTER_CONGIRURATION_LENGTH){
       // START PARSING THE SIGNAL FROM THE DATA PORTION OF THE COMMAND
       if(c == '\n' || c == ','){
         int sample = currentSample.toInt();
@@ -379,6 +385,9 @@ void replaySignalFromIncomingBluetoothCommand(){
   file.close();
 
   if(parsedSamples > 0){
+    // SET CC1101 CONFIG
+    setCC1101Configuration(CC1101_ConfigurationString);
+    // REPLAY THE SIGNAL
     sendSamples(incomingBluetoothSignal, parsedSamples);
   }
 }

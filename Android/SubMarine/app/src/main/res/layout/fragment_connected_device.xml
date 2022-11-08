@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.connectedDevice.PeriscopeFragment"
+    android:background="@color/background_dark"
+    android:id="@+id/connectedDeviceLayout">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewConnectedDeviceTitle"
+        android:text="Device Name"
+        android:textColor="@color/fontcolor_component_dark_active"
+        android:textAlignment="center"
+        android:textSize="22dp"
+        android:textStyle="bold"
+        android:padding="10dp"
+        app:layout_constraintTop_toTopOf="@id/connectedDeviceLayout"></TextView>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewConnectedDeviceInfo"
+        android:text="00:00:00:00:00"
+        android:textColor="@color/fontcolor_component_dark_inactive"
+        android:textAlignment="center"
+        android:padding="10dp"
+        app:layout_constraintTop_toBottomOf="@id/textViewConnectedDeviceTitle"></TextView>
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/animationConnectedDevice"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        app:lottie_rawRes="@raw/submarine"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        android:padding="20dp"
+        app:layout_constraintTop_toBottomOf="@id/textViewConnectedDeviceInfo"
+        />
+
+    <Button
+        android:id="@+id/periscopeButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Periscope Mode"
+        app:layout_constraintTop_toBottomOf="@id/animationConnectedDevice"
+        ></Button>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

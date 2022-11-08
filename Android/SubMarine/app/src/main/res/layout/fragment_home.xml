@@ -5,8 +5,67 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.home.HomeFragment"
+    android:background="@color/background_dark"
     android:id="@+id/homeLayout">
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewHomeTitle"
+        android:text="Sub Marine"
+        android:textColor="@color/fontcolor_component_dark_active"
+        android:textAlignment="center"
+        android:textSize="22dp"
+        android:textStyle="bold"
+        android:padding="10dp"
+        app:layout_constraintTop_toTopOf="@id/homeLayout"></TextView>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewHomeInfo"
+        android:text="Click the Button below to start scanning for Bluetooth Devices"
+        android:textColor="@color/fontcolor_component_dark_inactive"
+        android:textAlignment="center"
+        android:padding="10dp"
+        app:layout_constraintTop_toBottomOf="@id/textViewHomeTitle"></TextView>
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/animationHome"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:lottie_rawRes="@raw/bluetooth_scan"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        android:padding="20dp"
+        app:layout_constraintTop_toBottomOf="@id/textViewHomeInfo"
+        app:layout_constraintBottom_toTopOf="@id/textViewHomeCopyright"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewHomeCopyright"
+        android:text="© Simon Dankelmann"
+        android:textColor="@color/fontcolor_component_dark_inactive"
+        android:textAlignment="center"
+        android:padding="5dp"
+        app:layout_constraintBottom_toTopOf="@id/textViewHomeGithub"
+        ></TextView>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewHomeGithub"
+        android:text="github.com/simondankelmann"
+        android:textColor="@color/fontcolor_component_dark_inactive"
+        android:textAlignment="center"
+        android:textStyle="italic"
+        android:textSize="12dp"
+        android:padding="2dp"
+        app:layout_constraintBottom_toBottomOf="@id/homeLayout"
+        ></TextView>
+
+    <!--
     <Button
         android:id="@+id/connectButton"
         android:layout_width="match_parent"
@@ -89,10 +148,10 @@
             app:layout_constraintStart_toEndOf="@id/scrollView"
             app:layout_constraintTop_toBottomOf="@id/scrollView"
 
-            android:text="---"
+            android:text="-"
             />
 
-    </ScrollView>
+    </ScrollView>-->
 
 
 
