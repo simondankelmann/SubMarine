@@ -524,6 +524,7 @@ void handleIncomingCommand(){
 #define MINIMUM_COPYTIME_US 16000
 #define RESET443 32000 //32m
 long lastCopyTime = 0;
+
 void recordSignal(){
   int i, transitions = 0;
   
@@ -535,10 +536,28 @@ void recordSignal(){
   // ADD CONFIGURATION TO FILE
   String cc1101Config = getCC1101Configuration();
   for(auto c : cc1101Config){file.write(c);}  
-  transitions = tryRecordSignalToFile(file);
+
+  transitions = tryRecordSignalToFile(file);          
+
   file.close();
 
-  if(transitions >= MINIMUM_TRANSITIONS && lastCopyTime >= MINIMUM_COPYTIME_US && operationMode == OPERATIONMODE_PERISCOPE){
+  bool isSuccess = false;
+  if(transitions >= MINIMUM_TRANSITIONS){
+    if(lastCopyTime >= MINIMUM_COPYTIME_US){
+      if(operationMode == OPERATIONMODE_PERISCOPE){
+          isSuccess = true;
+          Serial.println("Successfully recorded a Signal");
+      } else {
+        Serial.println("Operation Mode changed: " + operationMode);        
+      }
+    } else {
+      Serial.println("Not enough Copytime: " + String(lastCopyTime));
+    }
+  } else {
+    Serial.println("Not enough Transitions: " + String(transitions));
+  }
+
+  if(isSuccess){
     Serial.println("Signal Recorded successfully");
     Serial.println(String(transitions) + " Transitions Recorded");
   
@@ -557,7 +576,11 @@ void periscope(){
     initCC1101();
   }
   digitalWrite(PIN_LED_ONBOARD, HIGH);  
-  recordSignal();
+  while(operationMode == OPERATIONMODE_PERISCOPE && CC1101_TX == false){
+    recordSignal();    
+  }
+  
+  Serial.println("Periscope closed.");
   digitalWrite(PIN_LED_ONBOARD, LOW);  
 }
 
