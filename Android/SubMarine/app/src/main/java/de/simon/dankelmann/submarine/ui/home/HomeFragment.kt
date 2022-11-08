@@ -25,7 +25,11 @@ class HomeFragment : Fragment() {
     private var _logTag:String = "HomeFragment"
     private var _bluetoothSerial:BluetoothSerial? = null
     private var _viewModel:HomeViewModel? = null
-    private var _lastIcomongSignalString = ""
+    private var _lastIncomingSignalData = ""
+    private var _lastIncomingCc1101Config = ""
+
+    private var _commandHeaderLength = 8
+    private var _cc1101AdapterConfigLength = 18
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -82,13 +86,13 @@ class HomeFragment : Fragment() {
         replayButton.setOnClickListener { view ->
             // REPLAY
             _viewModel!!.updateReplayStatusText("Transmitting Signal to Sub Marine...")
-            if(_lastIcomongSignalString != ""){
-                Log.d(_logTag, "ReTransmitting: " + _lastIcomongSignalString)
+            if(_lastIncomingSignalData != ""){
+                Log.d(_logTag, "ReTransmitting: " + _lastIncomingSignalData)
 
                 val command = "0001"
                 val commandId = "1234"
 
-                val commandString = command + commandId + _lastIcomongSignalString
+                val commandString = command + commandId + _lastIncomingSignalData
 
                 _bluetoothSerial!!.sendByteString(commandString + "\n", ::replayStatusCallback)
             }
@@ -122,13 +126,44 @@ class HomeFragment : Fragment() {
         if(message != ""){
             Log.d(_logTag, "Received: " + message)
 
-            _lastIcomongSignalString = message
+            // PARSE COMMAND AND DATA
+            var incomingCommand = message.substring(0,4)
+            var incomingCommandId = message.substring(4,8)
+
+            Log.d(_logTag, "Icoming Command: " + incomingCommand)
+            Log.d(_logTag, "Icoming Command Id: " + incomingCommandId)
+
+            when (incomingCommand) {
+                "0003" -> handleIncomingSignalTransfer(message)
+                else -> { // Note the block
+                    Log.d(_logTag, "Icoming Command not parseable")
+                }
+            }
+            /*
+            _lastIncomingSignalData = message
             _viewModel!!.updateSignalData(message)
 
             var samplesCount = message.split(',').size
             _viewModel!!.updateSignalStatusText("Detected Signal with " + samplesCount + " Samples")
-        }
+            */
 
+        }
+    }
+
+    private fun handleIncomingSignalTransfer(data:String){
+        var configEndIndex = _commandHeaderLength + _cc1101AdapterConfigLength
+        var cc1101ConfigString = data.substring(_commandHeaderLength, configEndIndex)
+        var signalData = data.substring(configEndIndex)
+
+        Log.d(_logTag, "Configstring: " + cc1101ConfigString)
+        Log.d(_logTag, "Signaldata: " + signalData)
+
+        var samplesCount = signalData.split(',').size
+        _viewModel!!.updateSignalStatusText("Received Signal with " + samplesCount + " Samples")
+
+        _lastIncomingSignalData = signalData
+        _lastIncomingCc1101Config = cc1101ConfigString
+        _viewModel!!.updateSignalData(signalData)
     }
 
     private fun connectionStateChangedCallback(connectionState: Int){
