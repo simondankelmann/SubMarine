@@ -536,31 +536,35 @@ long lastCopyTime = 0;
 
 void recordSignal(){
   int i, transitions = 0;
-  
   lastCopyTime = 0;
-  // REMOVE PREVIUOS FILE
-  SPIFFS.remove(SPIFFS_FILENAME_RECORDED_SIGNAL);
-  // OPEN FILE
-  File file = SPIFFS.open(SPIFFS_FILENAME_RECORDED_SIGNAL, FILE_WRITE);
-  // ADD CONFIGURATION TO FILE
-  String cc1101Config = getCC1101Configuration();
-  for(auto c : cc1101Config){file.write(c);}  
+ 
+  
+  // RECORD TO FILE DIRECTLY:
+  /*
+  if(recordToFileDirectly){
+    // OPEN FILE
+    File file = SPIFFS.open(SPIFFS_FILENAME_RECORDED_SIGNAL, FILE_WRITE);
+    // ADD CONFIGURATION TO FILE
+    String cc1101Config = getCC1101Configuration();
+    for(auto c : cc1101Config){file.write(c);}  
 
-  transitions = tryRecordSignalToFile(file);          
+    transitions = tryRecordSignalToFile(file);          
 
-  file.close();
+    file.close();
+  }
+  */
+
+  // RECORD TO BUFFER AND THEN WRITE TO SPIFFS
+  while(transitions < MINIMUM_TRANSITIONS && lastCopyTime < MINIMUM_COPYTIME_US && (operationMode == OPERATIONMODE_PERISCOPE)){
+    transitions = tryRecordSignalToBuffer();          
+  }
 
   bool isSuccess = false;
   if(transitions >= MINIMUM_TRANSITIONS){
     if(lastCopyTime >= MINIMUM_COPYTIME_US){
-      if(operationMode == OPERATIONMODE_PERISCOPE){
-          isSuccess = true;
-          Serial.println("Successfully recorded a Signal");
-      } else {
-        Serial.println("Operation Mode changed: " + operationMode);        
-      }
+      isSuccess = true;
     } else {
-      Serial.println("Not enough Copytime: " + String(lastCopyTime));
+      Serial.println("Copytime too small: " + String(lastCopyTime));
     }
   } else {
     Serial.println("Not enough Transitions: " + String(transitions));
@@ -569,12 +573,34 @@ void recordSignal(){
   if(isSuccess){
     Serial.println("Signal Recorded successfully");
     Serial.println(String(transitions) + " Transitions Recorded");
+
+    // WRITE RECORDED SIGNAL BUFFER TO SPIFFS FILE
+    // REMOVE PREVIUOS FILE
+    SPIFFS.remove(SPIFFS_FILENAME_RECORDED_SIGNAL);
+    // OPEN FILE
+    File file = SPIFFS.open(SPIFFS_FILENAME_RECORDED_SIGNAL, FILE_WRITE);
+    // ADD CONFIGURATION TO FILE
+    String cc1101Config = getCC1101Configuration();
+    for(auto c : cc1101Config){file.write(c);}    
+
+    writeSignalBufferToFile(file,recordedSignal, transitions);   
+
+    file.close();
   
     dumpSpiffsFileToSerial(SPIFFS_FILENAME_RECORDED_SIGNAL);
     sendSignalToBluetoothFromFile(SPIFFS_FILENAME_RECORDED_SIGNAL);    
   } else {
     return;
   }
+}
+
+void writeSignalBufferToFile(File file, int signalBuffer[], int signalLength){
+    String prepend = "";
+    for(int i = 0; i <= signalLength; i++){
+        String valueToAdd = prepend + String(signalBuffer[i]);
+        writeStringToFile(file, valueToAdd); 
+        prepend = ",";
+    }
 }
 
 
@@ -587,6 +613,7 @@ void periscope(){
   digitalWrite(PIN_LED_ONBOARD, HIGH);  
   while(operationMode == OPERATIONMODE_PERISCOPE && CC1101_TX == false){
     recordSignal();    
+    Serial.println("Next round...");
   }
   
   Serial.println("Periscope closed.");
@@ -598,8 +625,11 @@ void replaySignal(){
 }
 
 void sendSamples(int samples[], int samplesLenght) {
-  CC1101_TX = true;
-  initCC1101();
+  if(CC1101_TX == false){
+    CC1101_TX = true;
+    initCC1101();
+  }
+  
   Serial.println("Transmitting " + String(samplesLenght) + " Samples");
 
   int delay = 0;
@@ -791,6 +821,66 @@ int trycopy() {
   return i;
 }
 */
+
+int tryRecordSignalToBuffer(){
+  int i;
+  //Serial.println("Copying...");
+  // CLEAR ANY PREVIOUSLY RECORDED SIGNAL
+  memset(recordedSignal,0,MAX_LENGHT_RECORDED_SIGNAL*sizeof(int));
+  byte n = 0;
+  int sign = -1;
+
+  int64_t startus = esp_timer_get_time();
+  int64_t startread;
+  int64_t dif = 0;
+  int64_t ttime = 0;
+  for (i = 0; i < MAX_LENGHT_RECORDED_SIGNAL; i++) {
+    startread = esp_timer_get_time();
+    dif = 0;
+    //WAIT FOR INIT
+    while (dif < RESET443) {
+      dif = esp_timer_get_time() - startread;
+      if (CCAvgRead() != n) {
+        break;
+      }
+    }
+    if (dif >= RESET443) {
+      recordedSignal[i] = RESET443 * sign;
+      //if not started wait...
+      if (i == 0) {
+        i = -1;
+        ttime++;
+        if (ttime > WAITFORSIGNAL) {
+          //Serial.println("No signal detected!");
+          return -1;
+        }
+      }
+      else {
+        ttime++;
+        if (ttime > WAITFORSIGNAL) {
+          //Serial.println("End of signal detected!");
+          break;
+        }
+      }
+    }
+    else {
+      recordedSignal[i] = dif * sign;
+      n = !n;
+      if(n) {
+        sign = 1;
+      } else {
+        sign = -1;
+      }
+    }
+  }
+
+  recordedSamples = i;
+
+  int64_t stopus = esp_timer_get_time();
+  lastCopyTime = (long)(stopus - startus);
+
+  return i;  
+}
 
 int tryRecordSignalToFile(File file) {
   int i;

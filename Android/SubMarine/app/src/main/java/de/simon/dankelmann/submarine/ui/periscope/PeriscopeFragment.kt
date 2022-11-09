@@ -211,11 +211,15 @@ class PeriscopeFragment: Fragment() {
         Log.d(_logTag, "Configstring: " + cc1101ConfigString)
         Log.d(_logTag, "Signaldata: " + signalData)
 
-        // CLEAR EMPTY LAST SAMPLES:
-
+        // CLEAR EMPTY FIRST SAMPLES:
         var samples = signalData.split(",").toMutableList()
         while(samples.last().toInt() <= 0){
             samples.removeLast()
+        }
+
+        // CLEAR EMPTY LAST SAMPLES:
+        while(samples.first().toInt() <= 0){
+            samples.removeFirst()
         }
 
         signalData = samples.joinToString(",")
