@@ -14,6 +14,8 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 //import com.google.android.things.bluetooth.BluetoothConnectionManager
 import de.simon.dankelmann.submarine.permissioncheck.PermissionCheck
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -119,23 +121,23 @@ class BluetoothSerial (context: Context, connectionChangedCallback:KFunction1<In
         var max = 100
         var delay = 100
 
-        Handler(Looper.getMainLooper()).post(Runnable {
+        GlobalScope.launch {
             try {
                 var bytes = message.toByteArray()
                 var fRepeatitions:Float = bytes.size.toFloat() / max
                 var repeatitions = fRepeatitions.toInt()
 
-                Log.d(_logTag, "REPEATS:" + fRepeatitions)
+                //Log.d(_logTag, "REPEATS:" + fRepeatitions)
 
                 var res = fRepeatitions.rem(1)
                 if (res.equals(0.0F)){
-                    Log.d(_logTag, "EVEN")
+                    //Log.d(_logTag, "EVEN")
                 } else {
-                    Log.d(_logTag, "UNEVEN ")
+                    //Log.d(_logTag, "UNEVEN ")
                     repeatitions++;
                 }
 
-                Log.d(_logTag, "repeatitions:  " + repeatitions)
+               // Log.d(_logTag, "repeatitions:  " + repeatitions)
                 var alreadySent = 0
                 val begin = System.currentTimeMillis()
                 for (i in 0..(repeatitions - 1)){
@@ -148,27 +150,24 @@ class BluetoothSerial (context: Context, connectionChangedCallback:KFunction1<In
 
                     _bluetoothSocketOutputStream!!.write(message.toByteArray(), offset, length)
 
-                    if(i == (repeatitions - 1)){
-                        val end = System.currentTimeMillis()
-                        val duration = end - begin
-                        statusCallback("Transmisson completed after " + duration + "ms")
-                    }
-
                     try{
                         Thread.sleep(delay.toLong())  // wait for 1 second
                     } catch (ex:java.lang.Exception){
                         Log.d(_logTag, "Exception caught: " + ex.message)
                     }
 
+                    if(i == (repeatitions - 1)){
+                        val end = System.currentTimeMillis()
+                        val duration = end - begin
+                        statusCallback("Transmisson completed after " + duration + "ms")
+                    }
 
                     alreadySent += length
-
+                    /*
                     Log.d(_logTag, "OFFSET: " + offset)
                     Log.d(_logTag, "LENGTH: " + length)
-                    Log.d(_logTag, "SENT: " + alreadySent)
+                    Log.d(_logTag, "SENT: " + alreadySent)*/
                 }
-
-
 
                 //_bluetoothSocketOutputStream!!.write(message.toByteArray(), 0, message.toByteArray().size)
 
@@ -182,6 +181,10 @@ class BluetoothSerial (context: Context, connectionChangedCallback:KFunction1<In
                 connectSocket()
                 //sendString(message)
             }
+        }
+
+        Handler(Looper.getMainLooper()).post(Runnable {
+
         })
     }
     fun sendString(message:String) {

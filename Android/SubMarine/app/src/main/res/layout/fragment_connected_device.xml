@@ -49,4 +49,14 @@
         app:layout_constraintTop_toBottomOf="@id/animationConnectedDevice"
         ></Button>
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewDatabaseInfo"
+        android:text="0 Signals in Database"
+        android:textColor="@color/fontcolor_component_dark_inactive"
+        android:textAlignment="center"
+        android:padding="10dp"
+        app:layout_constraintBottom_toBottomOf="@id/connectedDeviceLayout"></TextView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

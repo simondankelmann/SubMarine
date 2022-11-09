@@ -13,15 +13,20 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
+import de.simon.dankelmann.esp32_subghz.ui.connectedDevice.ConnectedDeviceViewModel
 import de.simon.dankelmann.esp32_subghz.ui.connectedDevice.PeriscopeViewModel
+import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.R
 import de.simon.dankelmann.submarine.permissioncheck.PermissionCheck
 import de.simon.dankelmann.submarine.databinding.FragmentConnectedDeviceBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class ConnectedDeviceFragment: Fragment() {
     private val _logTag = "ConnectedDeviceFragment"
     private var _binding: FragmentConnectedDeviceBinding? = null
-    private var _viewModel: PeriscopeViewModel? = null
+    private var _viewModel: ConnectedDeviceViewModel? = null
     private var _bluetoothDevice: BluetoothDevice? = null
     //private var _bluetoothSerial: BluetoothSerial? = null
 
@@ -35,7 +40,7 @@ class ConnectedDeviceFragment: Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val viewModel = ViewModelProvider(this).get(PeriscopeViewModel::class.java)
+        val viewModel = ViewModelProvider(this).get(ConnectedDeviceViewModel::class.java)
         _viewModel = viewModel
 
         _binding = FragmentConnectedDeviceBinding.inflate(inflater, container, false)
@@ -66,6 +71,17 @@ class ConnectedDeviceFragment: Fragment() {
                     descriptionTextView.text = it
                 }
 
+                val databaseInfoText: TextView = binding.textViewDatabaseInfo
+                _viewModel!!.dbInfoText.observe(viewLifecycleOwner) {
+                    databaseInfoText.text = it
+                }
+
+                val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
+                CoroutineScope(Dispatchers.IO).launch {
+                    val dataSize = signalDao.getAll().size
+                    _viewModel!!.dbInfoText.postValue(dataSize.toString() + " Signal(s) in Database")
+                }
+
                 // AUTO FILE EXPLORER
                 /*
                 val bundle = Bundle()
@@ -76,9 +92,6 @@ class ConnectedDeviceFragment: Fragment() {
 
             }
         }
-
-
-
 
         val periscopeButton: Button = binding.periscopeButton
         periscopeButton.setOnClickListener { view ->

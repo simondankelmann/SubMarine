@@ -42,7 +42,7 @@ int recordedSamples = 0;
 #define PIN_GDO2 4
 
 // CC1101 MODULE SETTINGS
-#define CC1101_ADAPTER_CONGIRURATION_LENGTH 18
+#define CC1101_ADAPTER_CONGIRURATION_LENGTH 30
  /*
       Adapter Configuration Structure:
       Bytes:
@@ -52,6 +52,8 @@ int recordedSamples = 0;
       8-10 => DRATE
       11-16 => RX_BW
       17 => PKT_FORMAT
+      18-23 => AVG_LQI
+      24-29 => AVG_RSSI
 */
 float CC1101_MHZ = 433.92;
 bool CC1101_TX = false;
@@ -59,6 +61,8 @@ int CC1101_MODULATION = 2;
 int CC1101_DRATE = 512;
 float CC1101_RX_BW = 256;
 int CC1101_PKT_FORMAT = 3;
+float CC1101_LAST_AVG_LQI = 0;
+float CC1101_LAST_AVG_RSSI = 0;
 
 // LED
 #define PIN_LED_ONBOARD 2
@@ -231,6 +235,8 @@ String getCC1101Configuration(){
       8-10 => DRATE
       11-16 => RX_BW
       17 => PKT_FORMAT
+      18-23 => AVG_LQI
+      24-29 => AVG_RSSI
   */
   String configurationString = "";
   // MHZ
@@ -262,6 +268,18 @@ String getCC1101Configuration(){
   // PKT_FORMAT
   configurationString += String(CC1101_PKT_FORMAT).substring(0,1);
 
+  String lqi = String(CC1101_LAST_AVG_LQI, 2);
+  while(lqi.length() < 6){
+    lqi = "0" + lqi;
+  }
+  configurationString += lqi;
+
+  String rssi = String(CC1101_LAST_AVG_RSSI, 2);
+  while(rssi.length() < 6){
+    rssi = "0" + rssi;
+  }
+  configurationString += rssi;
+
   return configurationString;
 }
 
@@ -275,6 +293,8 @@ void setCC1101Configuration(String configurationString){
       8-10 => DRATE
       11-16 => RX_BW
       17 => PKT_FORMAT
+      18-23 => AVG_LQI
+      24-29 => AVG_RSSI
   */
 
   int position = 0;
@@ -285,6 +305,8 @@ void setCC1101Configuration(String configurationString){
   String dRate = "";
   String rxBw = "";
   int pktFormat;
+  String lqi = "";
+  String rssi = "";
 
   for(auto x : configurationString)
   {
@@ -311,6 +333,15 @@ void setCC1101Configuration(String configurationString){
     if(position == 17){
       pktFormat = String(x).toInt();
     }
+
+    if(position > 17 && position <= 23){
+      lqi += x;
+    }
+
+    if(position > 23 && position <= 29){
+      rssi += x;
+    }
+
     position++;
   }
 
@@ -328,7 +359,11 @@ void setCC1101Configuration(String configurationString){
   Serial.println(rxBw.toFloat());
   Serial.print("PKT FORMAT: ");
   Serial.println(pktFormat);
-  */
+  Serial.print("LQI: ");
+  Serial.println(lqi.toFloat());
+  Serial.print("RSSI: ");
+  Serial.println(rssi);*/
+  
 
   // SET VALUES:
   CC1101_MHZ = mhz.toFloat();
@@ -337,9 +372,11 @@ void setCC1101Configuration(String configurationString){
   CC1101_DRATE = dRate.toInt();
   CC1101_RX_BW = rxBw.toFloat();
   CC1101_PKT_FORMAT = pktFormat;
+  CC1101_LAST_AVG_LQI = lqi.toFloat();
+  CC1101_LAST_AVG_RSSI = rssi.toFloat();
 
-  // RELOAD ADAPTER
-  initCC1101();
+    // RELOAD ADAPTER
+    initCC1101();
 }
 
 void replaySignalFromIncomingBluetoothCommand(){
@@ -574,6 +611,11 @@ void recordSignal(){
     Serial.println("Signal Recorded successfully");
     Serial.println(String(transitions) + " Transitions Recorded");
 
+    Serial.println("AVG RSSI: " + String(CC1101_LAST_AVG_RSSI));
+    Serial.println("AVG LQI: " + String(CC1101_LAST_AVG_LQI));
+
+    
+
     // WRITE RECORDED SIGNAL BUFFER TO SPIFFS FILE
     // REMOVE PREVIUOS FILE
     SPIFFS.remove(SPIFFS_FILENAME_RECORDED_SIGNAL);
@@ -613,7 +655,7 @@ void periscope(){
   digitalWrite(PIN_LED_ONBOARD, HIGH);  
   while(operationMode == OPERATIONMODE_PERISCOPE && CC1101_TX == false){
     recordSignal();    
-    Serial.println("Next round...");
+    Serial.println("Looking for more Signals");
   }
   
   Serial.println("Periscope closed.");
@@ -822,11 +864,23 @@ int trycopy() {
 }
 */
 
+
+int lqiCounter = 1;
+int lqiRecorded = 1;
+int rssiCounter = 1;
+int rssiRecorded = 1;
+
 int tryRecordSignalToBuffer(){
   int i;
   //Serial.println("Copying...");
   // CLEAR ANY PREVIOUSLY RECORDED SIGNAL
   memset(recordedSignal,0,MAX_LENGHT_RECORDED_SIGNAL*sizeof(int));
+  /*
+  lqiCounter = 0;
+  lqiRecorded = 0;
+  rssiCounter = 0;
+  rssiRecorded = 0;*/
+
   byte n = 0;
   int sign = -1;
 
@@ -865,6 +919,16 @@ int tryRecordSignalToBuffer(){
     }
     else {
       recordedSignal[i] = dif * sign;
+
+      if(sign > 0){
+        // UPDATE RSSI / LQI
+        /*
+        lqiCounter++;
+        lqiRecorded += ELECHOUSE_cc1101.getLqi();
+        rssiCounter++;
+        rssiRecorded += ELECHOUSE_cc1101.getRssi();
+        */
+      }
       n = !n;
       if(n) {
         sign = 1;
@@ -878,6 +942,9 @@ int tryRecordSignalToBuffer(){
 
   int64_t stopus = esp_timer_get_time();
   lastCopyTime = (long)(stopus - startus);
+
+  CC1101_LAST_AVG_LQI = lqiRecorded / lqiCounter;
+  CC1101_LAST_AVG_RSSI = rssiRecorded / rssiCounter;
 
   return i;  
 }

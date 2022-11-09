@@ -3,7 +3,7 @@ package de.simon.dankelmann.submarine.Constants
 class Constants {
     companion object {
         val BLUETOOTH_COMMAND_HEADER_LENGTH = 8
-        val CC1101_ADAPTER_CONFIGURATION_LENGTH = 18
+        val CC1101_ADAPTER_CONFIGURATION_LENGTH = 30
 
         // COMMAND IDS
         var COMMAND_ID_DUMMY = "0000"

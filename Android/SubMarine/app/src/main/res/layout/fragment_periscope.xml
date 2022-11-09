@@ -111,6 +111,16 @@
             ></TextView>
 
         <TextView
+            android:id="@+id/textViewLocation"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            android:text="Location"
+            android:textAlignment="center"
+            ></TextView>
+
+        <TextView
             android:id="@+id/textViewConnectionState"
             android:layout_width="0dp"
             android:layout_weight="1"

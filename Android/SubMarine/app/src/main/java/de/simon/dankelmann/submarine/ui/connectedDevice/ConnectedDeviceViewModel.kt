@@ -6,6 +6,10 @@ import androidx.lifecycle.ViewModel
 
 class ConnectedDeviceViewModel: ViewModel() {
 
+    val dbInfoText = MutableLiveData<String>().apply {
+        value = "0 Signals in Database"
+    }
+
     private val _title = MutableLiveData<String>().apply {
         value = "Device Name"
     }

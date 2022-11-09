@@ -30,8 +30,9 @@ class PeriscopeViewModel: ViewModel() {
         value = "Connecting..."
     }
 
-
-
+    val locationInfo = MutableLiveData<String>().apply {
+        value = "Location"
+    }
 
     fun updateTitle(text:String){
         _title.postValue(text)

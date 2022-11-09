@@ -1,8 +1,8 @@
 package de.simon.dankelmann.submarine
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
-import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.navigation.NavigationView
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -11,7 +11,14 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
+import de.simon.dankelmann.submarine.AppContext.AppContext
+import de.simon.dankelmann.submarine.Database.AppDatabase
+import de.simon.dankelmann.submarine.Entities.LocationEntity
 import de.simon.dankelmann.submarine.databinding.ActivityMainBinding
+import de.simon.dankelmann.submarine.services.DatabaseService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -41,6 +48,18 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow
             ), drawerLayout
         )
+
+        /* DB TEST
+        val locationDao = AppDatabase.getDatabase(applicationContext).locationDao()
+        CoroutineScope(Dispatchers.IO).launch {
+            val data = locationDao.getAll()
+            Log.d("TAG__", "Locations found: " + data.size.toString())
+            var le:LocationEntity = LocationEntity(0, 1.0f,1.0,1.0,1.0,1.0f)
+            var newId = locationDao.insertItem(le)
+            Log.d("TAG__", "ID: " + newId)
+        }
+        */
+
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
     }
