@@ -14,4 +14,6 @@
     <string name="menu_scanbt">Scan BT</string>
     <string name="menu_connected_device">Connected Device</string>
     <string name="menu_periscope">Periscope</string>
+    <string name="menu_signalDatabase">Signal Database</string>
+    <string name="menu_signalDetail">Signal Detail</string>
 </resources>

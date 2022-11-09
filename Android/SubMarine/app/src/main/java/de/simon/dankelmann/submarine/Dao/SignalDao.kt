@@ -15,6 +15,9 @@ interface SignalDao {
     @Query("SELECT * FROM signalentity WHERE uid IN (:singalIds)")
     fun loadAllByIds(singalIds: IntArray): List<SignalEntity>
 
+    @Query("SELECT * FROM signalentity WHERE uid = :singalId LIMIT 1")
+    fun getById(singalId: Int): SignalEntity
+
     /*
     @Query("SELECT * FROM locationentity WHERE uid = locationId LIMIT 1")
     fun findById(locationId: Int): LocationEntity

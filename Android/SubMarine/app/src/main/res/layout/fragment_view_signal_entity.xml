@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.viewSignalEntity.ViewSignalEntityFragment"
+    android:id="@+id/viewSignalEntityLayout"
+    android:background="@color/background_dark"
+    >
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewSignalDetailTitle"
+        android:text="Signal Detail"
+        android:textColor="@color/fontcolor_component_dark_active"
+        android:textAlignment="center"
+        android:textSize="22dp"
+        android:textStyle="bold"
+        android:padding="10dp"
+        app:layout_constraintTop_toTopOf="@id/viewSignalEntityLayout"></TextView>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewSignalDetailDescription"
+        android:text="0 Samples"
+        android:textColor="@color/fontcolor_component_dark_inactive"
+        android:textAlignment="center"
+        android:padding="10dp"
+        app:layout_constraintTop_toBottomOf="@id/textViewSignalDetailTitle"></TextView>
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/animationSignalDetail"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        app:lottie_rawRes="@raw/inspect_signal"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        android:padding="20dp"
+        app:layout_constraintTop_toBottomOf="@id/textViewSignalDetailDescription"
+        />
+
+
+    <!--
+            -->
+
+    <LinearLayout
+        android:id="@+id/signalInfoLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/animationSignalDetail"
+        >
+
+        <TextView
+            android:id="@+id/textViewSignalFrequency"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            android:text="433.92 Mhz"
+            android:textAlignment="center"
+            app:layout_constraintTop_toBottomOf="@id/animationPeriscope"
+            ></TextView>
+
+        <Button
+            android:id="@+id/replaySignalDetailButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Replay Signal">
+
+        </Button>
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/signalInfoLayout"
+        app:layout_constraintBottom_toTopOf="@id/periscopeFooter"
+        android:padding="20dp"
+        >
+        <TextView
+            android:id="@+id/textViewSignalDetailData"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            android:text="-"
+            app:layout_constraintTop_toBottomOf="@id/animationPeriscope"
+            ></TextView>
+    </ScrollView>
+
+
+
+    <LinearLayout
+        android:id="@+id/periscopeFooter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="@id/viewSignalEntityLayout"
+        android:padding="5dp">
+
+        <TextView
+            android:id="@+id/textViewFooter1"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            android:text="-"
+            ></TextView>
+
+        <TextView
+            android:id="@+id/textViewFooter2"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            android:text="-"
+            android:textAlignment="center"
+            ></TextView>
+
+        <TextView
+            android:id="@+id/textViewFooter3"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            android:text="-"
+            android:textAlignment="viewEnd"
+            ></TextView>
+
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

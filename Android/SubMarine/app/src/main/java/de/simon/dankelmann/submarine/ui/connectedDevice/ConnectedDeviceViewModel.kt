@@ -1,4 +1,4 @@
-package de.simon.dankelmann.esp32_subghz.ui.connectedDevice
+package de.simon.dankelmann.submarine.ui.connectedDevice
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

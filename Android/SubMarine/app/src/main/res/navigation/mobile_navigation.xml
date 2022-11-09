@@ -33,6 +33,9 @@
         <action
             android:id="@+id/action_nav_connected_device_to_nav_periscope"
             app:destination="@id/nav_periscope" />
+        <action
+            android:id="@+id/action_nav_connected_device_to_nav_signal_database"
+            app:destination="@id/nav_signal_database" />
     </fragment>
 
     <fragment
@@ -40,6 +43,23 @@
         android:name="de.simon.dankelmann.submarine.ui.periscope.PeriscopeFragment"
         android:label="@string/menu_periscope"
         tools:layout="@layout/fragment_periscope" >
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_signal_database"
+        android:name="de.simon.dankelmann.submarine.ui.SignalDatabase.SignalDatabaseFragment"
+        android:label="@string/menu_signalDatabase"
+        tools:layout="@layout/fragment_signal_database" >
+        <action
+            android:id="@+id/action_nav_signal_database_to_nav_signalDetail"
+            app:destination="@id/nav_signalDetail" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_signalDetail"
+        android:name="de.simon.dankelmann.submarine.ui.viewSignalEntity.ViewSignalEntityFragment"
+        android:label="@string/menu_signalDetail"
+        tools:layout="@layout/fragment_view_signal_entity" >
     </fragment>
 
     <fragment

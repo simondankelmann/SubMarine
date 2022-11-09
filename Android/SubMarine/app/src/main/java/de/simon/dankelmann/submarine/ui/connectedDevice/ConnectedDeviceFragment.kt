@@ -13,8 +13,6 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
-import de.simon.dankelmann.esp32_subghz.ui.connectedDevice.ConnectedDeviceViewModel
-import de.simon.dankelmann.esp32_subghz.ui.connectedDevice.PeriscopeViewModel
 import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.R
 import de.simon.dankelmann.submarine.permissioncheck.PermissionCheck
@@ -46,10 +44,6 @@ class ConnectedDeviceFragment: Fragment() {
         _binding = FragmentConnectedDeviceBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-
-
-
-
         // GET DATA FROM BUNDLE
         var deviceFromBundle = arguments?.getParcelable("Device") as BluetoothDevice?
         if(deviceFromBundle != null){
@@ -76,6 +70,26 @@ class ConnectedDeviceFragment: Fragment() {
                     databaseInfoText.text = it
                 }
 
+                val periscopeButton: Button = binding.periscopeButton
+                periscopeButton.setOnClickListener { view ->
+                    // GO TO FILE EXPLORER FRAGMENT
+                    val bundle = Bundle()
+                    bundle.putString("DeviceAddress", _bluetoothDevice?.address)
+                    bundle.putParcelable("Device", _bluetoothDevice!!)
+                    requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_connected_device_to_nav_periscope, bundle)
+                }
+
+                // SIGNAL DB BUTTON
+                val signalDbButton: Button = binding.signalDatabaseButton
+                signalDbButton.setOnClickListener { view ->
+                    // GO TO FILE EXPLORER FRAGMENT
+                    val bundle = Bundle()
+                    bundle.putString("DeviceAddress", _bluetoothDevice?.address)
+                    bundle.putParcelable("Device", _bluetoothDevice!!)
+                    requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_connected_device_to_nav_signal_database, bundle)
+                }
+
+                // DB COUNTER
                 val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
                 CoroutineScope(Dispatchers.IO).launch {
                     val dataSize = signalDao.getAll().size
@@ -93,14 +107,7 @@ class ConnectedDeviceFragment: Fragment() {
             }
         }
 
-        val periscopeButton: Button = binding.periscopeButton
-        periscopeButton.setOnClickListener { view ->
-            // GO TO FILE EXPLORER FRAGMENT
-            val bundle = Bundle()
-            bundle.putString("DeviceAddress", _bluetoothDevice?.address)
-            bundle.putParcelable("Device", _bluetoothDevice!!)
-            requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_connected_device_to_nav_periscope, bundle)
-        }
+
 
         return root
     }

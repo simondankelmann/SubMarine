@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.connectedDevice.PeriscopeFragment"
+    tools:context=".ui.connectedDevice.ConnectedDeviceFragment"
     android:background="@color/background_dark"
     android:id="@+id/connectedDeviceLayout">
 
@@ -47,6 +47,14 @@
         android:layout_height="wrap_content"
         android:text="Periscope Mode"
         app:layout_constraintTop_toBottomOf="@id/animationConnectedDevice"
+        ></Button>
+
+    <Button
+        android:id="@+id/signalDatabaseButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Signal Database"
+        app:layout_constraintTop_toBottomOf="@id/periscopeButton"
         ></Button>
 
     <TextView

@@ -179,7 +179,7 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
         //_animationView!!.playAnimation()
         // GIVE IT SOME TIME TO TRANSMIT THE SIGNAL
         Handler(Looper.getMainLooper()).postDelayed(Runnable {
-            //setOperationMode(Constants.OPERATIONMODE_PERISCOPE)
+            setOperationMode(Constants.OPERATIONMODE_PERISCOPE)
             requireActivity().runOnUiThread {
                 //_binding?.animationPeriscope!!.cancelAnimation()
                 _viewModel!!.updateDescription("Looking for Signals")
@@ -298,7 +298,6 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
             Log.d(_logTag, "Saved Signal with ID: " + signalId)
         }
 
-
         // CLEAR EMPTY FIRST SAMPLES:
         var samples = signalData.split(",").toMutableList()
         while(samples.last().toInt() <= 0){
@@ -321,7 +320,7 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
         _capturedSignals++;
         _viewModel!!.infoTextFooter.postValue(_capturedSignals.toString() + " Signals captured");
 
-        setOperationMode(Constants.OPERATIONMODE_IDLE)
+        setOperationMode(Constants.OPERATIONMODE_PERISCOPE)
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
