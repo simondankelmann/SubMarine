@@ -57,6 +57,14 @@
         app:layout_constraintTop_toBottomOf="@id/periscopeButton"
         ></Button>
 
+    <Button
+        android:id="@+id/recordsignalButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Record Signal"
+        app:layout_constraintTop_toBottomOf="@id/signalDatabaseButton"
+        ></Button>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -1,4 +1,4 @@
-package de.simon.dankelmann.submarine.ui.periscope
+package de.simon.dankelmann.submarine.ui.recordSignal
 
 import android.Manifest
 import android.bluetooth.BluetoothDevice
@@ -8,18 +8,22 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.Editable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import com.airbnb.lottie.LottieAnimationView
-import de.simon.dankelmann.esp32_subghz.ui.connectedDevice.PeriscopeViewModel
+import com.airbnb.lottie.LottieDrawable
+import de.simon.dankelmann.esp32_subghz.ui.recordSignal.RecordSignalViewModel
 import de.simon.dankelmann.submarine.Constants.Constants
 import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.Entities.LocationEntity
@@ -27,6 +31,7 @@ import de.simon.dankelmann.submarine.Entities.SignalEntity
 import de.simon.dankelmann.submarine.Interfaces.LocationResultListener
 import de.simon.dankelmann.submarine.R
 import de.simon.dankelmann.submarine.databinding.FragmentPeriscopeBinding
+import de.simon.dankelmann.submarine.databinding.FragmentRecordSignalBinding
 import de.simon.dankelmann.submarine.permissioncheck.PermissionCheck
 import de.simon.dankelmann.submarine.services.BluetoothSerial
 import de.simon.dankelmann.submarine.services.ForegroundService
@@ -37,13 +42,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.util.*
 import kotlin.math.round
+import kotlin.reflect.KFunction1
 
 
-class PeriscopeFragment: Fragment(), LocationResultListener {
-    private val _logTag = "PeriscopeFragment"
-    private var _binding: FragmentPeriscopeBinding? = null
-    private var _viewModel: PeriscopeViewModel? = null
+class RecordSignalFragment: Fragment(), LocationResultListener {
+    private val _logTag = "RecordSignalFragment"
+    private var _binding: FragmentRecordSignalBinding? = null
+    private var _viewModel: RecordSignalViewModel? = null
     private var _bluetoothDevice: BluetoothDevice? = null
     private var _bluetoothSerial: BluetoothSerial? = null
 
@@ -51,13 +58,17 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
     private var _lastIncomingSignalData = ""
     private var _lastIncomingCc1101Config = ""
 
-    private var _animationView:LottieAnimationView? = null
     private var _locationService:LocationService? = null
 
     private var _lastLocation:Location? = null
     private var _lastLocationDateTime:LocalDateTime? = null
+    private var _submarineService:SubMarineService = SubMarineService()
 
-    private var _submarineService: SubMarineService = SubMarineService()
+    private var _signalEntity:SignalEntity? = null
+    private var _savedSignal:Boolean = false
+    private var _signalLocation:Location? = null
+    private var _signalRecordDate:LocalDateTime? = null
+    private var _isConnected:Boolean = false
 
     // Notification Service Intent
     var serviceIntent: Intent? = null
@@ -73,10 +84,10 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val viewModel = ViewModelProvider(this).get(PeriscopeViewModel::class.java)
+        val viewModel = ViewModelProvider(this).get(RecordSignalViewModel::class.java)
         _viewModel = viewModel
 
-        _binding = FragmentPeriscopeBinding.inflate(inflater, container, false)
+        _binding = FragmentRecordSignalBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
         // REQUEST LOCATION UPDATES
@@ -94,12 +105,31 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
                 Thread(Runnable {
                     _bluetoothSerial?.connect(deviceFromBundle.address, ::receivedDataCallback)
                 }).start()
-
             }
         }
 
         // SET UP UI
-        val description: TextView = binding.textViewPersicopeDescription
+        val animationView: LottieAnimationView = binding.animationRecordSignal
+        _viewModel!!.animationResourceId.observe(viewLifecycleOwner) {
+            animationView.setAnimation(it)
+            if(it == R.raw.success){
+                animationView.repeatCount = 0
+            } else {
+                animationView.repeatCount = LottieDrawable.INFINITE
+            }
+            animationView.playAnimation()
+        }
+
+        animationView.setOnClickListener{view ->
+            if(_viewModel!!.animationResourceId.value == R.raw.success){
+                setOperationMode(Constants.OPERATIONMODE_RECORD_SIGNAL, ::setOperationModeRecordSignalCallback)
+                _viewModel!!.capturedSignalName.postValue("")
+                _viewModel!!.capturedSignalData.postValue("")
+                _viewModel!!.capturedSignalInfo.postValue("No Signal recorded yet")
+            }
+        }
+
+        val description: TextView = binding.textViewRecordSignalDescription
         _viewModel!!.description.observe(viewLifecycleOwner) {
             description.text = it
         }
@@ -114,45 +144,46 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
             capturedSignalData.text = it
         }
 
-        val infoTextFooter: TextView = binding.textViewSignalCounter
-        _viewModel!!.infoTextFooter.observe(viewLifecycleOwner) {
-            infoTextFooter.text = it
+        val editTextCapturedSignalName: EditText = binding.editTextCapturedSignalName
+        _viewModel!!.capturedSignalName.observe(viewLifecycleOwner) {
+            editTextCapturedSignalName.setText(it)
         }
 
-        val connectionState: TextView = binding.textViewConnectionState
-        _viewModel!!.connectionState.observe(viewLifecycleOwner) {
-            connectionState.text = it
+        val footerText1: TextView = binding.textViewFooter1
+        _viewModel!!.footerText1.observe(viewLifecycleOwner) {
+            footerText1.text = it
         }
 
-        val locationInfo: TextView = binding.textViewLocation
-        _viewModel!!.locationInfo.observe(viewLifecycleOwner) {
-            locationInfo.text = it
+        val footerText2: TextView = binding.textViewFooter2
+        _viewModel!!.footerText2.observe(viewLifecycleOwner) {
+            footerText2.text = it
+        }
+
+        val footerText3: TextView = binding.textViewFooter3
+        _viewModel!!.footerText3.observe(viewLifecycleOwner) {
+            footerText3.text = it
         }
 
         // REPLAY BUTTON
         val replayButton: Button = binding.replaySignalButton
         replayButton.setOnClickListener { view ->
-            // REPLAY
-            _viewModel!!.updateDescription("Transmitting Signal to Sub Marine...")
-            if(_lastIncomingSignalData != ""){
-                requireActivity().runOnUiThread {
-                    _binding!!.animationPeriscope!!.setAnimation(R.raw.wave2)
-                    _binding!!.animationPeriscope.playAnimation()
-                }
-                _viewModel!!.updateDescription("Transmitting Signal to Sub Marine Device")
+            if(_signalEntity != null && _isConnected){
+                replaySignalEntity(_signalEntity!!)
+            }
 
-                Log.d(_logTag, "ReTransmitting: " + _lastIncomingSignalData)
-
-                val command = Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND
-                val commandId = Constants.COMMAND_ID_DUMMY
-                val commandString = command + commandId + _lastIncomingCc1101Config + _lastIncomingSignalData
-
-                _bluetoothSerial!!.sendByteString(commandString + "\n", ::replayStatusCallback)
+            if(!_isConnected){
+                _viewModel!!.animationResourceId.postValue(R.raw.warning)
             }
         }
 
-        // ANIMATION VIEW
-        _animationView = binding.animationPeriscope
+
+        // SAVE BUTTON
+        val saveButton: Button = binding.saveignalButton
+        saveButton.setOnClickListener { view ->
+            if(_signalEntity != null && _savedSignal == false){
+                saveCurrentSignal()
+            }
+        }
 
         // Start Foreground Service to scan Locations in Background
         serviceIntent = Intent(requireContext(), ForegroundService::class.java)
@@ -163,51 +194,82 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
         return root
     }
 
+    fun saveCurrentSignal(){
+        _viewModel!!.description.postValue("Saving the Signal")
+
+        val locationDao = AppDatabase.getDatabase(requireContext()).locationDao()
+        val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
+        CoroutineScope(Dispatchers.IO).launch {
+            var locationId = 0
+            // SAVE LOCATION ?!
+            if(_signalLocation != null && _lastLocationDateTime != null){
+                var locationEntity: LocationEntity = LocationEntity(0, _lastLocation!!.accuracy,_lastLocation!!.altitude,_lastLocation!!.latitude,_lastLocation!!.longitude,_lastLocation!!.speed)
+                locationId = locationDao.insertItem(locationEntity).toInt()
+                Log.d(_logTag, "Saved Location with ID: " + locationId)
+            }
+
+            _signalEntity!!.locationId = locationId
+
+            var enteredName = _binding!!.editTextCapturedSignalName.text.toString()
+            if(enteredName != "" && enteredName != _signalEntity!!.name){
+                _signalEntity!!.name = enteredName
+            }
+
+
+            var signalId = signalDao.insertItem(_signalEntity!!).toInt()
+            Log.d(_logTag, "Saved Signal with ID: " + signalId)
+            _viewModel!!.description.postValue("Signal saved successfully")
+        }
+
+
+
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    fun replaySignalEntity(signalEntity: SignalEntity){
+        _viewModel!!.animationResourceId.postValue(R.raw.wave2)
+        _viewModel!!.description.postValue("Transmitting Signal to Sub Marine...")
+        val command = Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND
+        val commandId = Constants.COMMAND_ID_DUMMY
+        val commandString = command + commandId + _submarineService.getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData
+
+        _bluetoothSerial!!.sendByteString(commandString + "\n", ::replayStatusCallback)
+    }
+
     @RequiresApi(Build.VERSION_CODES.M)
     private fun replayStatusCallback(message: String){
 
         requireActivity().runOnUiThread {
-            //_binding?.animationPeriscope!!.cancelAnimation()
-            _viewModel!!.updateDescription("Transmitting captured Signal")
-            _binding!!.animationPeriscope!!.setAnimation(R.raw.sinus)
-            _binding!!.animationPeriscope.playAnimation()
+            _viewModel!!.description.postValue("Transmitting captured Signal")
+            _viewModel!!.animationResourceId.postValue(R.raw.sinus)
         }
 
-        //_animationView!!.setAnimation(R.raw.sinus)
-        //_animationView!!.playAnimation()
         // GIVE IT SOME TIME TO TRANSMIT THE SIGNAL
         Handler(Looper.getMainLooper()).postDelayed(Runnable {
-            setOperationMode(Constants.OPERATIONMODE_PERISCOPE)
-            requireActivity().runOnUiThread {
-                //_binding?.animationPeriscope!!.cancelAnimation()
-                _viewModel!!.updateDescription("Looking for Signals")
-                _binding!!.animationPeriscope!!.setAnimation(R.raw.radar)
-                _binding!!.animationPeriscope.playAnimation()
-            }
+            _viewModel!!.animationResourceId.postValue(R.raw.success)
         }, 1500)
-        //Thread.sleep(1_500)
-        // GO BACK TO PERISCOPE MODE
-        /*activity?.runOnUiThread {
-            _binding!!.animationPeriscope.setAnimation(R.raw.radar)
-            _binding!!.animationPeriscope.playAnimation()
-        }*/
+
     }
 
-    private fun setOperationModeCallback(message: String){
+    private fun setOperationModeRecordSignalCallback(message: String){
         Log.d(_logTag, "OP MODE CB: " + message)
+        _viewModel!!.animationResourceId.postValue(R.raw.record_blue)
+        _viewModel!!.description.postValue("Recording Signal")
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
-    private fun setOperationMode(operationMode:String){
+    private fun setOperationMode(operationMode:String, statusCallback: KFunction1<String, Unit>){
         val command = Constants.COMMAND_SET_OPERATION_MODE
         val commandId = Constants.COMMAND_ID_DUMMY
 
         val commandString = command + commandId + operationMode
 
-        //Handler(Looper.getMainLooper()).post(Runnable {
-            _bluetoothSerial!!.sendByteString(commandString + "\n", ::setOperationModeCallback)
-        //})
+        if(operationMode == Constants.OPERATIONMODE_RECORD_SIGNAL){
+            _savedSignal = false
+        }
 
+        _viewModel!!.description.postValue("Setting Operation Mode: " + operationMode)
+        _bluetoothSerial!!.sendByteString(commandString + "\n", statusCallback)
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -239,24 +301,17 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
         var cc1101ConfigString = data.substring(Constants.BLUETOOTH_COMMAND_HEADER_LENGTH, configEndIndex)
         var signalData = data.substring(configEndIndex)
 
+
+        _viewModel!!.animationResourceId.postValue(R.raw.success)
+
         Log.d(_logTag, "Configstring: " + cc1101ConfigString)
         Log.d(_logTag, "Signaldata: " + signalData)
 
-        val locationDao = AppDatabase.getDatabase(requireContext()).locationDao()
-        val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
-        CoroutineScope(Dispatchers.IO).launch {
-            var locationId = 0
-            // SAVE LOCATION ?!
-            if(_lastLocation != null && _lastLocationDateTime != null){
-
-                var locationEntity: LocationEntity = LocationEntity(0, _lastLocation!!.accuracy,_lastLocation!!.altitude,_lastLocation!!.latitude,_lastLocation!!.longitude,_lastLocation!!.speed)
-                locationId = locationDao.insertItem(locationEntity).toInt()
-                Log.d(_logTag, "Saved Location with ID: " + locationId)
-            }
-
-            var signalEntity = _submarineService.parseSignalEntityFromDataString(data, locationId)
-            var signalId = signalDao.insertItem(signalEntity).toInt()
-            Log.d(_logTag, "Saved Signal with ID: " + signalId)
+        var signalEntity = _submarineService.parseSignalEntityFromDataString(data, 0)
+        if(signalEntity != null){
+            _signalEntity = signalEntity
+            _signalLocation = _lastLocation
+            _signalRecordDate = LocalDateTime.now()
         }
 
         // CLEAR EMPTY FIRST SAMPLES:
@@ -274,14 +329,14 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
 
         var samplesCount = signalData.split(',').size
         _viewModel!!.capturedSignalInfo.postValue("Received " + samplesCount + " Samples")
+        _viewModel!!.capturedSignalData.postValue(signalData)
 
         _lastIncomingSignalData = signalData
         _lastIncomingCc1101Config = cc1101ConfigString
         _viewModel!!.capturedSignalData.postValue(signalData)
+        _viewModel!!.capturedSignalName.postValue(_signalEntity!!.name)
         _capturedSignals++;
-        _viewModel!!.infoTextFooter.postValue(_capturedSignals.toString() + " Signals captured");
-
-        setOperationMode(Constants.OPERATIONMODE_PERISCOPE)
+        //_viewModel!!.infoTextFooter.postValue(_capturedSignals.toString() + " Signals captured");
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -290,28 +345,22 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
         when(connectionState){
             0 -> {
                 Log.d(_logTag, "Disconnected")
-                _viewModel!!.connectionState.postValue("Disconnected")
+                _viewModel!!.footerText3.postValue("Disconnected")
+                _isConnected = false
             }
             1 -> {
                 Log.d(_logTag, "Connecting...")
-                requireActivity().runOnUiThread {
-                    //_binding?.animationPeriscope!!.cancelAnimation()
-                    _binding!!.animationPeriscope!!.setAnimation(R.raw.dots)
-                    _binding!!.animationPeriscope.playAnimation()
-                }
-
-                _viewModel!!.connectionState.postValue("Connecting...")
+                _viewModel!!.animationResourceId.postValue(R.raw.bluetooth_scan)
+                _viewModel!!.footerText3.postValue("Connecting...")
+                _isConnected = false
             }
             2 -> {
                 Log.d(_logTag, "Connected")
-                _viewModel!!.connectionState.postValue("Connected")
+                _viewModel!!.footerText3.postValue("Connected")
                 // ACTIVATE PERISCOPE MODE
-                setOperationMode(Constants.OPERATIONMODE_PERISCOPE)
-                requireActivity().runOnUiThread {
-                    //_binding?.animationPeriscope!!.cancelAnimation()
-                    _binding!!.animationPeriscope!!.setAnimation(R.raw.radar)
-                    _binding!!.animationPeriscope.playAnimation()
-                }
+                _isConnected = true
+                setOperationMode(Constants.OPERATIONMODE_RECORD_SIGNAL,::setOperationModeRecordSignalCallback)
+                _viewModel!!.animationResourceId.postValue(R.raw.dots)
             }
         }
     }
@@ -328,7 +377,7 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
         _lastLocationDateTime = LocalDateTime.now()
 
         var decimals = 4
-        _viewModel!!.locationInfo.postValue(location.longitude.round(decimals).toString() + " | " + location.latitude.round(decimals).toString())
+        _viewModel!!.footerText2.postValue(location.longitude.round(decimals).toString() + " | " + location.latitude.round(decimals).toString())
     }
 
     fun Double.round(decimals: Int): Double {

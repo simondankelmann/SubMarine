@@ -28,6 +28,7 @@ int incomingBluetoothSignal[INCOMING_BLUETOOTH_SIGNAL_BUFFER_SIZE];
 #define OPERATIONMODE_IDLE "0000" 
 #define OPERATIONMODE_HANDLE_INCOMING_BLUETOOTH_COMMAND "0001" 
 #define OPERATIONMODE_PERISCOPE "0002"
+#define OPERATIONMODE_RECORD_SIGNAL "0003"
 String lastExecutedOperationMode = "0000"; 
 String operationMode = "0000";
 
@@ -544,6 +545,8 @@ void loop() {
   // HANDLE OPERATION MODE
   if(operationMode == OPERATIONMODE_PERISCOPE){
     periscope();
+  } else if(operationMode == OPERATIONMODE_RECORD_SIGNAL){
+    operationModeRecordSignal();
   } else if(operationMode == OPERATIONMODE_HANDLE_INCOMING_BLUETOOTH_COMMAND){
     // HANDLE INCOMING COMMAND
     handleIncomingCommand();
@@ -592,7 +595,7 @@ void recordSignal(){
   */
 
   // RECORD TO BUFFER AND THEN WRITE TO SPIFFS
-  while(transitions < MINIMUM_TRANSITIONS && lastCopyTime < MINIMUM_COPYTIME_US && (operationMode == OPERATIONMODE_PERISCOPE)){
+  while(transitions < MINIMUM_TRANSITIONS && lastCopyTime < MINIMUM_COPYTIME_US && (operationMode == OPERATIONMODE_PERISCOPE || operationMode == OPERATIONMODE_RECORD_SIGNAL)){
     transitions = tryRecordSignalToBuffer();          
   }
 
@@ -660,6 +663,21 @@ void periscope(){
   
   Serial.println("Periscope closed.");
   digitalWrite(PIN_LED_ONBOARD, LOW);  
+}
+
+void operationModeRecordSignal(){
+  Serial.println("Recording a Signal");
+  if(lastExecutedOperationMode != OPERATIONMODE_RECORD_SIGNAL || CC1101_TX == true){
+    CC1101_TX = false;
+    initCC1101();
+  }
+  digitalWrite(PIN_LED_ONBOARD, HIGH);  
+
+  recordSignal();    
+
+  Serial.println("Recording done.");
+  digitalWrite(PIN_LED_ONBOARD, LOW);  
+  setOperationMode(OPERATIONMODE_IDLE);
 }
 
 void replaySignal(){
