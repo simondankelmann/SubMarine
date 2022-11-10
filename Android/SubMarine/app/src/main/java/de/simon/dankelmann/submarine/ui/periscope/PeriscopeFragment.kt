@@ -94,7 +94,6 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
                 Thread(Runnable {
                     _bluetoothSerial?.connect(deviceFromBundle.address, ::receivedDataCallback)
                 }).start()
-
             }
         }
 
@@ -284,7 +283,6 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
         setOperationMode(Constants.OPERATIONMODE_PERISCOPE)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun connectionStateChangedCallback(connectionState: Int){
         Log.d(_logTag, "Connection Callback: " + connectionState)
         when(connectionState){
@@ -321,7 +319,6 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
         _binding = null
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun receiveLocationChanges(location: Location) {
         //Log.d(_logTag, "Location updated")
         _lastLocation = location

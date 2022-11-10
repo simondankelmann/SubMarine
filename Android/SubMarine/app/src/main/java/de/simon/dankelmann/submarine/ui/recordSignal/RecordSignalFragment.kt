@@ -24,6 +24,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.airbnb.lottie.LottieAnimationView
 import com.airbnb.lottie.LottieDrawable
 import de.simon.dankelmann.esp32_subghz.ui.recordSignal.RecordSignalViewModel
+import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.Constants.Constants
 import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.Entities.LocationEntity
@@ -52,7 +53,7 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
     private var _binding: FragmentRecordSignalBinding? = null
     private var _viewModel: RecordSignalViewModel? = null
     private var _bluetoothDevice: BluetoothDevice? = null
-    private var _bluetoothSerial: BluetoothSerial? = null
+    //private var _bluetoothSerial: BluetoothSerial? = null
 
     private var _capturedSignals = 0
     private var _lastIncomingSignalData = ""
@@ -62,7 +63,7 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
 
     private var _lastLocation:Location? = null
     private var _lastLocationDateTime:LocalDateTime? = null
-    private var _submarineService:SubMarineService = SubMarineService()
+    private var _submarineService:SubMarineService = AppContext.submarineService
 
     private var _signalEntity:SignalEntity? = null
     private var _savedSignal:Boolean = false
@@ -78,7 +79,6 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
     // onDestroyView.
     private val binding get() = _binding!!
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -86,6 +86,12 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
     ): View {
         val viewModel = ViewModelProvider(this).get(RecordSignalViewModel::class.java)
         _viewModel = viewModel
+
+        // Start Foreground Service to scan Locations in Background
+        serviceIntent = Intent(requireContext(), ForegroundService::class.java)
+        serviceIntent!!.putExtra("inputExtra", "Foreground Service Example in Android FROM FRAGMENT")
+        serviceIntent!!.action = "ACTION_START_FOREGROUND_SERVICE"
+        ContextCompat.startForegroundService(requireContext(), serviceIntent!!)
 
         _binding = FragmentRecordSignalBinding.inflate(inflater, container, false)
         val root: View = binding.root
@@ -101,10 +107,18 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
                 _bluetoothDevice = deviceFromBundle
 
                 // LETS GO !
+                _submarineService.registerCallback(::connectionStateChangedCallback, SubMarineService.CallbackType.BluetoothConnectionStateChanged)
+                _submarineService.registerCallback(::receivedDataCallback, SubMarineService.CallbackType.IcomingData)
+                _submarineService.registerCallback(::setOperationModeRecordSignalCallback, SubMarineService.CallbackType.SetOperationMode)
+                _submarineService.registerCallback(::replayStatusCallback, SubMarineService.CallbackType.ReplaySignal)
+                _submarineService.deviceAddress = deviceFromBundle.address
+                _submarineService.connect(requireContext())
+
+                /*
                 _bluetoothSerial = BluetoothSerial(requireContext(), ::connectionStateChangedCallback)
                 Thread(Runnable {
                     _bluetoothSerial?.connect(deviceFromBundle.address, ::receivedDataCallback)
-                }).start()
+                }).start()*/
             }
         }
 
@@ -122,7 +136,9 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
 
         animationView.setOnClickListener{view ->
             if(_viewModel!!.animationResourceId.value == R.raw.success){
-                setOperationMode(Constants.OPERATIONMODE_RECORD_SIGNAL, ::setOperationModeRecordSignalCallback)
+                //setOperationMode(Constants.OPERATIONMODE_RECORD_SIGNAL, ::setOperationModeRecordSignalCallback)
+                _submarineService.setOperationMode(Constants.OPERATIONMODE_RECORD_SIGNAL)
+                _savedSignal = false
                 _viewModel!!.capturedSignalName.postValue("")
                 _viewModel!!.capturedSignalData.postValue("")
                 _viewModel!!.capturedSignalInfo.postValue("No Signal recorded yet")
@@ -185,12 +201,6 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
             }
         }
 
-        // Start Foreground Service to scan Locations in Background
-        serviceIntent = Intent(requireContext(), ForegroundService::class.java)
-        serviceIntent!!.putExtra("inputExtra", "Foreground Service Example in Android FROM FRAGMENT")
-        serviceIntent!!.action = "ACTION_START_FOREGROUND_SERVICE"
-        ContextCompat.startForegroundService(requireContext(), serviceIntent!!)
-
         return root
     }
 
@@ -225,20 +235,19 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
 
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     fun replaySignalEntity(signalEntity: SignalEntity){
         _viewModel!!.animationResourceId.postValue(R.raw.wave2)
         _viewModel!!.description.postValue("Transmitting Signal to Sub Marine...")
+        /*
         val command = Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND
         val commandId = Constants.COMMAND_ID_DUMMY
-        val commandString = command + commandId + _submarineService.getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData
+        val commandString = command + commandId + _submarineService.getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData*/
 
-        _bluetoothSerial!!.sendByteString(commandString + "\n", ::replayStatusCallback)
+        _submarineService.sendCommandToDevice(Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND, Constants.COMMAND_ID_DUMMY, _submarineService.getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData)
+        //_bluetoothSerial!!.sendByteString(commandString + "\n", ::replayStatusCallback)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun replayStatusCallback(message: String){
-
         requireActivity().runOnUiThread {
             _viewModel!!.description.postValue("Transmitting captured Signal")
             _viewModel!!.animationResourceId.postValue(R.raw.sinus)
@@ -257,7 +266,7 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
         _viewModel!!.description.postValue("Recording Signal")
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+    /*
     private fun setOperationMode(operationMode:String, statusCallback: KFunction1<String, Unit>){
         val command = Constants.COMMAND_SET_OPERATION_MODE
         val commandId = Constants.COMMAND_ID_DUMMY
@@ -270,9 +279,8 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
 
         _viewModel!!.description.postValue("Setting Operation Mode: " + operationMode)
         _bluetoothSerial!!.sendByteString(commandString + "\n", statusCallback)
-    }
+    }*/
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun receivedDataCallback(message: String){
         if(message != ""){
             Log.d(_logTag, "Received: " + message)
@@ -293,14 +301,10 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
         }
     }
 
-
-
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun handleIncomingSignalTransfer(data:String){
         var configEndIndex = Constants.BLUETOOTH_COMMAND_HEADER_LENGTH + Constants.CC1101_ADAPTER_CONFIGURATION_LENGTH
         var cc1101ConfigString = data.substring(Constants.BLUETOOTH_COMMAND_HEADER_LENGTH, configEndIndex)
         var signalData = data.substring(configEndIndex)
-
 
         _viewModel!!.animationResourceId.postValue(R.raw.success)
 
@@ -339,7 +343,6 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
         //_viewModel!!.infoTextFooter.postValue(_capturedSignals.toString() + " Signals captured");
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun connectionStateChangedCallback(connectionState: Int){
         Log.d(_logTag, "Connection Callback: " + connectionState)
         when(connectionState){
@@ -359,7 +362,8 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
                 _viewModel!!.footerText3.postValue("Connected")
                 // ACTIVATE PERISCOPE MODE
                 _isConnected = true
-                setOperationMode(Constants.OPERATIONMODE_RECORD_SIGNAL,::setOperationModeRecordSignalCallback)
+                //setOperationMode(Constants.OPERATIONMODE_RECORD_SIGNAL,::setOperationModeRecordSignalCallback)
+                _submarineService.setOperationMode(Constants.OPERATIONMODE_RECORD_SIGNAL)
                 _viewModel!!.animationResourceId.postValue(R.raw.dots)
             }
         }
@@ -385,5 +389,4 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
         repeat(decimals) { multiplier *= 10 }
         return round(this * multiplier) / multiplier
     }
-
 }

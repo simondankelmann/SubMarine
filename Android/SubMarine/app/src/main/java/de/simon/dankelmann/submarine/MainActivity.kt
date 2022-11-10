@@ -1,5 +1,6 @@
 package de.simon.dankelmann.submarine
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -11,11 +12,13 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.Entities.LocationEntity
 import de.simon.dankelmann.submarine.databinding.ActivityMainBinding
 import de.simon.dankelmann.submarine.services.DatabaseService
+import de.simon.dankelmann.submarine.services.ForegroundService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -48,6 +51,14 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow
             ), drawerLayout
         )
+
+        // FOREGROUND SERVICE
+        /*
+        var serviceIntent = Intent(applicationContext.applicationContext, ForegroundService::class.java)
+        serviceIntent!!.putExtra("inputExtra", "Foreground Service Example in Android FROM FRAGMENT")
+        serviceIntent!!.action = "ACTION_START_FOREGROUND_SERVICE"
+        ContextCompat.startForegroundService(applicationContext.applicationContext, serviceIntent!!)
+        */
 
         /* DB TEST
         val locationDao = AppDatabase.getDatabase(applicationContext).locationDao()

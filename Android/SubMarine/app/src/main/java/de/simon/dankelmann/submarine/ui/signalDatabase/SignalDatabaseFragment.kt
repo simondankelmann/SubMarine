@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import de.simon.dankelmann.esp32_subghz.Adapters.BluetoothDeviceListviewAdapter
 import de.simon.dankelmann.esp32_subghz.Adapters.SignalDatabaseListviewAdapter
+import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.Constants.Constants
 import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.Entities.SignalEntity

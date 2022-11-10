@@ -3,11 +3,12 @@ package de.simon.dankelmann.esp32_subghz.ui.recordSignal
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import de.simon.dankelmann.submarine.R
 
 class RecordSignalViewModel: ViewModel() {
 
     val animationResourceId = MutableLiveData<Int>().apply {
-        value = 0
+        value = R.raw.bluetooth_scan
     }
 
     val title = MutableLiveData<String>().apply {

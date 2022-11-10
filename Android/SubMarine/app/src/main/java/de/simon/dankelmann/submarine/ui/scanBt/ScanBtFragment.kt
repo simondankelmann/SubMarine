@@ -21,10 +21,12 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import de.simon.dankelmann.esp32_subghz.Adapters.BluetoothDeviceListviewAdapter
+import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.permissioncheck.PermissionCheck
 import de.simon.dankelmann.submarine.R
 import de.simon.dankelmann.submarine.services.BluetoothService
 import de.simon.dankelmann.submarine.databinding.FragmentScanbtBinding
+import de.simon.dankelmann.submarine.services.SubMarineService
 import java.util.*
 
 
@@ -53,6 +55,8 @@ class ScanBtFragment : Fragment(), AdapterView.OnItemClickListener {
 
         _binding = FragmentScanbtBinding.inflate(inflater, container, false)
         val root: View = binding.root
+
+        var test = AppContext.submarineService
 
         /*
         val textView: TextView = binding.textScanBt

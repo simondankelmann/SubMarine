@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId "de.simon.dankelmann.submarine"
-        minSdk 21
+        minSdk 23
         targetSdk 32
         versionCode 1
         versionName "1.0"

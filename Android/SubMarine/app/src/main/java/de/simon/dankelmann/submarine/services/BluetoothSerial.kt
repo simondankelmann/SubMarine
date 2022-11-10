@@ -57,6 +57,7 @@ class BluetoothSerial (context: Context, connectionChangedCallback:KFunction1<In
             _bluetoothDevice = _bluetoothAdapter?.getRemoteDevice(macAddress)
             if(_bluetoothDevice != null){
                 if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
+                    Log.d(_logTag, "Connecting to Socket")
                     connectSocket()
                 }
             }

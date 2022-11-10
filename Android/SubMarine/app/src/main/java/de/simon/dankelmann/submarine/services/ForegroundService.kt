@@ -39,13 +39,14 @@ class ForegroundService : Service() {
         }
     }
 
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // Send a notification that service is started
         //toast("Service started.")
 
+        Log.d("_FG", "Entering onStartCommand")
 
         intent.let {
-            var action = intent.action
+            var action = intent?.action
 
             if(action == ACTION_STOP_FOREGROUND_SERVICE){
                 stopForegroundService()
