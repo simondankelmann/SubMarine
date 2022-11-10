@@ -99,6 +99,16 @@ class ConnectedDeviceFragment: Fragment() {
                     requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_connected_device_to_nav_record_signal, bundle)
                 }
 
+                // ADAPTER SETUP BUTTON
+                val adapterSetupButton: Button = binding.adapterSetupButton
+                adapterSetupButton.setOnClickListener { view ->
+                    // GO TO FILE EXPLORER FRAGMENT
+                    val bundle = Bundle()
+                    bundle.putString("DeviceAddress", _bluetoothDevice?.address)
+                    bundle.putParcelable("Device", _bluetoothDevice!!)
+                    requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_connected_device_to_nav_adapter_setup, bundle)
+                }
+
                 // DB COUNTER
                 val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
                 CoroutineScope(Dispatchers.IO).launch {

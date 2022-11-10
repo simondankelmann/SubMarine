@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.AdapterSetup.AdapterSetupFragment"
+    android:id="@+id/adapterSetupLayout"
+    android:background="@color/background_dark"
+    >
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewAdapterSetupTitle"
+        android:text="Adapter Setup"
+        android:textColor="@color/fontcolor_component_dark_active"
+        android:textAlignment="center"
+        android:textSize="22dp"
+        android:textStyle="bold"
+        android:padding="10dp"
+        app:layout_constraintTop_toTopOf="@id/adapterSetupLayout"></TextView>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewAdapterSetupDescription"
+        android:text="Set CC1101 Configuration"
+        android:textColor="@color/fontcolor_component_dark_inactive"
+        android:textAlignment="center"
+        android:padding="10dp"
+        app:layout_constraintTop_toBottomOf="@id/textViewAdapterSetupTitle"></TextView>
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/animationAdapterSetup"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        app:lottie_rawRes="@raw/dots"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        android:padding="20dp"
+        app:layout_constraintTop_toBottomOf="@id/textViewAdapterSetupDescription"
+        />
+
+    <ScrollView
+        android:id="@+id/adapterSetupScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/animationAdapterSetup"
+        app:layout_constraintBottom_toTopOf="@id/adapterSetupFooter">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:id="@+id/textViewLabelMhz"
+                        android:text="Frequency (Mhz)"
+                        android:textColor="@color/fontcolor_component_dark_inactive"
+                        android:textAlignment="center"
+                        android:padding="10dp"
+                       ></TextView>
+
+                    <EditText
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:id="@+id/editTextViewMhz"
+                        android:text="433.92"
+                        android:textSize="14dp"
+                        android:textColor="@color/fontcolor_component_dark_inactive"
+                        android:textAlignment="center"
+                        ></EditText>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:id="@+id/textViewLabelModulation"
+                        android:text="Modulation"
+                        android:textColor="@color/fontcolor_component_dark_inactive"
+                        android:textAlignment="center"
+                        android:padding="10dp"
+                        ></TextView>
+
+                    <EditText
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:id="@+id/editTextViewModulation"
+                        android:text="ASK/OOK"
+                        android:textSize="14dp"
+                        android:textColor="@color/fontcolor_component_dark_inactive"
+                        android:textAlignment="center"
+                        ></EditText>
+                </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:id="@+id/textViewLabelDrate"
+                    android:text="D-Rate"
+                    android:textColor="@color/fontcolor_component_dark_inactive"
+                    android:textAlignment="center"
+                    android:padding="10dp"
+                    ></TextView>
+
+                <EditText
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    android:id="@+id/editTextViewDrate"
+                    android:text="512"
+                    android:textSize="14dp"
+                    android:textColor="@color/fontcolor_component_dark_inactive"
+                    android:textAlignment="center"
+                    ></EditText>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:id="@+id/textViewLabelRxBw"
+                    android:text="RX Bandwidth"
+                    android:textColor="@color/fontcolor_component_dark_inactive"
+                    android:textAlignment="center"
+                    android:padding="10dp"
+                    ></TextView>
+
+                <EditText
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    android:id="@+id/editTextViewRxBw"
+                    android:text="256"
+                    android:textSize="14dp"
+                    android:textColor="@color/fontcolor_component_dark_inactive"
+                    android:textAlignment="center"
+                    ></EditText>
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:id="@+id/textViewLabelPktFormat"
+                    android:text="PKT Format"
+                    android:textColor="@color/fontcolor_component_dark_inactive"
+                    android:textAlignment="center"
+                    android:padding="10dp"
+                    ></TextView>
+
+                <EditText
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    android:id="@+id/editTextViewPktFormat"
+                    android:text="3"
+                    android:textSize="14dp"
+                    android:textColor="@color/fontcolor_component_dark_inactive"
+                    android:textAlignment="center"
+                    ></EditText>
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/adapterSetupFooter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="@id/adapterSetupLayout">
+
+        <Button
+            android:id="@+id/loadConfigurationButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Load">
+        </Button>
+
+        <TextView
+            android:id="@+id/textviewFooter1"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            android:padding="10dp"
+            android:textAlignment="center"
+            android:text="Connecting...">
+        </TextView>
+
+        <Button
+            android:id="@+id/saveConfigurationButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Save">
+        </Button>
+
+    </LinearLayout>
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

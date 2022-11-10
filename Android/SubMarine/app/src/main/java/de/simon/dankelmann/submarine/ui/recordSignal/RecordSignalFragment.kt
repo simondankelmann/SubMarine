@@ -107,18 +107,20 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
                 _bluetoothDevice = deviceFromBundle
 
                 // LETS GO !
+                _submarineService.clearCallbacks()
                 _submarineService.registerCallback(::connectionStateChangedCallback, SubMarineService.CallbackType.BluetoothConnectionStateChanged)
                 _submarineService.registerCallback(::receivedDataCallback, SubMarineService.CallbackType.IcomingData)
                 _submarineService.registerCallback(::setOperationModeRecordSignalCallback, SubMarineService.CallbackType.SetOperationMode)
                 _submarineService.registerCallback(::replayStatusCallback, SubMarineService.CallbackType.ReplaySignal)
                 _submarineService.deviceAddress = deviceFromBundle.address
-                _submarineService.connect(requireContext())
+                _submarineService.connect()
 
                 /*
                 _bluetoothSerial = BluetoothSerial(requireContext(), ::connectionStateChangedCallback)
                 Thread(Runnable {
                     _bluetoothSerial?.connect(deviceFromBundle.address, ::receivedDataCallback)
-                }).start()*/
+                }).start()
+                */
             }
         }
 

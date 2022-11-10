@@ -21,16 +21,12 @@ import de.simon.dankelmann.submarine.Constants.Constants
 import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.Entities.SignalEntity
 import de.simon.dankelmann.submarine.R
-import de.simon.dankelmann.submarine.databinding.FragmentGalleryBinding
-import de.simon.dankelmann.submarine.databinding.FragmentSignalDatabaseBinding
 import de.simon.dankelmann.submarine.databinding.FragmentViewSignalEntityBinding
 import de.simon.dankelmann.submarine.permissioncheck.PermissionCheck
 import de.simon.dankelmann.submarine.services.BluetoothSerial
-import de.simon.dankelmann.submarine.ui.SignalDatabase.SignalDatabaseViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlin.math.sign
 
 class ViewSignalEntityFragment : Fragment() {
 

@@ -27,9 +27,13 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+    private lateinit var appContext:AppContext
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // INITIALIZE THE APP CONTEXT
+        AppContext.setContext(this)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)

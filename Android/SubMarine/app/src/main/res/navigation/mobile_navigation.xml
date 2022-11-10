@@ -39,6 +39,9 @@
         <action
             android:id="@+id/action_nav_connected_device_to_nav_record_signal"
             app:destination="@id/nav_record_signal" />
+        <action
+            android:id="@+id/action_nav_connected_device_to_nav_adapter_setup"
+            app:destination="@id/nav_adapter_setup" />
     </fragment>
 
     <fragment
@@ -70,6 +73,13 @@
         android:name="de.simon.dankelmann.submarine.ui.recordSignal.RecordSignalFragment"
         android:label="@string/menu_recordSignal"
         tools:layout="@layout/fragment_record_signal" >
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_adapter_setup"
+        android:name="de.simon.dankelmann.submarine.ui.AdapterSetup.AdapterSetupFragment"
+        android:label="@string/menu_adapterSetup"
+        tools:layout="@layout/fragment_adapter_setup" >
     </fragment>
 
     <fragment

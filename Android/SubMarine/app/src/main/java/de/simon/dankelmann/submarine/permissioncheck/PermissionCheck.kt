@@ -10,7 +10,7 @@ class PermissionCheck {
         private val _logTag = "PermissionCheck"
         fun checkPermission(permission:String):Boolean{
             return true
-            if(checkSelfPermission(AppContext.instance!!, permission) == PackageManager.PERMISSION_GRANTED){
+            if(checkSelfPermission(AppContext.getContext(), permission) == PackageManager.PERMISSION_GRANTED){
                 return true
             }
             Log.d(_logTag, "Permission not granted: $permission")

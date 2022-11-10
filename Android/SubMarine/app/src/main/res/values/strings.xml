@@ -17,4 +17,5 @@
     <string name="menu_signalDatabase">Signal Database</string>
     <string name="menu_signalDetail">Signal Detail</string>
     <string name="menu_recordSignal">Record Signal</string>
+    <string name="menu_adapterSetup">Adapter Setup</string>
 </resources>

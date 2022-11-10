@@ -36,19 +36,28 @@ class SubMarineService {
     private var _commandSentCallbacks: MutableList<KFunction1<String, Unit>> = mutableListOf()
     private var _setOperationModeCallbacks: MutableList<KFunction1<String, Unit>> = mutableListOf()
     private var _replaySignalCallbacks: MutableList<KFunction1<String, Unit>> = mutableListOf()
-    private var _context:Context? = null
 
-    fun connect(context:Context){
+    fun connect(){
         if(_connectionState != ConnectionStates.Connected.value && deviceAddress != ""){
-            _context = context
             Log.d(_logTag, "Connecting Bluetooth Serial on " + deviceAddress)
-            _bluetoothSerial = BluetoothSerial(context, ::connectionStateChangedCallback)
-
+            _bluetoothSerial = BluetoothSerial(AppContext.getContext(), ::connectionStateChangedCallback)
             Thread(Runnable {
                 //_bluetoothSerial?.connect(deviceFromBundle.address, ::receivedDataCallback)
                 _bluetoothSerial?.connect(deviceAddress, ::bluetoothSerialReceivedDataCallback)
             }).start()
         }
+
+        if(_connectionState == ConnectionStates.Connected.value){
+            connectionStateChangedCallback(2)
+        }
+    }
+
+    fun clearCallbacks(){
+        _connectionStateChangedCallbacks = mutableListOf()
+        _incomingDataCallbacks = mutableListOf()
+        _commandSentCallbacks = mutableListOf()
+        _setOperationModeCallbacks = mutableListOf()
+        _replaySignalCallbacks = mutableListOf()
     }
 
     fun registerCallback(function:Any, callbackType: CallbackType){
@@ -122,6 +131,7 @@ class SubMarineService {
         if(command == Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND){
             callback = ::replaySignalCallback
         }
+
         _bluetoothSerial!!.sendByteString(commandString + "\n", callback)
     }
 

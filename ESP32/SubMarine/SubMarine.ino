@@ -18,6 +18,8 @@ int incomingCommandEndTime = 0;
 #define COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND "0001" 
 #define COMMAND_SET_OPERATION_MODE "0002" 
 #define COMMAND_TRANSFER_SIGNAL_OVER_BLUETOOTH "0003"
+#define COMMAND_SET_ADAPTER_CONFIGURATION "0004"
+#define COMMAND_GET_ADAPTER_CONFIGURATION "0005"
 String incomingBluetoothCommandParsed = "";
 
 // SIGNAL FROM BLUETOOTH COMMAND
@@ -121,6 +123,7 @@ void initCC1101(){
                                                           // 1 = Synchronous serial mode, Data in on GDO0 and data out on either of the GDOx pins. 
                                                           // 2 = Random TX mode; sends random data using PN9 generator. Used for test. Works as normal mode, setting 0 (00), in RX. 
                                                           // 3 = Asynchronous serial mode, Data in on GDO0 and data out on either of the GDOx pins.
+
   // Check the CC1101 Spi connection.
   if(!ELECHOUSE_cc1101.getCC1101()){       
     Serial.println("CC1101 Connection Error");
@@ -143,6 +146,8 @@ void btCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
       incomingCommandLength = 0;
       // CLEAR PREVIOUS COMMAND FILE
       SPIFFS.remove("/incomingBluetoothCommand.txt");
+      File file = SPIFFS.open("/incomingBluetoothCommand.txt", FILE_WRITE);
+      file.close();
     }    
     receivingBluetoothCommand = true;
     File file = SPIFFS.open("/incomingBluetoothCommand.txt", FILE_APPEND);
@@ -346,7 +351,7 @@ void setCC1101Configuration(String configurationString){
     position++;
   }
 
-  /*
+  
   Serial.println("DETECTED FROM STRING: ");
   Serial.print("MHZ: ");
   Serial.println(mhz.toFloat());
@@ -363,7 +368,7 @@ void setCC1101Configuration(String configurationString){
   Serial.print("LQI: ");
   Serial.println(lqi.toFloat());
   Serial.print("RSSI: ");
-  Serial.println(rssi);*/
+  Serial.println(rssi);
   
 
   // SET VALUES:
@@ -376,8 +381,8 @@ void setCC1101Configuration(String configurationString){
   CC1101_LAST_AVG_LQI = lqi.toFloat();
   CC1101_LAST_AVG_RSSI = rssi.toFloat();
 
-    // RELOAD ADAPTER
-    initCC1101();
+  // RELOAD ADAPTER
+  initCC1101();
 }
 
 void replaySignalFromIncomingBluetoothCommand(){
@@ -454,6 +459,42 @@ void setOperationModeFromIncomingBluetoothCommand(){
     fileIndex++;
   }
   file.close();
+}
+
+
+void setAdapterConfigurationFromIncomingBluetoothCommand(){
+  Serial.println("Setting Adapter Configuration from incoming Bluetooth Command");
+  
+  int fileIndex = 0;
+  String parsedConfigurationString = "";
+
+  File file = SPIFFS.open("/incomingBluetoothCommand.txt", FILE_READ);
+  while (file.available()) {
+    char c = file.read();
+    
+    if(fileIndex >= INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH){
+      // START PARSING THE SIGNAL FROM THE DATA PORTION OF THE COMMAND
+      if(c == '\n'){
+        setCC1101Configuration(parsedConfigurationString);
+        Serial.println("Parsed Configuration String from Command: " + parsedConfigurationString);
+        break;
+      } else {
+        parsedConfigurationString += c;
+      }
+    }
+
+    fileIndex++;
+  }
+  file.close();
+
+  digitalWrite(PIN_LED_ONBOARD, HIGH);
+  delay(250);
+  digitalWrite(PIN_LED_ONBOARD, LOW);
+  delay(250);
+  digitalWrite(PIN_LED_ONBOARD, HIGH);
+  delay(250);
+  digitalWrite(PIN_LED_ONBOARD, LOW);
+  delay(250);
 }
 
 void sendSignalToBluetooth(int samples[], int samplesLength){
@@ -543,7 +584,9 @@ void loop() {
   }*/
 
   // HANDLE OPERATION MODE
-  if(operationMode == OPERATIONMODE_PERISCOPE){
+  if(operationMode == OPERATIONMODE_IDLE){
+    delay(100);
+  } else if(operationMode == OPERATIONMODE_PERISCOPE){
     periscope();
   } else if(operationMode == OPERATIONMODE_RECORD_SIGNAL){
     operationModeRecordSignal();
@@ -567,6 +610,55 @@ void handleIncomingCommand(){
     setOperationModeFromIncomingBluetoothCommand();
     incomingBluetoothCommandParsed = "";
   }
+
+  if(incomingBluetoothCommandParsed == COMMAND_SET_ADAPTER_CONFIGURATION){
+    setAdapterConfigurationFromIncomingBluetoothCommand();
+    incomingBluetoothCommandParsed = "";
+  }
+
+   if(incomingBluetoothCommandParsed == COMMAND_GET_ADAPTER_CONFIGURATION){
+    returnAdapterConfigurationToBluetooth();
+    incomingBluetoothCommandParsed = "";
+  }
+  
+}
+
+
+void sendCommandToBluetoothSerial(String command, String commandId, String dataString){
+  
+   if(SerialBT.hasClient()){
+    Serial.println("Sending Command to Bluetooth Serial: " + command);
+
+    int before = millis();  
+
+    // COMMAND
+    for(int i = 0; i <= 3; i++){
+        SerialBT.write(command[i]);      
+    }
+
+    // COMMAND ID
+    for(int i = 0; i <= 3; i++){
+        SerialBT.write(commandId[i]);
+    }
+
+    // DATA
+    for(char c : dataString){
+      SerialBT.write(c);
+    }  
+
+    SerialBT.write('\n');
+    SerialBT.flush();
+
+    int after = millis();
+    Serial.print("Transmission ended after: ");
+    Serial.print(after - before);
+    Serial.println(" Milliseconds");
+  }
+
+}
+
+void returnAdapterConfigurationToBluetooth(){
+  sendCommandToBluetoothSerial(COMMAND_SET_ADAPTER_CONFIGURATION, "0000", getCC1101Configuration());
 }
 
 #define MINIMUM_TRANSITIONS 32
@@ -595,7 +687,7 @@ void recordSignal(){
   */
 
   // RECORD TO BUFFER AND THEN WRITE TO SPIFFS
-  while(transitions < MINIMUM_TRANSITIONS && lastCopyTime < MINIMUM_COPYTIME_US && (operationMode == OPERATIONMODE_PERISCOPE || operationMode == OPERATIONMODE_RECORD_SIGNAL)){
+  while(transitions < MINIMUM_TRANSITIONS && lastCopyTime < MINIMUM_COPYTIME_US && (operationMode == OPERATIONMODE_PERISCOPE  || operationMode == OPERATIONMODE_RECORD_SIGNAL)){
     transitions = tryRecordSignalToBuffer();          
   }
 
@@ -890,6 +982,7 @@ int rssiRecorded = 1;
 
 int tryRecordSignalToBuffer(){
   int i;
+  lastCopyTime = 0;
   //Serial.println("Copying...");
   // CLEAR ANY PREVIOUSLY RECORDED SIGNAL
   memset(recordedSignal,0,MAX_LENGHT_RECORDED_SIGNAL*sizeof(int));

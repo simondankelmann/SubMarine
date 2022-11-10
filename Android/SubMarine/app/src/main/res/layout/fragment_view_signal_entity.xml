@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.viewSignalEntity.ViewSignalEntityFragment"
+    tools:context=".ui.viewSignalEntity.AdapterSetupFragment"
     android:id="@+id/viewSignalEntityLayout"
     android:background="@color/background_dark"
     >
