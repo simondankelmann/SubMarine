@@ -42,6 +42,9 @@
         <action
             android:id="@+id/action_nav_connected_device_to_nav_adapter_setup"
             app:destination="@id/nav_adapter_setup" />
+        <action
+            android:id="@+id/action_nav_connected_device_to_nav_signal_map"
+            app:destination="@id/nav_signal_map" />
     </fragment>
 
     <fragment
@@ -80,6 +83,13 @@
         android:name="de.simon.dankelmann.submarine.ui.AdapterSetup.AdapterSetupFragment"
         android:label="@string/menu_adapterSetup"
         tools:layout="@layout/fragment_adapter_setup" >
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_signal_map"
+        android:name="de.simon.dankelmann.submarine.ui.SignalMap.SignalMapFragment"
+        android:label="@string/menu_signalMap"
+        tools:layout="@layout/fragment_signal_map" >
     </fragment>
 
     <fragment
