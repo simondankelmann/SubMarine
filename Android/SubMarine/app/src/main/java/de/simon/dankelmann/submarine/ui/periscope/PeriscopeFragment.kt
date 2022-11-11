@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.airbnb.lottie.LottieAnimationView
 import de.simon.dankelmann.esp32_subghz.ui.connectedDevice.PeriscopeViewModel
+import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.Constants.Constants
 import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.Entities.LocationEntity
@@ -45,7 +46,7 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
     private var _binding: FragmentPeriscopeBinding? = null
     private var _viewModel: PeriscopeViewModel? = null
     private var _bluetoothDevice: BluetoothDevice? = null
-    private var _bluetoothSerial: BluetoothSerial? = null
+    //private var _bluetoothSerial: BluetoothSerial? = null
 
     private var _capturedSignals = 0
     private var _lastIncomingSignalData = ""
@@ -57,7 +58,7 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
     private var _lastLocation:Location? = null
     private var _lastLocationDateTime:LocalDateTime? = null
 
-    private var _submarineService: SubMarineService = SubMarineService()
+    private var _submarineService:SubMarineService = AppContext.submarineService
 
     // Notification Service Intent
     var serviceIntent: Intent? = null
@@ -82,7 +83,14 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
         // REQUEST LOCATION UPDATES
         _locationService = LocationService(requireContext(), this)
 
+        setupUi()
+
+
+        registerSubmarineCallbacks()
+        _submarineService.connect()
+
         // GET DATA FROM BUNDLE
+        /*
         var deviceFromBundle = arguments?.getParcelable("Device") as BluetoothDevice?
         if(deviceFromBundle != null){
             if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
@@ -95,9 +103,23 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
                     _bluetoothSerial?.connect(deviceFromBundle.address, ::receivedDataCallback)
                 }).start()
             }
-        }
+        }*/
 
+        // Start Foreground Service to scan Locations in Background
+        serviceIntent = Intent(requireContext(), ForegroundService::class.java)
+        serviceIntent!!.putExtra("inputExtra", "Foreground Service Example in Android FROM FRAGMENT")
+        serviceIntent!!.action = "ACTION_START_FOREGROUND_SERVICE"
+        ContextCompat.startForegroundService(requireContext(), serviceIntent!!)
+
+        return root
+    }
+
+    fun setupUi(){
         // SET UP UI
+
+        // ANIMATION VIEW
+        _animationView = binding.animationPeriscope
+
         val description: TextView = binding.textViewPersicopeDescription
         _viewModel!!.description.observe(viewLifecycleOwner) {
             description.text = it
@@ -141,25 +163,40 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
                 _viewModel!!.updateDescription("Transmitting Signal to Sub Marine Device")
 
                 Log.d(_logTag, "ReTransmitting: " + _lastIncomingSignalData)
-
+/*
                 val command = Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND
                 val commandId = Constants.COMMAND_ID_DUMMY
                 val commandString = command + commandId + _lastIncomingCc1101Config + _lastIncomingSignalData
+*/
+                _submarineService.sendCommandToDevice(Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND, Constants.COMMAND_ID_DUMMY, _lastIncomingSignalData)
 
-                _bluetoothSerial!!.sendByteString(commandString + "\n", ::replayStatusCallback)
+               // _bluetoothSerial!!.sendByteString(commandString + "\n", ::replayStatusCallback)
             }
         }
+    }
 
-        // ANIMATION VIEW
-        _animationView = binding.animationPeriscope
+    fun registerSubmarineCallbacks(){
+        _submarineService.clearCallbacks()
+        _submarineService.registerCallback(::connectionStateChangedCallback, SubMarineService.CallbackType.BluetoothConnectionStateChanged)
+        _submarineService.registerCallback(::receivedDataCallback, SubMarineService.CallbackType.IcomingData)
+        _submarineService.registerCallback(::replayStatusCallback, SubMarineService.CallbackType.ReplaySignal)
+        _submarineService.registerCallback(::setOperationModeCallback, SubMarineService.CallbackType.SetOperationMode)
+    }
 
-        // Start Foreground Service to scan Locations in Background
-        serviceIntent = Intent(requireContext(), ForegroundService::class.java)
-        serviceIntent!!.putExtra("inputExtra", "Foreground Service Example in Android FROM FRAGMENT")
-        serviceIntent!!.action = "ACTION_START_FOREGROUND_SERVICE"
-        ContextCompat.startForegroundService(requireContext(), serviceIntent!!)
+    override fun onDestroyView() {
+        _submarineService.clearCallbacks()
+        super.onDestroyView()
+        _binding = null
+    }
 
-        return root
+    override fun onPause() {
+        _submarineService.clearCallbacks()
+        super.onPause()
+    }
+
+    override fun onResume() {
+        registerSubmarineCallbacks()
+        super.onResume()
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -203,8 +240,10 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
 
         val commandString = command + commandId + operationMode
 
+        _submarineService.setOperationMode(operationMode)
+
         //Handler(Looper.getMainLooper()).post(Runnable {
-            _bluetoothSerial!!.sendByteString(commandString + "\n", ::setOperationModeCallback)
+            //_bluetoothSerial!!.sendByteString(commandString + "\n", ::setOperationModeCallback)
         //})
 
     }
@@ -312,11 +351,6 @@ class PeriscopeFragment: Fragment(), LocationResultListener {
                 }
             }
         }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 
     override fun receiveLocationChanges(location: Location) {

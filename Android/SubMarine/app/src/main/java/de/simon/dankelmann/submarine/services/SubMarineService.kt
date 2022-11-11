@@ -1,5 +1,6 @@
 package de.simon.dankelmann.submarine.services
 
+import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.os.Build
 import android.util.Log
@@ -27,8 +28,9 @@ class SubMarineService {
     private var _connectionState:Int = ConnectionStates.Disconnected.value
     private var _bluetoothSerial:BluetoothSerial? = null
     private var _isListening = false
+    private var _bluetoothDevice:BluetoothDevice? = null
 
-    var deviceAddress:String = ""
+    //var deviceAddress:String = ""
 
     //var connectionStateChangedCallback: KFunction1<Int, Unit>? = null
     private var _connectionStateChangedCallbacks: MutableList<KFunction1<Int, Unit>> = mutableListOf()
@@ -38,19 +40,35 @@ class SubMarineService {
     private var _replaySignalCallbacks: MutableList<KFunction1<String, Unit>> = mutableListOf()
 
     fun connect(){
-        if(_connectionState != ConnectionStates.Connected.value && deviceAddress != ""){
-            Log.d(_logTag, "Connecting Bluetooth Serial on " + deviceAddress)
-            _bluetoothSerial = BluetoothSerial(AppContext.getContext(), ::connectionStateChangedCallback)
-            Thread(Runnable {
-                //_bluetoothSerial?.connect(deviceFromBundle.address, ::receivedDataCallback)
-                _bluetoothSerial?.connect(deviceAddress, ::bluetoothSerialReceivedDataCallback)
-            }).start()
+        if(_connectionState != ConnectionStates.Connected.value ){
+            if(_bluetoothDevice != null && _bluetoothDevice!!.address != null && _bluetoothDevice!!.address != ""){
+                var macAddress = _bluetoothDevice!!.address
+                Log.d(_logTag, "Connecting Bluetooth Serial on " + macAddress)
+                _bluetoothSerial = BluetoothSerial(AppContext.getContext(), ::connectionStateChangedCallback)
+                Thread(Runnable {
+                    //_bluetoothSerial?.connect(deviceFromBundle.address, ::receivedDataCallback)
+                    _bluetoothSerial?.connect(macAddress, ::bluetoothSerialReceivedDataCallback)
+                }).start()
+            } else {
+                Log.d(_logTag, "Mac Address is not valid")
+            }
+        } else {
+            Log.d(_logTag, "Already connected")
         }
 
         if(_connectionState == ConnectionStates.Connected.value){
             connectionStateChangedCallback(2)
         }
     }
+
+    fun setBluetoothDevice(bluetoothDevice: BluetoothDevice){
+        _bluetoothDevice = bluetoothDevice
+    }
+
+    fun getBluetoothDevice():BluetoothDevice?{
+        return _bluetoothDevice
+    }
+
 
     fun clearCallbacks(){
         _connectionStateChangedCallbacks = mutableListOf()

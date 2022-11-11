@@ -61,25 +61,35 @@ class AdapterSetupFragment : Fragment() {
         // CALL SETUP UI AFTER _viewModel and _binding are set up
         setupUi()
 
-        var deviceFromBundle = arguments?.getParcelable("Device") as BluetoothDevice?
-        if(deviceFromBundle != null){
-            if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
-                _bluetoothDevice = deviceFromBundle
-
-                // LETS GO !
-                _submarineService.clearCallbacks()
-                _submarineService.registerCallback(::connectionStateChangedCallback, SubMarineService.CallbackType.BluetoothConnectionStateChanged)
-                _submarineService.registerCallback(::commandSentCallback, SubMarineService.CallbackType.CommandSent)
-                _submarineService.registerCallback(::receivedDataCallback, SubMarineService.CallbackType.IcomingData)
-                _submarineService.deviceAddress = deviceFromBundle.address
-
-                _viewModel!!.animationResourceId.postValue(R.raw.bluetooth_scan)
-                _submarineService.connect()
-            }
-        }
+        registerSubmarineCallbacks()
+        _viewModel!!.animationResourceId.postValue(R.raw.bluetooth_scan)
+        _submarineService.connect()
 
         return root
     }
+
+    fun registerSubmarineCallbacks(){
+        _submarineService.clearCallbacks()
+        _submarineService.registerCallback(::connectionStateChangedCallback, SubMarineService.CallbackType.BluetoothConnectionStateChanged)
+        _submarineService.registerCallback(::commandSentCallback, SubMarineService.CallbackType.CommandSent)
+        _submarineService.registerCallback(::receivedDataCallback, SubMarineService.CallbackType.IcomingData)
+    }
+    override fun onDestroyView() {
+        _submarineService.clearCallbacks()
+        super.onDestroyView()
+        _binding = null
+    }
+
+    override fun onPause() {
+        _submarineService.clearCallbacks()
+        super.onPause()
+    }
+
+    override fun onResume() {
+        registerSubmarineCallbacks()
+        super.onResume()
+    }
+
 
     private fun receivedDataCallback(message: String){
         if(message != ""){
@@ -221,8 +231,4 @@ class AdapterSetupFragment : Fragment() {
         }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
 }

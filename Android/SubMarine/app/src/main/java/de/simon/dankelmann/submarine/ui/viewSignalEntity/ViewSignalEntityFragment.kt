@@ -17,6 +17,7 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.airbnb.lottie.LottieAnimationView
+import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.Constants.Constants
 import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.Entities.SignalEntity
@@ -24,6 +25,7 @@ import de.simon.dankelmann.submarine.R
 import de.simon.dankelmann.submarine.databinding.FragmentViewSignalEntityBinding
 import de.simon.dankelmann.submarine.permissioncheck.PermissionCheck
 import de.simon.dankelmann.submarine.services.BluetoothSerial
+import de.simon.dankelmann.submarine.services.SubMarineService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,9 +36,11 @@ class ViewSignalEntityFragment : Fragment() {
     private val _logTag = "SignalEntityFragment"
     private var _viewModel: ViewSignalEntityViewModel? = null
     private var _bluetoothDevice: BluetoothDevice? = null
-    private var _bluetoothSerial: BluetoothSerial? = null
+    //private var _bluetoothSerial: BluetoothSerial? = null
     private var _signalEntity: SignalEntity? = null
     private var _isConnected:Boolean = false
+    private var _submarineService: SubMarineService = AppContext.submarineService
+    private var _signalEntityId = 0
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -56,101 +60,10 @@ class ViewSignalEntityFragment : Fragment() {
         _binding = FragmentViewSignalEntityBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        var deviceFromBundle = arguments?.getParcelable("Device") as BluetoothDevice?
         var signalEntityId = arguments?.getInt("SignalEntityId") as Int
-        if(deviceFromBundle != null && signalEntityId != null){
-            if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
-                _bluetoothDevice = deviceFromBundle
-
-                // SETUP UI
-                _viewModel!!.animationResourceId.postValue(R.raw.inspect_signal)
-
-                val titleText: TextView = binding.textViewSignalDetailTitle
-                _viewModel!!.signalDetailTitle.observe(viewLifecycleOwner) {
-                    titleText.text = it
-                }
-
-                val descriptionText: TextView = binding.textViewSignalDetailDescription
-                _viewModel!!.signalDetailDescription.observe(viewLifecycleOwner) {
-                    descriptionText.text = it
-                }
-
-                val frequencyText: TextView = binding.textViewSignalFrequency
-                _viewModel!!.signalDetailFrequency.observe(viewLifecycleOwner) {
-                    frequencyText.text = it
-                }
-
-                val dataText: TextView = binding.textViewSignalDetailData
-                _viewModel!!.signalDetailData.observe(viewLifecycleOwner) {
-                    dataText.text = it
-                }
-
-                val footerText1: TextView = binding.textViewFooter1
-                _viewModel!!.footerText1.observe(viewLifecycleOwner) {
-                    footerText1.text = it
-                }
-
-                val footerText2: TextView = binding.textViewFooter2
-                _viewModel!!.footerText2.observe(viewLifecycleOwner) {
-                    footerText2.text = it
-                }
-
-                val footerText3: TextView = binding.textViewFooter3
-                _viewModel!!.footerText3.observe(viewLifecycleOwner) {
-                    footerText3.text = it
-                }
-
-                val animationView: LottieAnimationView = binding.animationSignalDetail
-                _viewModel!!.animationResourceId.observe(viewLifecycleOwner) {
-                    animationView.setAnimation(it)
-                    animationView.playAnimation()
-                }
-
-                // REPLAY
-                val replayButton: Button = binding.replaySignalDetailButton
-                replayButton.setOnClickListener { view ->
-                    if(_signalEntity != null && _isConnected){
-                        replaySignalEntity(_signalEntity!!)
-                    }
-
-                    if(!_isConnected){
-                        _viewModel!!.animationResourceId.postValue(R.raw.warning)
-                    }
-                }
-
-                // LOAD DATA FROM DB
-                val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
-                CoroutineScope(Dispatchers.IO).launch {
-
-                    val signalEntity = signalDao.getById(signalEntityId)
-                    if(signalEntity != null){
-                        _signalEntity = signalEntity!!
-
-                        Log.d(_logTag, "SIGNAL: " + _signalEntity?.name)
-
-                        //SETUP UI
-                        requireActivity().runOnUiThread{
-                            _viewModel!!.signalDetailTitle.postValue(_signalEntity?.name)
-                            _viewModel!!.signalDetailDescription.postValue(_signalEntity!!.signalDataLength.toString() + " Samples")
-                            _viewModel!!.signalDetailFrequency.postValue(_signalEntity?.frequency.toString() + " Mhz")
-                            _viewModel!!.signalDetailData.postValue(_signalEntity?.signalData.toString())
-
-                            _viewModel!!.footerText1.postValue(getModulationString(_signalEntity!!.modulation!!) + " | " + _signalEntity!!.type!!)
-                            _viewModel!!.footerText2.postValue("RX-BW: " + _signalEntity!!.rxBw.toString()+" Khz")
-                        }
-
-                        // LETS GO !
-                        _bluetoothSerial = BluetoothSerial(requireContext(), ::connectionStateChangedCallback)
-                        Thread(Runnable {
-                            _bluetoothSerial?.connect(deviceFromBundle.address, ::receivedDataCallback)
-                        }).start()
-
-                    }
-
-                }
-
-
-            }
+        if(signalEntityId != null){
+            _signalEntityId = signalEntityId
+            setupUi()
         }
 
         /*
@@ -159,6 +72,108 @@ class ViewSignalEntityFragment : Fragment() {
             textView.text = it
         }*/
         return root
+    }
+
+    fun setupUi(){
+        // SETUP UI
+        _viewModel!!.animationResourceId.postValue(R.raw.inspect_signal)
+
+        val titleText: TextView = binding.textViewSignalDetailTitle
+        _viewModel!!.signalDetailTitle.observe(viewLifecycleOwner) {
+            titleText.text = it
+        }
+
+        val descriptionText: TextView = binding.textViewSignalDetailDescription
+        _viewModel!!.signalDetailDescription.observe(viewLifecycleOwner) {
+            descriptionText.text = it
+        }
+
+        val frequencyText: TextView = binding.textViewSignalFrequency
+        _viewModel!!.signalDetailFrequency.observe(viewLifecycleOwner) {
+            frequencyText.text = it
+        }
+
+        val dataText: TextView = binding.textViewSignalDetailData
+        _viewModel!!.signalDetailData.observe(viewLifecycleOwner) {
+            dataText.text = it
+        }
+
+        val footerText1: TextView = binding.textViewFooter1
+        _viewModel!!.footerText1.observe(viewLifecycleOwner) {
+            footerText1.text = it
+        }
+
+        val footerText2: TextView = binding.textViewFooter2
+        _viewModel!!.footerText2.observe(viewLifecycleOwner) {
+            footerText2.text = it
+        }
+
+        val footerText3: TextView = binding.textViewFooter3
+        _viewModel!!.footerText3.observe(viewLifecycleOwner) {
+            footerText3.text = it
+        }
+
+        val animationView: LottieAnimationView = binding.animationSignalDetail
+        _viewModel!!.animationResourceId.observe(viewLifecycleOwner) {
+            animationView.setAnimation(it)
+            animationView.playAnimation()
+        }
+
+        // REPLAY
+        val replayButton: Button = binding.replaySignalDetailButton
+        replayButton.setOnClickListener { view ->
+            if(_signalEntity != null && _isConnected){
+                replaySignalEntity(_signalEntity!!)
+            }
+
+            if(!_isConnected){
+                _viewModel!!.animationResourceId.postValue(R.raw.warning)
+            }
+        }
+
+        // LOAD DATA FROM DB
+        val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
+        CoroutineScope(Dispatchers.IO).launch {
+
+            val signalEntity = signalDao.getById(_signalEntityId)
+            if(signalEntity != null){
+                _signalEntity = signalEntity!!
+
+                Log.d(_logTag, "SIGNAL: " + _signalEntity?.name)
+
+                //SETUP UI
+                requireActivity().runOnUiThread{
+                    _viewModel!!.signalDetailTitle.postValue(_signalEntity?.name)
+                    _viewModel!!.signalDetailDescription.postValue(_signalEntity!!.signalDataLength.toString() + " Samples")
+                    _viewModel!!.signalDetailFrequency.postValue(_signalEntity?.frequency.toString() + " Mhz")
+                    _viewModel!!.signalDetailData.postValue(_signalEntity?.signalData.toString())
+
+                    _viewModel!!.footerText1.postValue(getModulationString(_signalEntity!!.modulation!!) + " | " + _signalEntity!!.type!!)
+                    _viewModel!!.footerText2.postValue("RX-BW: " + _signalEntity!!.rxBw.toString()+" Khz")
+                }
+
+                // LETS GO !
+                registerSubmarineCallbacks()
+                //_submarineService.deviceAddress = _bluetoothDevice!!.address
+                _submarineService.connect()
+
+                /*
+                _bluetoothSerial = BluetoothSerial(requireContext(), ::connectionStateChangedCallback)
+                Thread(Runnable {
+                    _bluetoothSerial?.connect(deviceFromBundle.address, ::receivedDataCallback)
+                }).start()*/
+
+            }
+
+        }
+    }
+
+    fun registerSubmarineCallbacks(){
+        _submarineService.clearCallbacks()
+        _submarineService.registerCallback(::connectionStateChangedCallback, SubMarineService.CallbackType.BluetoothConnectionStateChanged)
+        _submarineService.registerCallback(::receivedDataCallback, SubMarineService.CallbackType.IcomingData)
+        _submarineService.registerCallback(::replayStatusCallback, SubMarineService.CallbackType.ReplaySignal)
+        _submarineService.registerCallback(::setOperationModeCallback, SubMarineService.CallbackType.SetOperationMode)
     }
 
     fun getModulationString(modulation:Int):String{
@@ -228,7 +243,9 @@ class ViewSignalEntityFragment : Fragment() {
         val commandId = Constants.COMMAND_ID_DUMMY
         val commandString = command + commandId + getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData
 
-        _bluetoothSerial!!.sendByteString(commandString + "\n", ::replayStatusCallback)
+        _submarineService.sendCommandToDevice(command, commandId, getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData)
+
+        //_bluetoothSerial!!.sendByteString(commandString + "\n", ::replayStatusCallback)
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -242,7 +259,6 @@ class ViewSignalEntityFragment : Fragment() {
 
             Log.d(_logTag, "Icoming Command: " + incomingCommand)
             Log.d(_logTag, "Icoming Command Id: " + incomingCommandId)
-
         }
     }
 
@@ -266,7 +282,9 @@ class ViewSignalEntityFragment : Fragment() {
         val command = Constants.COMMAND_SET_OPERATION_MODE
         val commandId = Constants.COMMAND_ID_DUMMY
         val commandString = command + commandId + operationMode
-        _bluetoothSerial!!.sendByteString(commandString + "\n", ::setOperationModeCallback)
+
+        _submarineService.setOperationMode(operationMode)
+        //_bluetoothSerial!!.sendByteString(commandString + "\n", ::setOperationModeCallback)
     }
 
     private fun setOperationModeCallback(message: String){
@@ -297,7 +315,18 @@ class ViewSignalEntityFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        _submarineService.clearCallbacks()
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onPause() {
+        _submarineService.clearCallbacks()
+        super.onPause()
+    }
+
+    override fun onResume() {
+        registerSubmarineCallbacks()
+        super.onResume()
     }
 }

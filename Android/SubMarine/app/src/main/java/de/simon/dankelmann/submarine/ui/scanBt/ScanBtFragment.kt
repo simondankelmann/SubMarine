@@ -158,9 +158,9 @@ class ScanBtFragment : Fragment(), AdapterView.OnItemClickListener {
 
         var selectedDevice = _viewModel.getBluetoothDeviceModel(p2)
 
-        val bundle = Bundle()
-        bundle.putString("DeviceAddress", selectedDevice!!.device!!.address)
-        bundle.putParcelable("Device", selectedDevice!!.device!!)
-        requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_scanbt_to_nav_connected_device, bundle)
+        AppContext.submarineService.setBluetoothDevice(selectedDevice!!.device!!)
+        AppContext.submarineService.connect()
+
+        requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_scanbt_to_nav_connected_device)
     }
 }

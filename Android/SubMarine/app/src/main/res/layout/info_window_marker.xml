@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/infoWindowLayout"
+    android:background="@color/background_dark"
+    android:padding="10dp"
+    >
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textviewTitle"
+        android:text="Signal Name"
+        android:textColor="@color/fontcolor_component_dark_active"
+        android:textAlignment="center"
+        android:textSize="16dp"
+        android:textStyle="bold"
+        android:padding="10dp"
+        app:layout_constraintTop_toTopOf="@id/signalMapLayout"></TextView>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewSignalInfoWindow"
+        android:text="Locate recorded Signal"
+        android:textColor="@color/fontcolor_component_dark_inactive"
+        android:textAlignment="center"
+        android:padding="10dp"
+        app:layout_constraintTop_toBottomOf="@id/textViewSignalMapTitle"></TextView>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/detailsButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Show Details"
+        ></Button>
+
+
+</LinearLayout>

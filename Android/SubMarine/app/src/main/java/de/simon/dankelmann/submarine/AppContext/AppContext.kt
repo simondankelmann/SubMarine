@@ -33,6 +33,7 @@ abstract class AppContext {
         private lateinit var context: Context
         var submarineService: SubMarineService = SubMarineService()
 
+
         fun setContext(con: Context) {
             context=con
         }
@@ -40,5 +41,6 @@ abstract class AppContext {
         fun getContext():Context {
             return context
         }
+
     }
 }

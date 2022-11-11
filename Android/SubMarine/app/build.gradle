@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId "de.simon.dankelmann.submarine"
-        minSdk 23
+        minSdk 26
         targetSdk 32
         versionCode 1
         versionName "1.0"
@@ -72,5 +72,6 @@ dependencies {
     // optional - Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:$room_version")
 
-
+    // OPEN STREET MAPS
+    implementation 'org.osmdroid:osmdroid-android:6.1.13'
 }

@@ -90,6 +90,9 @@
         android:name="de.simon.dankelmann.submarine.ui.SignalMap.SignalMapFragment"
         android:label="@string/menu_signalMap"
         tools:layout="@layout/fragment_signal_map" >
+        <action
+            android:id="@+id/action_nav_signal_map_to_nav_signalDetail"
+            app:destination="@id/nav_signalDetail" />
     </fragment>
 
     <fragment

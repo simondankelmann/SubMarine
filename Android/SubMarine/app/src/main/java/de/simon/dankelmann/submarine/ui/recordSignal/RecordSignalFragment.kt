@@ -99,31 +99,18 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
         // REQUEST LOCATION UPDATES
         _locationService = LocationService(requireContext(), this)
 
-        // GET DATA FROM BUNDLE
-        var deviceFromBundle = arguments?.getParcelable("Device") as BluetoothDevice?
-        if(deviceFromBundle != null){
-            if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
-                //_viewModel?.updateText(deviceFromBundle.name + " - " + deviceFromBundle.address)
-                _bluetoothDevice = deviceFromBundle
+        setupUi()
 
-                // LETS GO !
-                _submarineService.clearCallbacks()
-                _submarineService.registerCallback(::connectionStateChangedCallback, SubMarineService.CallbackType.BluetoothConnectionStateChanged)
-                _submarineService.registerCallback(::receivedDataCallback, SubMarineService.CallbackType.IcomingData)
-                _submarineService.registerCallback(::setOperationModeRecordSignalCallback, SubMarineService.CallbackType.SetOperationMode)
-                _submarineService.registerCallback(::replayStatusCallback, SubMarineService.CallbackType.ReplaySignal)
-                _submarineService.deviceAddress = deviceFromBundle.address
-                _submarineService.connect()
+        // LETS GO !
+        _submarineService.clearCallbacks()
+        registerSubmarineCallbacks()
 
-                /*
-                _bluetoothSerial = BluetoothSerial(requireContext(), ::connectionStateChangedCallback)
-                Thread(Runnable {
-                    _bluetoothSerial?.connect(deviceFromBundle.address, ::receivedDataCallback)
-                }).start()
-                */
-            }
-        }
+        _submarineService.connect()
 
+        return root
+    }
+
+    fun setupUi(){
         // SET UP UI
         val animationView: LottieAnimationView = binding.animationRecordSignal
         _viewModel!!.animationResourceId.observe(viewLifecycleOwner) {
@@ -202,8 +189,29 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
                 saveCurrentSignal()
             }
         }
+    }
 
-        return root
+    fun registerSubmarineCallbacks(){
+        _submarineService.clearCallbacks()
+        _submarineService.registerCallback(::connectionStateChangedCallback, SubMarineService.CallbackType.BluetoothConnectionStateChanged)
+        _submarineService.registerCallback(::receivedDataCallback, SubMarineService.CallbackType.IcomingData)
+        _submarineService.registerCallback(::setOperationModeRecordSignalCallback, SubMarineService.CallbackType.SetOperationMode)
+        _submarineService.registerCallback(::replayStatusCallback, SubMarineService.CallbackType.ReplaySignal)
+    }
+    override fun onDestroyView() {
+        _submarineService.clearCallbacks()
+        super.onDestroyView()
+        _binding = null
+    }
+
+    override fun onPause() {
+        _submarineService.clearCallbacks()
+        super.onPause()
+    }
+
+    override fun onResume() {
+        registerSubmarineCallbacks()
+        super.onResume()
     }
 
     fun saveCurrentSignal(){
@@ -371,10 +379,6 @@ class RecordSignalFragment: Fragment(), LocationResultListener {
         }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun receiveLocationChanges(location: Location) {
