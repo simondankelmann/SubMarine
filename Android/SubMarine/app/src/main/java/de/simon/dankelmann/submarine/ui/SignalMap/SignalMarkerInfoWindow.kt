@@ -1,16 +1,12 @@
 package de.simon.dankelmann.submarine.ui.SignalMap
 
 import android.app.Activity
-import android.bluetooth.BluetoothDevice
-import android.net.MacAddress
 import android.os.Bundle
-import android.widget.ActionMenuView
 import android.widget.Button
 import android.widget.TextView
 import androidx.navigation.findNavController
 import de.simon.dankelmann.submarine.Entities.SignalEntity
 import de.simon.dankelmann.submarine.R
-import de.simon.dankelmann.submarine.services.SubMarineService
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.infowindow.InfoWindow
 
@@ -39,6 +35,7 @@ class SignalMarkerInfoWindow(mapView: MapView, activity: Activity, signalEntity:
 
         var desriptionText = ""
 
+        desriptionText += "Samples: " + _signalEntity!!.signalDataLength.toString() + "" + "\n"
         desriptionText += "Frequency: " + _signalEntity!!.frequency.toString() + " Mhz" + "\n"
         desriptionText += "Type: " + _signalEntity!!.type.toString() + "" + "\n"
         desriptionText += "Modulation: " + _signalEntity!!.modulation.toString() + "" + "\n"

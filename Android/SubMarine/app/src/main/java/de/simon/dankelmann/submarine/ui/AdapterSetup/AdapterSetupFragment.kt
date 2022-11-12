@@ -1,45 +1,33 @@
 package de.simon.dankelmann.submarine.ui.AdapterSetup
 
-import android.Manifest
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
-import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.airbnb.lottie.LottieAnimationView
 import com.airbnb.lottie.LottieDrawable
 import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.Constants.Constants
-import de.simon.dankelmann.submarine.Database.AppDatabase
-import de.simon.dankelmann.submarine.Entities.SignalEntity
+import de.simon.dankelmann.submarine.Interfaces.SubmarineResultListenerInterface
 import de.simon.dankelmann.submarine.Models.CC1101Configuration
+import de.simon.dankelmann.submarine.Models.SubmarineCommand
 import de.simon.dankelmann.submarine.R
 import de.simon.dankelmann.submarine.databinding.FragmentAdapterSetupBinding
-import de.simon.dankelmann.submarine.permissioncheck.PermissionCheck
-import de.simon.dankelmann.submarine.services.BluetoothSerial
-import de.simon.dankelmann.submarine.services.SubMarineService
-import de.simon.dankelmann.submarine.ui.AdapterSetup.AdapterSetupViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import de.simon.dankelmann.submarine.Services.SubMarineService
 
-class AdapterSetupFragment : Fragment() {
+class AdapterSetupFragment : Fragment(), SubmarineResultListenerInterface {
 
     private var _binding: FragmentAdapterSetupBinding? = null
     private val _logTag = "AdapterSetupFragment"
     private var _viewModel: AdapterSetupViewModel? = null
     private var _bluetoothDevice: BluetoothDevice? = null
     private var _submarineService:SubMarineService = AppContext.submarineService
+    private var _configLoaded = false
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -61,37 +49,35 @@ class AdapterSetupFragment : Fragment() {
         // CALL SETUP UI AFTER _viewModel and _binding are set up
         setupUi()
 
-        registerSubmarineCallbacks()
+        //registerSubmarineCallbacks()
+        //_submarineService.connect()
+
         _viewModel!!.animationResourceId.postValue(R.raw.bluetooth_scan)
+
+        _submarineService.addResultListener(this)
         _submarineService.connect()
 
         return root
     }
 
-    fun registerSubmarineCallbacks(){
-        _submarineService.clearCallbacks()
-        _submarineService.registerCallback(::connectionStateChangedCallback, SubMarineService.CallbackType.BluetoothConnectionStateChanged)
-        _submarineService.registerCallback(::commandSentCallback, SubMarineService.CallbackType.CommandSent)
-        _submarineService.registerCallback(::receivedDataCallback, SubMarineService.CallbackType.IcomingData)
-    }
     override fun onDestroyView() {
-        _submarineService.clearCallbacks()
+        _submarineService.removeResultListener(this)
         super.onDestroyView()
         _binding = null
     }
 
     override fun onPause() {
-        _submarineService.clearCallbacks()
+        _submarineService.removeResultListener(this)
         super.onPause()
     }
 
     override fun onResume() {
-        registerSubmarineCallbacks()
+        _submarineService.addResultListener(this)
         super.onResume()
     }
 
 
-    private fun receivedDataCallback(message: String){
+    private fun receivedDataCallback(message: String, outgoingCommand:SubmarineCommand?){
         if(message != ""){
             Log.d(_logTag, "Received: " + message)
 
@@ -121,9 +107,14 @@ class AdapterSetupFragment : Fragment() {
         _viewModel!!.animationResourceId.postValue(R.raw.configuration)
     }
 
-    fun commandSentCallback(data:String){
+    fun commandSentCallback(command:SubmarineCommand){
         Log.d(_logTag, "commandSentCallback")
-        _viewModel!!.animationResourceId.postValue(R.raw.success)
+        if(command._command == Constants.COMMAND_GET_ADAPTER_CONFIGURATION && _configLoaded == false){
+            _configLoaded = true
+            _viewModel!!.animationResourceId.postValue(R.raw.configuration)
+        } else {
+            _viewModel!!.animationResourceId.postValue(R.raw.success)
+        }
     }
 
     fun setupUi(){
@@ -183,13 +174,13 @@ class AdapterSetupFragment : Fragment() {
 
     fun getConfigrationFromAdapter(){
         _viewModel!!.animationResourceId.postValue(R.raw.wave2)
-        _submarineService.sendCommandToDevice(Constants.COMMAND_GET_ADAPTER_CONFIGURATION, Constants.COMMAND_ID_DUMMY, "")
+        _submarineService.sendCommandToDevice(SubmarineCommand(Constants.COMMAND_GET_ADAPTER_CONFIGURATION, Constants.COMMAND_ID_DUMMY, ""))
     }
 
     fun writeConfigrationToAdapter(){
         var enteredConfiguration = getCC1101ConfigurationFromUi()
         _viewModel!!.animationResourceId.postValue(R.raw.wave2)
-        _submarineService.sendCommandToDevice(Constants.COMMAND_SET_ADAPTER_CONFIGURATION, Constants.COMMAND_ID_DUMMY, enteredConfiguration.getConfigurationString())
+        _submarineService.sendCommandToDevice(SubmarineCommand(Constants.COMMAND_SET_ADAPTER_CONFIGURATION, Constants.COMMAND_ID_DUMMY, enteredConfiguration.getConfigurationString()))
     }
 
     fun getCC1101ConfigurationFromUi():CC1101Configuration{
@@ -229,6 +220,31 @@ class AdapterSetupFragment : Fragment() {
                 getConfigrationFromAdapter()
             }
         }
+    }
+
+    override fun onConnectionStateChanged(connectionState: Int) {
+        connectionStateChangedCallback(connectionState)
+    }
+
+    override fun onIncomingData(data: String, command: SubmarineCommand?) {
+        Log.d(_logTag, "Data comes in: " + data)
+        receivedDataCallback(data, command)
+    }
+
+    override fun onOutgoingData(timeElapsed: Int, command: SubmarineCommand?) {
+        // NOT IN USE
+    }
+
+    override fun onCommandSent(timeElapsed: Int, command: SubmarineCommand) {
+        commandSentCallback(command)
+    }
+
+    override fun onOperationModeSet(timeElapsed: Int, command: SubmarineCommand) {
+        // NOT IN USE
+    }
+
+    override fun onSignalReplayed(timeElapsed: Int, command: SubmarineCommand) {
+        // NOT IN USE
     }
 
 }

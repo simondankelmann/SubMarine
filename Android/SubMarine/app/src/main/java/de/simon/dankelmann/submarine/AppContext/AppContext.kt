@@ -1,7 +1,7 @@
 package de.simon.dankelmann.submarine.AppContext
 
 import android.content.Context
-import de.simon.dankelmann.submarine.services.SubMarineService
+import de.simon.dankelmann.submarine.Services.SubMarineService
 
 /*
 import android.app.Application

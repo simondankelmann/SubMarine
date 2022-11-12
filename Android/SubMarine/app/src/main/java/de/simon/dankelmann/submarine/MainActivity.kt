@@ -1,8 +1,6 @@
 package de.simon.dankelmann.submarine
 
-import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import com.google.android.material.navigation.NavigationView
 import androidx.navigation.findNavController
@@ -12,16 +10,8 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import de.simon.dankelmann.submarine.AppContext.AppContext
-import de.simon.dankelmann.submarine.Database.AppDatabase
-import de.simon.dankelmann.submarine.Entities.LocationEntity
 import de.simon.dankelmann.submarine.databinding.ActivityMainBinding
-import de.simon.dankelmann.submarine.services.DatabaseService
-import de.simon.dankelmann.submarine.services.ForegroundService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -50,9 +40,16 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
+        /*
         appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow
+            ), drawerLayout
+        )*/
+
+        appBarConfiguration = AppBarConfiguration(
+            setOf(
+                R.id.nav_home, R.id.nav_scanbt, R.id.nav_periscope, R.id.nav_signal_database, R.id.nav_record_signal, R.id.nav_adapter_setup, R.id.nav_signal_map
             ), drawerLayout
         )
 

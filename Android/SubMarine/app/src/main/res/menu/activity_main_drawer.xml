@@ -1,20 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:showIn="navigation_view">
+    tools:showIn="navigation_view"
+    >
 
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_home"
-            android:icon="@drawable/ic_menu_camera"
-            android:title="@string/menu_home" />
+            android:icon="@drawable/ic_home"
+            android:title="@string/menu_home"
+            />
+
         <item
-            android:id="@+id/nav_gallery"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="@string/menu_gallery" />
+            android:id="@+id/nav_signal_map"
+            android:icon="@drawable/ic_menu_mapmode"
+            android:title="@string/menu_signalMap" />
+
         <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_menu_slideshow"
-            android:title="@string/menu_slideshow" />
+            android:id="@+id/nav_signal_database"
+            android:icon="@drawable/ic_database"
+            android:title="@string/menu_signalDatabase" />
+
+
+        <item
+            android:id="@+id/nav_record_signal"
+            android:icon="@drawable/ic_record_24"
+            android:title="@string/menu_recordSignal" />
+
+        <item
+            android:id="@+id/nav_periscope"
+            android:icon="@drawable/ic_baseline_search_24"
+            android:title="@string/menu_periscope" />
+
+        <item
+            android:id="@+id/nav_adapter_setup"
+            android:icon="@drawable/ic_settings"
+            android:title="@string/menu_adapterSetup" />
+
+
+
+
     </group>
 </menu>

@@ -1,17 +1,12 @@
 package de.simon.dankelmann.esp32_subghz.Adapters
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
-import androidx.core.app.ActivityCompat
 import de.simon.dankelmann.submarine.Entities.SignalEntity
-import de.simon.dankelmann.submarine.Models.BluetoothDeviceModel
-import de.simon.dankelmann.submarine.permissioncheck.PermissionCheck
 import de.simon.dankelmann.submarine.R
 
 class SignalDatabaseListviewAdapter(private val context: Context, private var signalEntityList: MutableList<SignalEntity>) : BaseAdapter() {

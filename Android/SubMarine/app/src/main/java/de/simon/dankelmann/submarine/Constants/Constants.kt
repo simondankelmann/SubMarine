@@ -5,6 +5,8 @@ class Constants {
         val BLUETOOTH_COMMAND_HEADER_LENGTH = 8
         val CC1101_ADAPTER_CONFIGURATION_LENGTH = 30
 
+        val EOL_CHAR:String = "\n"
+
         // COMMAND IDS
         var COMMAND_ID_DUMMY = "0000"
 

@@ -1,8 +1,5 @@
 package de.simon.dankelmann.submarine.ui.SignalMap
 
-import android.Manifest
-import android.bluetooth.BluetoothDevice
-import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
@@ -10,19 +7,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.findNavController
-import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.BuildConfig
 import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.Interfaces.LocationResultListener
 import de.simon.dankelmann.submarine.R
 import de.simon.dankelmann.submarine.databinding.FragmentSignalMapBinding
-import de.simon.dankelmann.submarine.permissioncheck.PermissionCheck
-import de.simon.dankelmann.submarine.services.LocationService
-import de.simon.dankelmann.submarine.services.SubMarineService
+import de.simon.dankelmann.submarine.Services.LocationService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,7 +24,6 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.Marker.OnMarkerClickListener
 import org.osmdroid.views.overlay.TilesOverlay
 
 
@@ -41,8 +32,6 @@ class SignalMapFragment : Fragment(), LocationResultListener {
     private var _binding: FragmentSignalMapBinding? = null
     private val _logTag = "SignalMapFragment"
     private var _viewModel: SignalMapViewModel? = null
-    private var _bluetoothDevice: BluetoothDevice? = null
-    private var _submarineService:SubMarineService = AppContext.submarineService
     private var _locationService:LocationService? = null
     private var _map: MapView? = null
     private var _mapController: IMapController? = null
@@ -50,10 +39,9 @@ class SignalMapFragment : Fragment(), LocationResultListener {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
-    private var _locateMe = true
     private var _firstReceivedLocation:Location? = null
     private var _lastReceivedLocation:Location? = null
-    private var _initialMapZoom = 19.0
+    private var _initialMapZoom = 20.5
 
     // MY POSISTION MARKER
     var _myPositionMarker:Marker? = null
@@ -186,12 +174,6 @@ class SignalMapFragment : Fragment(), LocationResultListener {
 
     fun addSignalMarkersToMap(){
         if(_map != null){
-            // REMOVE MARKERS
-            _signalMarkerList.map {
-                _map!!.overlays.remove(it)
-                _map!!.invalidate()
-            }
-
             // CLEAR THE LIST
             _signalMarkerList = mutableListOf()
 
@@ -200,6 +182,13 @@ class SignalMapFragment : Fragment(), LocationResultListener {
             val locationDao = AppDatabase.getDatabase(requireContext()).locationDao()
             CoroutineScope(Dispatchers.IO).launch {
                 val signalEntities = signalDao.getAll()
+
+                // REMOVE MARKERS
+                _signalMarkerList.map {
+                    _map!!.overlays.remove(it)
+                    _map!!.invalidate()
+                }
+
                 signalEntities.map {
                     if(it.locationId != null && it.locationId!! > 0){
 
@@ -209,37 +198,29 @@ class SignalMapFragment : Fragment(), LocationResultListener {
                         var signalMarker = Marker(_map!!)
                         signalMarker.position = signalPoint
                         var markerIcon = requireActivity().getDrawable(R.drawable.ic_baseline_signal)
-                        markerIcon!!.setTint(resources.getColor(R.color.fontcolor_component_dark_inactive))
+                        markerIcon!!.setTint(resources.getColor(R.color.accent_color_darkmode))
                         signalMarker.icon = markerIcon
                         signalMarker.setAnchor(Marker.ANCHOR_BOTTOM, Marker.ANCHOR_CENTER)
                         signalMarker.title = it.name
-                        _map!!.overlays.add(signalMarker)
+
 
                         val infoWindow = SignalMarkerInfoWindow(_map!!, requireActivity(), it)
                         signalMarker.infoWindow = infoWindow
 
-                        /*
-                        signalMarker.setOnMarkerClickListener(OnMarkerClickListener { marker, mapView ->
-                            //marker.showInfoWindow()
-                            //mapView.controller.animateTo(marker.position)
-                            //Toast.makeText(context, "Hallo", Toast.LENGTH_LONG).show()
 
-                            val bundle = Bundle()
-                            bundle.putParcelable("Device", _bluetoothDevice)
-                            bundle.putInt("SignalEntityId", it.uid)
-                            requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_signal_map_to_nav_signalDetail, bundle)
+                        _signalMarkerList.add(signalMarker)
+                        _viewModel!!.footerText1.postValue(_signalMarkerList.size.toString() + " Signals")
+                        _map!!.overlays.add(signalMarker)
 
-                            true
-                        })*/
                     }
 
                 }
 
-
-
                 _map!!.invalidate()
             }
         }
+
+
     }
 
     fun onSignalMarkerClicked(marker:Marker, map:MapView){

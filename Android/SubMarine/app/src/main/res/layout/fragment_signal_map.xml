@@ -39,20 +39,6 @@
         app:layout_constraintTop_toBottomOf="@id/textViewSignalMapDescription"
         >
 
-        <Button
-            android:id="@+id/loadSignalsButton"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="Load Signals"></Button>
-
-        <Button
-            android:id="@+id/centerButton"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="Center Map"></Button>
-
     </LinearLayout>
 
     <org.osmdroid.views.MapView
@@ -74,6 +60,13 @@
         app:layout_constraintBottom_toBottomOf="@id/signalMapLayout"
         >
 
+        <Button
+            android:id="@+id/loadSignalsButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Reload"></Button>
+
         <TextView
             android:id="@+id/textviewFooter1"
             android:layout_width="0dp"
@@ -84,6 +77,15 @@
             android:textAlignment="center"
             android:text="-">
         </TextView>
+
+        <Button
+            android:id="@+id/centerButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Center"></Button>
+
+
 
     </LinearLayout>
 

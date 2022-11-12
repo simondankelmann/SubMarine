@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.connectedDevice.ConnectedDeviceFragment"
+    tools:context=".ui.ConnectedDevice.ConnectedDeviceFragment"
     android:background="@color/background_dark"
     android:id="@+id/connectedDeviceLayout">
 
@@ -34,7 +34,7 @@
         android:id="@+id/animationConnectedDevice"
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        app:lottie_rawRes="@raw/submarine"
+        app:lottie_rawRes="@raw/connecting"
         app:lottie_autoPlay="true"
         app:lottie_loop="true"
         android:padding="20dp"

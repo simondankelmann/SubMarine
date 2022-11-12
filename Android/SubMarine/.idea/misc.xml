@@ -4,6 +4,7 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/main/res/drawable/ic_bluetooth_24.xml" value="0.199" />
+        <entry key="app/src/main/res/drawable/side_nav_bar.xml" value="0.238" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.19114583333333332" />
         <entry key="app/src/main/res/layout/app_bar_main.xml" value="0.19114583333333332" />
         <entry key="app/src/main/res/layout/content_main.xml" value="0.3703125" />
@@ -17,9 +18,11 @@
         <entry key="app/src/main/res/layout/fragment_signal_database.xml" value="0.25" />
         <entry key="app/src/main/res/layout/fragment_signal_map.xml" value="0.21770833333333334" />
         <entry key="app/src/main/res/layout/fragment_view_signal_entity.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/info_window_marker.xml" value="0.23177083333333334" />
         <entry key="app/src/main/res/layout/listrow_bluetooth_device.xml" value="0.19114583333333332" />
         <entry key="app/src/main/res/layout/listrow_signal_entity.xml" value="0.5" />
         <entry key="app/src/main/res/layout/nav_header_main.xml" value="0.19114583333333332" />
+        <entry key="app/src/main/res/menu/activity_main_drawer.xml" value="0.67" />
       </map>
     </option>
   </component>

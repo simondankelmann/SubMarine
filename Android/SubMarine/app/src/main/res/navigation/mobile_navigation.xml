@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/nav_home"
-        android:name="de.simon.dankelmann.submarine.ui.home.HomeFragment"
+        android:name="de.simon.dankelmann.submarine.ui.Home.HomeFragment"
         android:label="@string/menu_home"
         tools:layout="@layout/fragment_home" >
         <action
@@ -17,7 +17,7 @@
 
     <fragment
         android:id="@+id/nav_scanbt"
-        android:name="de.simon.dankelmann.submarine.ui.scanBt.ScanBtFragment"
+        android:name="de.simon.dankelmann.submarine.ui.ScanBt.ScanBtFragment"
         android:label="@string/menu_scanbt"
         tools:layout="@layout/fragment_scanbt" >
         <action
@@ -27,7 +27,7 @@
 
     <fragment
         android:id="@+id/nav_connected_device"
-        android:name="de.simon.dankelmann.submarine.ui.connectedDevice.ConnectedDeviceFragment"
+        android:name="de.simon.dankelmann.submarine.ui.ConnectedDevice.ConnectedDeviceFragment"
         android:label="@string/menu_connected_device"
         tools:layout="@layout/fragment_connected_device" >
         <action
@@ -49,7 +49,7 @@
 
     <fragment
         android:id="@+id/nav_periscope"
-        android:name="de.simon.dankelmann.submarine.ui.periscope.PeriscopeFragment"
+        android:name="de.simon.dankelmann.submarine.ui.Periscope.PeriscopeFragment"
         android:label="@string/menu_periscope"
         tools:layout="@layout/fragment_periscope" >
     </fragment>
@@ -66,14 +66,14 @@
 
     <fragment
         android:id="@+id/nav_signalDetail"
-        android:name="de.simon.dankelmann.submarine.ui.viewSignalEntity.ViewSignalEntityFragment"
+        android:name="de.simon.dankelmann.submarine.ui.ViewSignalEntity.ViewSignalEntityFragment"
         android:label="@string/menu_signalDetail"
         tools:layout="@layout/fragment_view_signal_entity" >
     </fragment>
 
     <fragment
         android:id="@+id/nav_record_signal"
-        android:name="de.simon.dankelmann.submarine.ui.recordSignal.RecordSignalFragment"
+        android:name="de.simon.dankelmann.submarine.ui.RecordSignal.RecordSignalFragment"
         android:label="@string/menu_recordSignal"
         tools:layout="@layout/fragment_record_signal" >
     </fragment>
@@ -95,15 +95,5 @@
             app:destination="@id/nav_signalDetail" />
     </fragment>
 
-    <fragment
-        android:id="@+id/nav_gallery"
-        android:name="de.simon.dankelmann.submarine.ui.gallery.GalleryFragment"
-        android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_gallery" />
 
-    <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="de.simon.dankelmann.submarine.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
 </navigation>
