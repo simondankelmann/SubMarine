@@ -2,6 +2,7 @@ package de.simon.dankelmann.submarine.ui.SignalMap
 
 import android.Manifest
 import android.bluetooth.BluetoothDevice
+import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
@@ -32,6 +33,7 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Marker.OnMarkerClickListener
+import org.osmdroid.views.overlay.TilesOverlay
 
 
 class SignalMapFragment : Fragment(), LocationResultListener {
@@ -122,9 +124,15 @@ class SignalMapFragment : Fragment(), LocationResultListener {
                 _map = map
                 _mapController = _map!!.controller
                 Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
+                //_map!!.setTileSource(TileSourceFactory.MAPNIK);
                 _map!!.setTileSource(TileSourceFactory.MAPNIK);
                 _map!!.setMultiTouchControls(true)
                 _mapController!!.setZoom(_initialMapZoom)
+
+                // INVERT COLOR
+                _map!!.getOverlayManager().getTilesOverlay().setColorFilter(TilesOverlay.INVERT_COLORS);
+                _map!!.getOverlayManager().getTilesOverlay().setLoadingBackgroundColor(R.color.background_dark);
+                _map!!.getOverlayManager().getTilesOverlay().setLoadingLineColor(R.color.fontcolor_component_dark_inactive);
 
                 if(_firstReceivedLocation != null){
                     setMapCenter(_firstReceivedLocation!!)
@@ -200,7 +208,9 @@ class SignalMapFragment : Fragment(), LocationResultListener {
 
                         var signalMarker = Marker(_map!!)
                         signalMarker.position = signalPoint
-                        signalMarker.icon = requireActivity().getDrawable(R.drawable.ic_baseline_signal)
+                        var markerIcon = requireActivity().getDrawable(R.drawable.ic_baseline_signal)
+                        markerIcon!!.setTint(resources.getColor(R.color.fontcolor_component_dark_inactive))
+                        signalMarker.icon = markerIcon
                         signalMarker.setAnchor(Marker.ANCHOR_BOTTOM, Marker.ANCHOR_CENTER)
                         signalMarker.title = it.name
                         _map!!.overlays.add(signalMarker)

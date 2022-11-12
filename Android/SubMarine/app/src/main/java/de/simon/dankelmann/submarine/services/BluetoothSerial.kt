@@ -53,18 +53,24 @@ class BluetoothSerial (context: Context, connectionChangedCallback:KFunction1<In
 
     fun connect(macAddress: String, receivedDataCallback: KFunction1<String, Unit>){
         _callback = receivedDataCallback
-        if(_bluetoothAdapter != null){
-            _bluetoothDevice = _bluetoothAdapter?.getRemoteDevice(macAddress)
-            if(_bluetoothDevice != null){
-                if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
-                    Log.d(_logTag, "Connecting to Socket")
-                    connectSocket()
+        try{
+            if(_bluetoothAdapter != null){
+                _bluetoothDevice = _bluetoothAdapter?.getRemoteDevice(macAddress)
+                if(_bluetoothDevice != null){
+                    if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
+                        Log.d(_logTag, "Connecting to Socket")
+                        connectSocket()
+                    }
                 }
             }
+        } catch (ex:java.lang.Exception){
+            Log.d(_logTag, "Could not connect to Socket")
+            _connectionChangedCallback!!(connectionState_Disconnected)
         }
     }
 
     private fun resetConnection() {
+
         _connectionChangedCallback!!(connectionState_Disconnected)
         if (_bluetoothSocketInputStream != null) {
             try {
@@ -104,6 +110,8 @@ class BluetoothSerial (context: Context, connectionChangedCallback:KFunction1<In
                     _connectionChangedCallback!!(connectionState_Connected)
                     // BEGIN LISTENING
                     beginListeningOnInputStream(_callback!!)
+                } else {
+                    _connectionChangedCallback!!(connectionState_Disconnected)
                 }
             }
         }
