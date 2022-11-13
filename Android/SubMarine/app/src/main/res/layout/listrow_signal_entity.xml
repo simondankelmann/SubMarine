@@ -1,15 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.SignalDatabase.SignalDatabaseFragment"
+    android:background="@color/background_dark"
+    android:id="@+id/listRowLayoutSignalEntity">
+
+    <!-- android:background="@color/background_dark" -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="@id/listRowLayoutSignalEntity"
+        app:layout_constraintStart_toStartOf="@id/listRowLayoutSignalEntity">
+
+        <ImageView
+            android:id="@+id/signalIcon"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/ic_baseline_signal"
+            android:layout_gravity="left"
+            android:scaleType="fitCenter"
+            app:tint="@color/fontcolor_component_dark_inactive"
+           >
+        </ImageView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/signalName"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="5dp"
+            android:text="SignalName"
+            android:textSize="18dp"
+            android:textStyle="bold"
+            android:textColor="@color/fontcolor_component_dark_active"
+            />
+
+        <TextView
+            android:id="@+id/signalInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:text="RAW..."
+            android:textStyle="italic"
+            android:textColor="@color/fontcolor_component_dark_inactive"/>
+
+    </LinearLayout>
+
+    </LinearLayout>
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+<!--
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="50dp"
+    android:layout_height="65dp"
     android:orientation="horizontal"
+    android:background="?attr/colorPrimary"
     >
-    <!--android:background="?attr/colorPrimary"-->
 
     <ImageView
+        android:id="@+id/signalIcon"
         android:layout_width="80dp"
-        android:layout_height="50dp"
+        android:layout_height="65dp"
         android:src="@drawable/ic_baseline_signal"
         android:layout_gravity="left"
         android:layout_weight="1"
@@ -60,4 +125,4 @@
             />
     </LinearLayout>
 
-</LinearLayout>
+</LinearLayout>-->

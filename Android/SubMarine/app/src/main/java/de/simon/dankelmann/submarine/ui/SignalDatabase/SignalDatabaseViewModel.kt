@@ -38,9 +38,10 @@ class SignalDatabaseViewModel: ViewModel() {
         return null
     }
 
+    /*
     val signalDatabaseDescription = MutableLiveData<String>().apply {
         value = "0 Signals in Database"
-    }
+    }*/
 
     val signalDatabaseFooterText = MutableLiveData<String>().apply {
         value = "-"

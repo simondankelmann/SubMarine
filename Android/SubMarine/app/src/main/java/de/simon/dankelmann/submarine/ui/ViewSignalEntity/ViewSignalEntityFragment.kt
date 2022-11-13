@@ -10,15 +10,18 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TextView
+import android.widget.*
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.airbnb.lottie.LottieAnimationView
+import com.airbnb.lottie.LottieDrawable
 import de.simon.dankelmann.submarine.AppContext.AppContext
+import de.simon.dankelmann.submarine.BuildConfig
 import de.simon.dankelmann.submarine.Constants.Constants
 import de.simon.dankelmann.submarine.Database.AppDatabase
+import de.simon.dankelmann.submarine.Entities.LocationEntity
 import de.simon.dankelmann.submarine.Entities.SignalEntity
 import de.simon.dankelmann.submarine.Interfaces.SubmarineResultListenerInterface
 import de.simon.dankelmann.submarine.Models.SubmarineCommand
@@ -28,6 +31,13 @@ import de.simon.dankelmann.submarine.Services.SubMarineService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.osmdroid.api.IMapController
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.TilesOverlay
 
 class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
 
@@ -36,10 +46,16 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
     private var _viewModel: ViewSignalEntityViewModel? = null
     private var _bluetoothDevice: BluetoothDevice? = null
     //private var _bluetoothSerial: BluetoothSerial? = null
-    private var _signalEntity: SignalEntity? = null
+    //private var _signalEntity: SignalEntity? = null
     private var _isConnected:Boolean = false
     private var _submarineService: SubMarineService = AppContext.submarineService
+    private var _signalEntity:SignalEntity? = null
     private var _signalEntityId = 0
+    private var _locationId = -1
+
+    private var _map: MapView? = null
+    private var _mapController: IMapController? = null
+    private var _initialMapZoom = 20.5
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -62,6 +78,33 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
         var signalEntityId = arguments?.getInt("SignalEntityId") as Int
         if(signalEntityId != null){
             _signalEntityId = signalEntityId
+            // LOAD DATA FROM DB
+            val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
+            val locationDao = AppDatabase.getDatabase(requireContext()).locationDao()
+            CoroutineScope(Dispatchers.IO).launch {
+                val signalEntity = signalDao.getById(_signalEntityId)
+                if(signalEntity != null){
+                    _signalEntity = signalEntity
+
+                    if(signalEntity.locationId != null){
+                        _locationId = signalEntity.locationId!!
+                    }
+
+                    _viewModel!!.signalEntity.postValue(signalEntity)
+                    Log.d(_logTag, "POW IS: " + signalEntity.proofOfWork)
+
+                    //MAP SETUP
+                    if(_signalEntity != null && _locationId != -1){
+                        val locationEntity = locationDao.getById(_locationId)
+                        if(locationEntity != null){
+                            setupMap(locationEntity, _signalEntity!!)
+                        }
+                    } else {
+                        Log.d(_logTag, "No Map Setup")
+                    }
+                }
+            }
+
             setupUi()
 
             _submarineService.addResultListener(this)
@@ -72,54 +115,68 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
 
     fun setupUi(){
         // SETUP UI
-        _viewModel!!.animationResourceId.postValue(R.raw.inspect_signal)
-
-        val titleText: TextView = binding.textViewSignalDetailTitle
-        _viewModel!!.signalDetailTitle.observe(viewLifecycleOwner) {
-            titleText.text = it
-        }
-
+        val replayButton: ImageButton = binding.replaySignalDetailButton
+        val animationView: LottieAnimationView = binding.animationSignalDetail
+        val mapView = binding.signalMapView
+        val titleText: EditText = binding.textViewSignalDetailTitle
         val descriptionText: TextView = binding.textViewSignalDetailDescription
-        _viewModel!!.signalDetailDescription.observe(viewLifecycleOwner) {
-            descriptionText.text = it
-        }
-
-        val frequencyText: TextView = binding.textViewSignalFrequency
-        _viewModel!!.signalDetailFrequency.observe(viewLifecycleOwner) {
-            frequencyText.text = it
-        }
-
-        val dataText: TextView = binding.textViewSignalDetailData
-        _viewModel!!.signalDetailData.observe(viewLifecycleOwner) {
-            dataText.text = it
-        }
-
+        //val frequencyText: TextView = binding.textViewSignalFrequency
+        val dataText: EditText = binding.textViewSignalDetailData
         val footerText1: TextView = binding.textViewFooter1
-        _viewModel!!.footerText1.observe(viewLifecycleOwner) {
-            footerText1.text = it
-        }
-
         val footerText2: TextView = binding.textViewFooter2
-        _viewModel!!.footerText2.observe(viewLifecycleOwner) {
-            footerText2.text = it
-        }
-
         val footerText3: TextView = binding.textViewFooter3
+
+        val powButton: ImageButton = binding.proofOfWorkButton
+        var layoutPowButton:LinearLayout = binding.layoutPOWButton
+
+        val saveButton: ImageButton = binding.SaveButton
+
+
         _viewModel!!.footerText3.observe(viewLifecycleOwner) {
             footerText3.text = it
         }
 
-        val animationView: LottieAnimationView = binding.animationSignalDetail
+        _viewModel!!.signalEntity.observe(viewLifecycleOwner) {
+            if(_viewModel!!.signalEntity.value != null){
+                _signalEntity = it!!
+
+                if(_viewModel!!.signalEntity.value!!.locationId != null){
+                    _locationId = _viewModel!!.signalEntity.value!!.locationId!!
+                }
+
+                titleText.setText( _viewModel!!.signalEntity.value!!.name)
+                descriptionText.text = _viewModel!!.signalEntity.value!!.frequency.toString() + " Mhz" + " | " +_viewModel!!.signalEntity.value!!.signalDataLength.toString() + " Samples"
+                //frequencyText.text =
+                dataText.setText( _viewModel!!.signalEntity.value!!.signalData)
+                footerText1.text = getModulationString(_viewModel!!.signalEntity.value!!.modulation!!) + " | " + _viewModel!!.signalEntity.value!!.type!!
+                footerText2.text = "RX-BW: " + _viewModel!!.signalEntity.value!!.rxBw.toString()+" Khz"
+
+                if(_viewModel!!.signalEntity.value!!.proofOfWork){
+                    layoutPowButton.background.setTint(resources.getColor(R.color.backgroundcolor_component_dark_active))
+                    powButton.setColorFilter(ContextCompat.getColor(requireContext(), R.color.fontcolor_component_dark_active))
+                } else {
+                    layoutPowButton.background.setTint(resources.getColor(R.color.backgroundcolor_component_dark_inactive))
+                    powButton.setColorFilter(ContextCompat.getColor(requireContext(), R.color.fontcolor_component_dark_inactive))
+                }
+            }
+        }
+
+        _viewModel!!.animationResourceId.postValue(R.raw.inspect_signal)
         _viewModel!!.animationResourceId.observe(viewLifecycleOwner) {
             animationView.setAnimation(it)
             animationView.playAnimation()
+
+            if(it == R.raw.save_folder){
+                animationView.repeatCount = 0
+            } else {
+                animationView.repeatCount = LottieDrawable.INFINITE
+            }
         }
 
         // REPLAY
-        val replayButton: Button = binding.replaySignalDetailButton
         replayButton.setOnClickListener { view ->
-            if(_signalEntity != null && _isConnected){
-                replaySignalEntity(_signalEntity!!)
+            if(_viewModel!!.signalEntity.value != null && _submarineService.isConnected()){
+                replaySignalEntity(_viewModel!!.signalEntity.value!!)
             }
 
             if(!_isConnected){
@@ -127,28 +184,88 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
             }
         }
 
-        // LOAD DATA FROM DB
-        val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
-        CoroutineScope(Dispatchers.IO).launch {
+        // TOGGLE POW
+        powButton.setOnClickListener { view ->
+            if(_viewModel!!.signalEntity.value != null){
+                var newState = !_viewModel!!.signalEntity.value!!.proofOfWork
+                var signalId = _viewModel!!.signalEntity.value!!.uid
 
-            val signalEntity = signalDao.getById(_signalEntityId)
-            if(signalEntity != null){
-                _signalEntity = signalEntity!!
+                CoroutineScope(Dispatchers.IO).launch {
+                    val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
+                    signalDao.updateProofOfWork(signalId, newState)
 
-                Log.d(_logTag, "SIGNAL: " + _signalEntity?.name)
-
-                //SETUP UI
-                requireActivity().runOnUiThread{
-                    _viewModel!!.signalDetailTitle.postValue(_signalEntity?.name)
-                    _viewModel!!.signalDetailDescription.postValue(_signalEntity!!.signalDataLength.toString() + " Samples")
-                    _viewModel!!.signalDetailFrequency.postValue(_signalEntity?.frequency.toString() + " Mhz")
-                    _viewModel!!.signalDetailData.postValue(_signalEntity?.signalData.toString())
-
-                    _viewModel!!.footerText1.postValue(getModulationString(_signalEntity!!.modulation!!) + " | " + _signalEntity!!.type!!)
-                    _viewModel!!.footerText2.postValue("RX-BW: " + _signalEntity!!.rxBw.toString()+" Khz")
+                    val signalEntity = signalDao.getById(signalId)
+                    if(signalEntity != null){
+                        _viewModel!!.signalEntity.postValue(signalEntity)
+                    }
                 }
             }
+        }
 
+        // SAVE CHANGES
+        saveButton.setOnClickListener { view ->
+            if(_viewModel!!.signalEntity.value != null){
+                var signalId = _viewModel!!.signalEntity.value!!.uid
+                var signalName = titleText.text.toString()
+                var signalData = dataText.text.toString()
+                var signalDataLength = dataText.text.toString().split(",").size
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
+                    signalDao.updateValues(signalId, signalName, signalData, signalDataLength )
+                    val signalEntity = signalDao.getById(signalId)
+                    if(signalEntity != null){
+                        _viewModel!!.signalEntity.postValue(signalEntity)
+
+                        _viewModel!!.animationResourceId.postValue(R.raw.save_folder)
+                    }
+                }
+            }
+        }
+    }
+
+    fun setupMap(locationEntity:LocationEntity, signalEntity: SignalEntity){
+        if(_binding != null){
+            Log.d(_logTag, "Setting up Map")
+            var map = _binding!!.signalMapView
+            if(map != null){
+                var signalPoint = GeoPoint(locationEntity.latitude!!, locationEntity.longitude!!)
+
+                // SHOW THE MAP
+                map.visibility = View.VISIBLE
+
+                _map = map
+                _mapController = map.controller
+                Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
+                _map!!.setTileSource(TileSourceFactory.MAPNIK);
+                _map!!.setMultiTouchControls(true)
+                _mapController!!.setZoom(_initialMapZoom)
+                _mapController!!.setCenter(signalPoint)
+
+                // INVERT COLOR
+                _map!!.getOverlayManager().getTilesOverlay().setColorFilter(TilesOverlay.INVERT_COLORS);
+                _map!!.getOverlayManager().getTilesOverlay().setLoadingBackgroundColor(R.color.background_dark);
+                _map!!.getOverlayManager().getTilesOverlay().setLoadingLineColor(R.color.fontcolor_component_dark_inactive);
+
+
+
+
+                var signalMarker = Marker(_map!!)
+                signalMarker.position = signalPoint
+                var markerIcon = requireActivity().getDrawable(R.drawable.ic_baseline_signal)
+
+                var markerColor = resources.getColor(R.color.fontcolor_component_dark_inactive)
+                if(signalEntity.proofOfWork){
+                    markerColor = resources.getColor(R.color.accent_color_darkmode)
+                }
+                markerIcon!!.setTint(markerColor)
+
+                signalMarker.icon = markerIcon
+                signalMarker.setAnchor(Marker.ANCHOR_BOTTOM, Marker.ANCHOR_CENTER)
+                signalMarker.title = signalEntity.name
+
+                _map!!.overlays.add(signalMarker)
+            }
         }
     }
 
@@ -241,7 +358,7 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
         Handler(Looper.getMainLooper()).postDelayed(Runnable {
             setOperationMode(Constants.OPERATIONMODE_IDLE)
             requireActivity().runOnUiThread {
-                _viewModel!!.signalDetailDescription.postValue(_signalEntity!!.signalDataLength.toString() + " Samples")
+                _viewModel!!.signalDetailDescription.postValue(_viewModel!!.signalEntity.value!!.signalDataLength.toString() + " Samples")
                 _viewModel!!.animationResourceId.postValue(R.raw.inspect_signal)
             }
         }, 1500)

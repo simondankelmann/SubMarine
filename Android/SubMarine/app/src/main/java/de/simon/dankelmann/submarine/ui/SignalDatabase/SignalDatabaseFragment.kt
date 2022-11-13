@@ -15,11 +15,13 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import de.simon.dankelmann.esp32_subghz.Adapters.SignalDatabaseListviewAdapter
 import de.simon.dankelmann.submarine.Database.AppDatabase
+import de.simon.dankelmann.submarine.Entities.SignalEntity
 import de.simon.dankelmann.submarine.R
 import de.simon.dankelmann.submarine.databinding.FragmentSignalDatabaseBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.math.sign
 
 class SignalDatabaseFragment: Fragment(), AdapterView.OnItemClickListener {
     private val _logTag = "SignalDatabaseFragment"
@@ -49,10 +51,11 @@ class SignalDatabaseFragment: Fragment(), AdapterView.OnItemClickListener {
     }
 
     fun setupUi(){
+        /*
         val descriptionText: TextView = binding.textViewSignalDatabaseDescription
         _viewModel!!.signalDatabaseDescription.observe(viewLifecycleOwner) {
             descriptionText.text = it
-        }
+        }*/
 
         val footerText: TextView = binding.textViewSignalDatabaseFooter
         _viewModel!!.signalDatabaseFooterText.observe(viewLifecycleOwner) {
@@ -67,13 +70,31 @@ class SignalDatabaseFragment: Fragment(), AdapterView.OnItemClickListener {
             listview.adapter = _listItemAdapter
         }
 
+        val searchButton = binding.searchButton
+        val searchInput = binding.signalDatabaseSearchString
+        searchButton.setOnClickListener{
+            loadData(searchInput.text.toString())
+        }
+
         // LOAD DATA FROM DB
+        loadData("")
+
+    }
+
+    fun loadData(searchString:String){
         val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
         CoroutineScope(Dispatchers.IO).launch {
-            _viewModel!!.signalDatabaseDescription.postValue("Loading items from Signal Database")
-            val data = signalDao.getAll()
-            _viewModel!!.signalDatabaseDescription.postValue(data.size.toString() + " Signal(s) in Database")
+            _viewModel!!.signalDatabaseFooterText.postValue("Loading items from Signal Database")
 
+            val data:List<SignalEntity>
+            if(searchString == ""){
+                 data = signalDao.getAll()
+            } else {
+                 data = signalDao.search("%" + searchString + "%")
+            }
+
+
+            _viewModel!!.signalDatabaseFooterText.postValue(data.size.toString() + " Signal(s) in Database")
             _viewModel!!.signalEntities.postValue(data.toMutableList())
         }
     }

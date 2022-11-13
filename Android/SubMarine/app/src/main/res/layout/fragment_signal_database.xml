@@ -8,6 +8,69 @@
     android:background="@color/background_dark"
     android:id="@+id/signalDatabaseLayout">
 
+    <LinearLayout
+        android:id="@+id/signalDatabaseHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/textViewSignalDatabaseTitle">
+
+        <EditText
+            android:id="@+id/signalDatabaseSearchString"
+            android:layout_width="0dp"
+            android:layout_weight="10"
+            android:layout_height="wrap_content"
+            android:textColor="@color/fontcolor_component_dark_active"
+            android:text="Search..."
+            app:layout_constraintTop_toBottomOf="@id/animationPeriscope"
+            android:layout_margin="5dp"
+            android:layout_gravity="center"
+            android:lines="1"
+            ></EditText>
+
+        <!--
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/textViewSignalDatabaseDescription"
+            android:text="0 Signals recorded"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            android:textAlignment="center"
+            android:padding="10dp"
+            app:layout_constraintTop_toBottomOf="@id/textViewSignalDatabaseTitle"></TextView>-->
+
+        <!-- SEARCH BUTTON -->
+        <LinearLayout
+            android:layout_height="@dimen/height_switchButton"
+            android:layout_width="@dimen/width_switchButton"
+            android:layout_weight="1"
+            android:background="@drawable/switch_layout_bg"
+            android:backgroundTint="@color/backgroundcolor_component_dark_inactive"
+            android:id="@+id/layoutSearchButton"
+            android:orientation="vertical"
+            android:bottomRightRadius="@dimen/border_radius_button"
+            android:bottomLeftRadius="@dimen/border_radius_button"
+            android:topLeftRadius="@dimen/border_radius_button"
+            android:topRightRadius="@dimen/border_radius_button"
+            android:layout_margin="5dp"
+            android:layout_gravity="center"
+            >
+            <ImageButton
+                android:layout_margin="5dp"
+                android:id="@+id/searchButton"
+                android:layout_width="@dimen/width_image_switchButton"
+                android:layout_height="@dimen/height_image_switchButton"
+                android:background="@null"
+                android:scaleType="fitCenter"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_search"
+                app:tint="@color/fontcolor_component_dark_inactive">
+            </ImageButton>
+        </LinearLayout>
+        <!-- END: SEARCH BUTTON -->
+
+    </LinearLayout>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,21 +83,12 @@
         android:padding="10dp"
         app:layout_constraintTop_toTopOf="@id/signalDatabaseLayout"></TextView>
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/textViewSignalDatabaseDescription"
-        android:text="0 Signals recorded"
-        android:textColor="@color/fontcolor_component_dark_inactive"
-        android:textAlignment="center"
-        android:padding="10dp"
-        app:layout_constraintTop_toBottomOf="@id/textViewSignalDatabaseTitle"></TextView>
 
     <ListView
         android:id="@+id/signalDatabaseListView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/textViewSignalDatabaseDescription"
+        app:layout_constraintTop_toBottomOf="@id/signalDatabaseHeader"
         app:layout_constraintBottom_toTopOf="@id/signalDatabaseFooter"
         />
 

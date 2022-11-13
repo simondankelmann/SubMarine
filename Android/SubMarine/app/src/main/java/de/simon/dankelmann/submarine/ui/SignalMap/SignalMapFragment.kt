@@ -35,13 +35,14 @@ class SignalMapFragment : Fragment(), LocationResultListener {
     private var _locationService:LocationService? = null
     private var _map: MapView? = null
     private var _mapController: IMapController? = null
+    private var _initialMapZoom = 20.5
 
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
     private var _firstReceivedLocation:Location? = null
     private var _lastReceivedLocation:Location? = null
-    private var _initialMapZoom = 20.5
+
 
     // MY POSISTION MARKER
     var _myPositionMarker:Marker? = null
@@ -198,7 +199,13 @@ class SignalMapFragment : Fragment(), LocationResultListener {
                         var signalMarker = Marker(_map!!)
                         signalMarker.position = signalPoint
                         var markerIcon = requireActivity().getDrawable(R.drawable.ic_baseline_signal)
-                        markerIcon!!.setTint(resources.getColor(R.color.accent_color_darkmode))
+
+                        var markerColor = resources.getColor(R.color.fontcolor_component_dark_inactive)
+                        if(it.proofOfWork){
+                            markerColor = resources.getColor(R.color.accent_color_darkmode)
+                        }
+                        markerIcon!!.setTint(markerColor)
+
                         signalMarker.icon = markerIcon
                         signalMarker.setAnchor(Marker.ANCHOR_BOTTOM, Marker.ANCHOR_CENTER)
                         signalMarker.title = it.name
@@ -206,7 +213,6 @@ class SignalMapFragment : Fragment(), LocationResultListener {
 
                         val infoWindow = SignalMarkerInfoWindow(_map!!, requireActivity(), it)
                         signalMarker.infoWindow = infoWindow
-
 
                         _signalMarkerList.add(signalMarker)
                         _viewModel!!.footerText1.postValue(_signalMarkerList.size.toString() + " Signals")

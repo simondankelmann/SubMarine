@@ -4,11 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.ViewSignalEntity.AdapterSetupFragment"
+    tools:context=".ui.ViewSignalEntity.ViewSignalEntityFragment"
     android:id="@+id/viewSignalEntityLayout"
     android:background="@color/background_dark"
     >
 
+    <!--
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,6 +21,20 @@
         android:textStyle="bold"
         android:padding="10dp"
         app:layout_constraintTop_toTopOf="@id/viewSignalEntityLayout"></TextView>
+    -->
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewSignalDetailTitle"
+        android:text="Signal Detail"
+        android:textColor="@color/fontcolor_component_dark_active"
+        android:textAlignment="center"
+        android:textSize="20dp"
+        android:textStyle="bold"
+        android:padding="10dp"
+        app:layout_constraintTop_toTopOf="@id/viewSignalEntityLayout"></EditText>
+
 
     <TextView
         android:layout_width="match_parent"
@@ -31,48 +46,169 @@
         android:padding="10dp"
         app:layout_constraintTop_toBottomOf="@id/textViewSignalDetailTitle"></TextView>
 
-    <com.airbnb.lottie.LottieAnimationView
-        android:id="@+id/animationSignalDetail"
+    <LinearLayout
+        android:id="@+id/animationMapLayout"
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        app:lottie_rawRes="@raw/inspect_signal"
-        app:lottie_autoPlay="true"
-        app:lottie_loop="true"
-        android:padding="20dp"
+        android:orientation="vertical"
         app:layout_constraintTop_toBottomOf="@id/textViewSignalDetailDescription"
-        />
+        android:padding="5dp"
+        >
 
+        <org.osmdroid.views.MapView
+            android:id="@+id/signalMapView"
+            android:layout_height="0dp"
+            android:layout_width="match_parent"
+            android:layout_weight="2"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone"
+            />
 
-    <!--
-            -->
+        <!-- ANIAMTION -->
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/animationSignalDetail"
+            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_height="0dp"
+            app:lottie_rawRes="@raw/inspect_signal"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            android:padding="20dp"
+            />
+    </LinearLayout>
+
 
     <LinearLayout
         android:id="@+id/signalInfoLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@id/animationSignalDetail"
+        app:layout_constraintTop_toBottomOf="@id/animationMapLayout"
         >
 
+        <!--
         <TextView
             android:id="@+id/textViewSignalFrequency"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_height="@dimen/height_image_switchButton"
             android:textColor="@color/fontcolor_component_dark_inactive"
             android:text="433.92 Mhz"
             android:textAlignment="center"
             app:layout_constraintTop_toBottomOf="@id/animationPeriscope"
-            ></TextView>
+            ></TextView>-->
 
+
+        <!--
         <Button
             android:id="@+id/replaySignalDetailButton"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="Replay Signal">
+        </Button>-->
 
-        </Button>
+        <!-- PROOF OF WORK BUTTON -->
+        <LinearLayout
+            android:layout_height="@dimen/height_switchButton"
+            android:layout_width="@dimen/width_switchButton"
+            android:background="@drawable/switch_layout_bg"
+            android:backgroundTint="@color/backgroundcolor_component_dark_inactive"
+            android:id="@+id/layoutPOWButton"
+            android:orientation="vertical"
+            android:bottomRightRadius="@dimen/border_radius_button"
+            android:bottomLeftRadius="@dimen/border_radius_button"
+            android:topLeftRadius="@dimen/border_radius_button"
+            android:topRightRadius="@dimen/border_radius_button"
+            android:layout_margin="5dp"
+            android:layout_gravity="center"
+            >
+            <ImageButton
+                android:layout_margin="5dp"
+                android:id="@+id/proofOfWorkButton"
+                android:layout_width="@dimen/width_image_switchButton"
+                android:layout_height="@dimen/height_image_switchButton"
+                android:background="@null"
+                android:scaleType="fitCenter"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_check"
+                app:tint="@color/fontcolor_component_dark_inactive">
+            </ImageButton>
+
+            <TextView
+                android:id="@+id/textViewSwitch5"
+                android:layout_width="@dimen/width_text_switchButton"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:clickable="false"
+                android:text="Switch 5"
+                android:textAlignment="center"
+                android:layout_marginTop="5dp"
+                android:textColor="@color/fontcolor_component_dark_inactive"
+                >
+            </TextView>
+        </LinearLayout>
+        <!-- END: PROOF OF WORK BUTTON -->
+
+        <!-- SAVE BUTTON -->
+        <LinearLayout
+            android:layout_height="@dimen/height_switchButton"
+            android:layout_width="@dimen/width_switchButton"
+            android:background="@drawable/switch_layout_bg"
+            android:backgroundTint="@color/backgroundcolor_component_dark_inactive"
+            android:id="@+id/layoutSaveButton"
+            android:orientation="vertical"
+            android:bottomRightRadius="@dimen/border_radius_button"
+            android:bottomLeftRadius="@dimen/border_radius_button"
+            android:topLeftRadius="@dimen/border_radius_button"
+            android:topRightRadius="@dimen/border_radius_button"
+            android:layout_margin="5dp"
+            android:layout_gravity="center"
+            >
+            <ImageButton
+                android:layout_margin="5dp"
+                android:id="@+id/SaveButton"
+                android:layout_width="@dimen/width_image_switchButton"
+                android:layout_height="@dimen/height_image_switchButton"
+                android:background="@null"
+                android:scaleType="fitCenter"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_save"
+                app:tint="@color/fontcolor_component_dark_inactive">
+            </ImageButton>
+        </LinearLayout>
+        <!-- END: SAVE BUTTON -->
+
+        <!-- REPLAY BUTTON -->
+        <LinearLayout
+            android:layout_height="@dimen/height_switchButton"
+            android:layout_width="@dimen/width_switchButton"
+            android:background="@drawable/switch_layout_bg"
+            android:backgroundTint="@color/backgroundcolor_component_dark_inactive"
+            android:id="@+id/layoutReplayButton"
+            android:orientation="vertical"
+            android:bottomRightRadius="@dimen/border_radius_button"
+            android:bottomLeftRadius="@dimen/border_radius_button"
+            android:topLeftRadius="@dimen/border_radius_button"
+            android:topRightRadius="@dimen/border_radius_button"
+            android:layout_margin="5dp"
+            android:layout_gravity="center"
+            >
+            <ImageButton
+                android:layout_margin="5dp"
+                android:id="@+id/replaySignalDetailButton"
+                android:layout_width="@dimen/width_image_switchButton"
+                android:layout_height="@dimen/height_image_switchButton"
+                android:background="@null"
+                android:scaleType="fitCenter"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_play_arrow"
+                app:tint="@color/fontcolor_component_dark_inactive">
+            </ImageButton>
+        </LinearLayout>
+        <!-- END: REPLAY BUTTON -->
     </LinearLayout>
 
     <ScrollView
@@ -82,14 +218,14 @@
         app:layout_constraintBottom_toTopOf="@id/periscopeFooter"
         android:padding="20dp"
         >
-        <TextView
+        <EditText
             android:id="@+id/textViewSignalDetailData"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/fontcolor_component_dark_inactive"
             android:text="-"
             app:layout_constraintTop_toBottomOf="@id/animationPeriscope"
-            ></TextView>
+            ></EditText>
     </ScrollView>
 
 
