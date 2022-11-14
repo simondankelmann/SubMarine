@@ -21,7 +21,7 @@ int incomingCommandEndTime = 0;
 #define COMMAND_TRANSFER_SIGNAL_OVER_BLUETOOTH "0003"
 #define COMMAND_SET_ADAPTER_CONFIGURATION "0004"
 #define COMMAND_GET_ADAPTER_CONFIGURATION "0005"
-#define COMMAND_SEND_DETECTED_FREQUENCY "0006"
+#define COMMAND_DETECTED_FREQUENCY "0006"
 String incomingBluetoothCommandParsed = "";
 String incomingBluetoothCommandIdParsed = "";
 String incomingBluetoothCommandDataStringParsed = "";
@@ -40,7 +40,7 @@ int incomingBluetoothSignal[INCOMING_BLUETOOTH_SIGNAL_BUFFER_SIZE];
 #define OPERATIONMODE_RECORD_SIGNAL "0003"
 #define OPERATIONMODE_DETECT_SIGNAL "0004"
 String lastExecutedOperationMode = "0000"; 
-String operationMode = OPERATIONMODE_DETECT_SIGNAL;//"0000";
+String operationMode = "0000";
 
 // RECORDED SAMPLES BUFFER
 #define MAX_LENGHT_RECORDED_SIGNAL 4096
@@ -464,6 +464,7 @@ void setOperationModeFromIncomingBluetoothCommand(){
   
   int fileIndex = 0;
   String parsedOperationMode = "";
+  String parsedDataString = "";
 
   File file = SPIFFS.open("/incomingBluetoothCommand.txt", FILE_READ);
   while (file.available()) {
@@ -473,10 +474,16 @@ void setOperationModeFromIncomingBluetoothCommand(){
       // START PARSING THE SIGNAL FROM THE DATA PORTION OF THE COMMAND
       if(c == '\n'){
         operationMode = parsedOperationMode;
+        incomingBluetoothCommandDataStringParsed = parsedDataString;
         Serial.println("Parsed Operation Mode: " + parsedOperationMode);
+        Serial.println("Parsed Data String: " + parsedDataString);
         break;
       } else {
-        parsedOperationMode += c;
+        if(fileIndex < INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH + 4){
+          parsedOperationMode += c;
+        } else {
+          parsedDataString += c;
+        }
       }
     }
 
@@ -667,6 +674,13 @@ void handleIncomingCommand(){
     returnAdapterConfigurationToBluetooth();
     incomingBluetoothCommandParsed = "";
   }
+
+  if(incomingBluetoothCommandParsed == OPERATIONMODE_DETECT_SIGNAL){
+    operationModeDetectSignal();
+    incomingBluetoothCommandParsed = "";
+  }
+
+   
   
 }
 
@@ -778,11 +792,11 @@ void recordSignal(){
   }
 }
 
-void detectSignal(int minRssi){
+bool detectSignal(int minRssi){
   bool signalDetected = false;
   detectedRssi = -100;
   detectedFrequency = 0.0;
-  while(signalDetected == false){
+  while(signalDetected == false && operationMode == OPERATIONMODE_DETECT_SIGNAL){
       // ITERATE FREQUENCIES      
       for(float fMhz : signalDetectionFrequencies)
       {
@@ -821,10 +835,11 @@ void detectSignal(int minRssi){
         rssiDetected = "-" + rssiDetected;
 
         String dataString = frequencyDetected + rssiDetected;
-        sendCommand(COMMAND_SEND_DETECTED_FREQUENCY,COMMAND_ID_DUMMY,dataString);
+        sendCommand(COMMAND_DETECTED_FREQUENCY,COMMAND_ID_DUMMY,dataString);
         
       } 
   }
+  return signalDetected;
 }
 
 void writeSignalBufferToFile(File file, int signalBuffer[], int signalLength){
@@ -870,7 +885,7 @@ void operationModeRecordSignal(){
 
 void operationModeDetectSignal(){
 
-  if(incomingBluetoothCommandParsed == OPERATIONMODE_RECORD_SIGNAL && incomingBluetoothCommandDataStringParsed != "" && incomingBluetoothCommandDataStringParsed.length() == 4){
+  if(incomingBluetoothCommandDataStringParsed != "" && incomingBluetoothCommandDataStringParsed.length() == 4){
       int parsedMinRssi = incomingBluetoothCommandDataStringParsed.toInt();
       if(parsedMinRssi < 0){
         signalDetectionMinRssi = parsedMinRssi;          
@@ -884,13 +899,16 @@ void operationModeDetectSignal(){
   }
   digitalWrite(PIN_LED_ONBOARD, HIGH);  
 
-  while(operationMode == OPERATIONMODE_DETECT_SIGNAL && CC1101_TX == false){
-    detectSignal(signalDetectionMinRssi);   
-  }
+  //while(operationMode == OPERATIONMODE_DETECT_SIGNAL && CC1101_TX == false){
+   bool result = detectSignal(signalDetectionMinRssi);   
+  //}
    
   Serial.println("Detection done.");
   digitalWrite(PIN_LED_ONBOARD, LOW);  
-  setOperationMode(OPERATIONMODE_IDLE);
+  if(result){
+    setOperationMode(OPERATIONMODE_IDLE);
+  }
+  
 }
 
 void replaySignal(){

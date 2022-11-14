@@ -172,8 +172,12 @@ class SubMarineService {
 
 
 
-    fun setOperationMode(operationMode:String){
-        val command = SubmarineCommand(Constants.COMMAND_SET_OPERATION_MODE,Constants.COMMAND_ID_DUMMY, operationMode)
+    fun setOperationMode(operationMode:String, dataString: String? = null){
+        var cmdData = operationMode
+        if(dataString != null){
+            cmdData += dataString
+        }
+        val command = SubmarineCommand(Constants.COMMAND_SET_OPERATION_MODE,Constants.COMMAND_ID_DUMMY, cmdData)
         sendCommandToDevice(command)
     }
 

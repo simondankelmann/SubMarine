@@ -95,6 +95,12 @@ class ConnectedDeviceFragment: Fragment(), SubmarineResultListenerInterface {
             requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_connected_device_to_nav_record_signal)
         }
 
+        // DETECT SIGNALBUTTON
+        val detectSignalButton: Button = binding.detectSignalButton
+        detectSignalButton.setOnClickListener { view ->
+            requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_connected_device_to_nav_detect_signal)
+        }
+
         // ADAPTER SETUP BUTTON
         val adapterSetupButton: Button = binding.adapterSetupButton
         adapterSetupButton.setOnClickListener { view ->
@@ -108,10 +114,14 @@ class ConnectedDeviceFragment: Fragment(), SubmarineResultListenerInterface {
         }
 
         // DB COUNTER
-        val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
+        var db = AppDatabase.getDatabase(requireContext());
+        val signalDao = db.signalDao()
         CoroutineScope(Dispatchers.IO).launch {
             val dataSize = signalDao.getAll().size
             _viewModel!!.dbInfoText.postValue(dataSize.toString() + " Signal(s) in Database")
+
+            //Log.d(_logTag, "DB PATH: " + AppDatabase.getDatabase(requireContext()).openHelper.writableDatabase.path)
+            //AppDatabase.exportToSdCard();
         }
 
         // ANIMATION

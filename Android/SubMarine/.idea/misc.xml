@@ -11,6 +11,7 @@
         <entry key="app/src/main/res/layout/content_main.xml" value="0.3703125" />
         <entry key="app/src/main/res/layout/fragment_adapter_setup.xml" value="0.22" />
         <entry key="app/src/main/res/layout/fragment_connected_device.xml" value="0.19114583333333332" />
+        <entry key="app/src/main/res/layout/fragment_detect_signal.xml" value="0.24479166666666666" />
         <entry key="app/src/main/res/layout/fragment_home.xml" value="0.19114583333333332" />
         <entry key="app/src/main/res/layout/fragment_marker_infowindow.xml" value="0.21770833333333334" />
         <entry key="app/src/main/res/layout/fragment_periscope.xml" value="0.19114583333333332" />

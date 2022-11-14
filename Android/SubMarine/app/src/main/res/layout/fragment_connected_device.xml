@@ -66,11 +66,19 @@
         ></Button>
 
     <Button
+        android:id="@+id/detectSignalButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Detect Signal"
+        app:layout_constraintTop_toBottomOf="@id/recordsignalButton"
+        ></Button>
+
+    <Button
         android:id="@+id/adapterSetupButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Adapter Setup"
-        app:layout_constraintTop_toBottomOf="@id/recordsignalButton"
+        app:layout_constraintTop_toBottomOf="@id/detectSignalButton"
         ></Button>
 
     <Button
