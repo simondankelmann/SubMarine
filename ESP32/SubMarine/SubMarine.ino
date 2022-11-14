@@ -15,29 +15,44 @@ bool receivingBluetoothCommand = false;
 int incomingCommandStartTime = 0;
 int incomingCommandEndTime = 0;
 
+// COMMANDS
 #define COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND "0001" 
 #define COMMAND_SET_OPERATION_MODE "0002" 
 #define COMMAND_TRANSFER_SIGNAL_OVER_BLUETOOTH "0003"
 #define COMMAND_SET_ADAPTER_CONFIGURATION "0004"
 #define COMMAND_GET_ADAPTER_CONFIGURATION "0005"
+#define COMMAND_SEND_DETECTED_FREQUENCY "0006"
 String incomingBluetoothCommandParsed = "";
+String incomingBluetoothCommandIdParsed = "";
+String incomingBluetoothCommandDataStringParsed = "";
+
+// COMMAND IDS
+#define COMMAND_ID_DUMMY "0000"
 
 // SIGNAL FROM BLUETOOTH COMMAND
 #define INCOMING_BLUETOOTH_SIGNAL_BUFFER_SIZE 4096
 int incomingBluetoothSignal[INCOMING_BLUETOOTH_SIGNAL_BUFFER_SIZE];
 
-// OPERATION MODE
+// OPERATION MODES
 #define OPERATIONMODE_IDLE "0000" 
 #define OPERATIONMODE_HANDLE_INCOMING_BLUETOOTH_COMMAND "0001" 
 #define OPERATIONMODE_PERISCOPE "0002"
 #define OPERATIONMODE_RECORD_SIGNAL "0003"
+#define OPERATIONMODE_DETECT_SIGNAL "0004"
 String lastExecutedOperationMode = "0000"; 
-String operationMode = "0000";
+String operationMode = OPERATIONMODE_DETECT_SIGNAL;//"0000";
 
 // RECORDED SAMPLES BUFFER
 #define MAX_LENGHT_RECORDED_SIGNAL 4096
 int recordedSignal[MAX_LENGHT_RECORDED_SIGNAL];
 int recordedSamples = 0;
+
+// SINGAL DETECTION
+#define SIGNAL_DETECTION_FREQUENCIES_LENGTH 16
+float signalDetectionFrequencies[SIGNAL_DETECTION_FREQUENCIES_LENGTH] = {300.00, 303.87, 304.25, 310.00, 315.00, 318.00, 390.00, 418.00, 433.07, 433.92, 434.42, 434.77, 438.90, 868.35, 915.00, 925.00};
+int detectedRssi = -100;
+float detectedFrequency = 0.0;
+int signalDetectionMinRssi = -65;
 
 // CC1101
 #include <ELECHOUSE_CC1101_SRC_DRV.h>
@@ -128,9 +143,10 @@ void initCC1101(){
   if(!ELECHOUSE_cc1101.getCC1101()){       
     Serial.println("CC1101 Connection Error");
   } else {
-    Serial.println("CC1101 Connection OK");
+    //Serial.println("CC1101 Connection OK");
   }
 }
+
 
 void btCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
   if(event == ESP_SPP_SRV_OPEN_EVT){
@@ -200,6 +216,7 @@ void incomingBluetoothCommandReceivedCallback(){
 
   String parsedCommand = "";
   String parsedCommandId = "";
+  String parsedDataString = "";
 
   int fileIndex = 0;  
   File file = SPIFFS.open("/incomingBluetoothCommand.txt", FILE_READ);
@@ -213,6 +230,10 @@ void incomingBluetoothCommandReceivedCallback(){
     if(fileIndex > 3 && fileIndex <= 7){
       parsedCommandId += c;
     }
+
+    if(fileIndex > 7){
+      parsedDataString += c;
+    }
     
     fileIndex++;
   }
@@ -220,9 +241,12 @@ void incomingBluetoothCommandReceivedCallback(){
   file.close();
   Serial.println("Parsed Command: " + parsedCommand);
   Serial.println("Parsed Command ID: " + parsedCommandId);
+  Serial.println("Parsed Data: " + parsedDataString);
 
   // SET THE CURRENT COMMAND HEADER INFORMATION FOR MAIN THREAD
   incomingBluetoothCommandParsed = parsedCommand;
+  incomingBluetoothCommandIdParsed = parsedCommand;
+  incomingBluetoothCommandDataStringParsed = parsedDataString;
 
   setOperationMode(OPERATIONMODE_HANDLE_INCOMING_BLUETOOTH_COMMAND); 
 }
@@ -523,6 +547,27 @@ void sendSignalToBluetooth(int samples[], int samplesLength){
   }
 }
 
+void sendCommand(String command, String commandId, String dataString){
+    String commandString = command + commandId + dataString;
+    Serial.println("Sending Command: " + command + " with ID: " + commandId + ", Data: " + dataString);
+
+    // SEND IT WITH BT SERIAL
+    if(SerialBT.hasClient()){
+        int before = millis();  
+        for(int i = 0; i < commandString.length(); i++){
+          SerialBT.write(commandString[i]);      
+        }
+        SerialBT.write('\n');
+        SerialBT.flush();
+        int after = millis();
+
+        Serial.print("Command sent after: ");
+        Serial.print(after - before);
+        Serial.println(" Milliseconds");
+    }
+
+}
+
 void sendSignalToBluetoothFromFile(String fileName){
   if(SerialBT.hasClient()){
     Serial.println("Sending Recorded File to Bluetooth");
@@ -590,6 +635,8 @@ void loop() {
     periscope();
   } else if(operationMode == OPERATIONMODE_RECORD_SIGNAL){
     operationModeRecordSignal();
+  } else if(operationMode == OPERATIONMODE_DETECT_SIGNAL){
+    operationModeDetectSignal();
   } else if(operationMode == OPERATIONMODE_HANDLE_INCOMING_BLUETOOTH_COMMAND){
     // HANDLE INCOMING COMMAND
     handleIncomingCommand();
@@ -616,7 +663,7 @@ void handleIncomingCommand(){
     incomingBluetoothCommandParsed = "";
   }
 
-   if(incomingBluetoothCommandParsed == COMMAND_GET_ADAPTER_CONFIGURATION){
+  if(incomingBluetoothCommandParsed == COMMAND_GET_ADAPTER_CONFIGURATION){
     returnAdapterConfigurationToBluetooth();
     incomingBluetoothCommandParsed = "";
   }
@@ -731,6 +778,55 @@ void recordSignal(){
   }
 }
 
+void detectSignal(int minRssi){
+  bool signalDetected = false;
+  detectedRssi = -100;
+  detectedFrequency = 0.0;
+  while(signalDetected == false){
+      // ITERATE FREQUENCIES      
+      for(float fMhz : signalDetectionFrequencies)
+      {
+          CC1101_MHZ = fMhz;
+          initCC1101();
+
+          int rssi = ELECHOUSE_cc1101.getRssi();
+
+          if(rssi >= detectedRssi){
+            detectedRssi = rssi;
+            detectedFrequency = fMhz;
+          }            
+      }
+
+      if(detectedRssi >= minRssi){
+
+        signalDetected = true;
+
+        // DEBUG
+        Serial.print("MHZ: ");  
+        Serial.print(detectedFrequency);   
+        Serial.print(" RSSI: ");
+        Serial.println(detectedRssi);
+        delay(300);
+
+        // SEND BACK
+        String frequencyDetected = String(detectedFrequency); // MAX 6 DIGITS E.G. 123.00
+        while(frequencyDetected.length() < 6){
+          frequencyDetected = "0" + frequencyDetected;
+        }
+
+        String rssiDetected = String(detectedRssi * -1); // MAX 4 DIGITS E.G. -100
+        while(rssiDetected.length() < 3){
+          rssiDetected = "0" + rssiDetected;
+        }
+        rssiDetected = "-" + rssiDetected;
+
+        String dataString = frequencyDetected + rssiDetected;
+        sendCommand(COMMAND_SEND_DETECTED_FREQUENCY,COMMAND_ID_DUMMY,dataString);
+        
+      } 
+  }
+}
+
 void writeSignalBufferToFile(File file, int signalBuffer[], int signalLength){
     String prepend = "";
     for(int i = 0; i <= signalLength; i++){
@@ -768,6 +864,31 @@ void operationModeRecordSignal(){
   recordSignal();    
 
   Serial.println("Recording done.");
+  digitalWrite(PIN_LED_ONBOARD, LOW);  
+  setOperationMode(OPERATIONMODE_IDLE);
+}
+
+void operationModeDetectSignal(){
+
+  if(incomingBluetoothCommandParsed == OPERATIONMODE_RECORD_SIGNAL && incomingBluetoothCommandDataStringParsed != "" && incomingBluetoothCommandDataStringParsed.length() == 4){
+      int parsedMinRssi = incomingBluetoothCommandDataStringParsed.toInt();
+      if(parsedMinRssi < 0){
+        signalDetectionMinRssi = parsedMinRssi;          
+      }
+  }
+
+  Serial.println("Detecting a Signal with min. RSSI: " + String(signalDetectionMinRssi));
+  if(lastExecutedOperationMode != OPERATIONMODE_RECORD_SIGNAL || CC1101_TX == true){
+    CC1101_TX = false;
+    initCC1101();
+  }
+  digitalWrite(PIN_LED_ONBOARD, HIGH);  
+
+  while(operationMode == OPERATIONMODE_DETECT_SIGNAL && CC1101_TX == false){
+    detectSignal(signalDetectionMinRssi);   
+  }
+   
+  Serial.println("Detection done.");
   digitalWrite(PIN_LED_ONBOARD, LOW);  
   setOperationMode(OPERATIONMODE_IDLE);
 }
@@ -1060,12 +1181,14 @@ int tryRecordSignalToBuffer(){
   return i;  
 }
 
+/*
 int tryRecordSignalToFile(File file) {
   int i;
   Serial.println("Recording...");
 
   byte n = 0;
   int sign = -1;
+  int currentVal = 0;
   int64_t startus = esp_timer_get_time();
   int64_t startread;
   int64_t dif = 0;
@@ -1111,7 +1234,8 @@ int tryRecordSignalToFile(File file) {
     }
     else {
       //recordedSignal[i] = dif * sign;
-      String valueToAdd = prepend + String(dif * sign);
+      currentVal = dif * sign;
+      String valueToAdd = prepend + String(currentVal);
       prepend = ",";
       writeStringToFile(file, valueToAdd);
       n = !n;
@@ -1127,7 +1251,7 @@ int tryRecordSignalToFile(File file) {
   lastCopyTime = (long)(stopus - startus);
 
   return i;
-}
+}*/
 
 void writeStringToFile(File file, String data){
   //Serial.println("Adding String to File: " + data);
