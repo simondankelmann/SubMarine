@@ -51,15 +51,38 @@
         android:progress="65"
         />
 
-    <TextView
+    <LinearLayout
+        android:id="@+id/SeekbarLabelLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/textViewMinRssiLabel"
-        android:text="Min. RSSI: -65 dBm"
-        android:textColor="@color/fontcolor_component_dark_inactive"
-        android:textAlignment="center"
-        android:padding="10dp"
-        app:layout_constraintTop_toBottomOf="@id/detectSignalMinRssiSeekbar"></TextView>
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/detectSignalMinRssiSeekbar"
+        >
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:id="@+id/textViewMinRssiLabel"
+            android:text="Min. RSSI: -65 dBm"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            android:textAlignment="center"
+            android:padding="10dp"
+            app:layout_constraintTop_toBottomOf="@id/detectSignalMinRssiSeekbar"></TextView>
+
+        <CheckBox
+            android:id="@+id/continuousDetectionCheckbox"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Continuous Detection"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            android:checked="true"
+            ></CheckBox>
+
+    </LinearLayout>
+
+
 
 
     <LinearLayout
@@ -67,11 +90,12 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@id/textViewMinRssiLabel"
+        app:layout_constraintTop_toBottomOf="@id/SeekbarLabelLayout"
         app:layout_constraintBottom_toTopOf="@id/DetectSignalFooter"
         android:padding="5dp">
 
         <LinearLayout
+            android:id="@+id/DetectSignalResultLabelLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
@@ -101,11 +125,17 @@
                 android:padding="10dp"
                 android:textAlignment="center"
                ></TextView>
-
         </LinearLayout>
 
-
-
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/textViewLogHeadling"
+            android:text="Log:"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            android:textAlignment="center"
+            android:padding="10dp"
+            app:layout_constraintTop_toBottomOf="@id/DetectSignalResultLabelLayout"></TextView>
 
         <ScrollView
             android:id="@+id/scrollViewDetectionLog"
@@ -116,16 +146,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/textViewLogHeadling"
-                    android:text="Log:"
-                    android:textColor="@color/fontcolor_component_dark_inactive"
-                    android:textAlignment="center"
-                    android:padding="10dp"
-                    app:layout_constraintTop_toBottomOf="@id/textViewDetectSignalTitle"></TextView>
 
                 <TextView
                     android:layout_width="match_parent"

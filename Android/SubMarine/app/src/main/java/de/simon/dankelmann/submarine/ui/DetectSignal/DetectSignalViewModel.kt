@@ -27,12 +27,16 @@ class DetectSignalViewModel: ViewModel() {
         value = "-"
     }
 
+    val continuosDetection = MutableLiveData<Boolean>().apply {
+        value = true
+    }
+
     val log = MutableLiveData<String>().apply {
         value = ""
     }
 
     val footerText1 = MutableLiveData<String>().apply {
-        value = "-"
+        value = "0 Signals detected"
     }
 
     val footerText2 = MutableLiveData<String>().apply {

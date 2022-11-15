@@ -47,6 +47,7 @@ class DetectSignalFragment: Fragment(), SubmarineResultListenerInterface {
     private var _submarineService:SubMarineService = AppContext.submarineService
     private var _signalDetectDate:LocalDateTime? = null
     private var _minRssi = "-065"
+    private var _detectedSignals = 0
 
 
 
@@ -65,9 +66,11 @@ class DetectSignalFragment: Fragment(), SubmarineResultListenerInterface {
         _binding = FragmentDetectSignalBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        setupUi()
+
         _submarineService.addResultListener(this)
         _submarineService.connect()
+
+        setupUi()
 
         return root
     }
@@ -95,16 +98,12 @@ class DetectSignalFragment: Fragment(), SubmarineResultListenerInterface {
         minRssiSeekbar.setOnSeekBarChangeListener(object :
             SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seek: SeekBar, progress: Int, fromUser: Boolean) {
-                //var minRssi = progress * -1
-
                 _minRssi = progress.toString()
                 while(_minRssi.length < 3){
                     _minRssi = "0"+ _minRssi
                 }
                 _minRssi = "-" + _minRssi
                 minRssiLabel.text = "Min. RSSI: "+(progress * -1).toString() + " dBm"
-
-                // write custom code for progress is changed
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
@@ -112,7 +111,6 @@ class DetectSignalFragment: Fragment(), SubmarineResultListenerInterface {
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                // NOT IN USE
                 _submarineService.setOperationMode(Constants.OPERATIONMODE_DETECT_SIGNAL, _minRssi)
             }
         });
@@ -130,6 +128,11 @@ class DetectSignalFragment: Fragment(), SubmarineResultListenerInterface {
         val detectedFrequency: TextView = binding.textViewDetectedFrequency
         _viewModel!!.detectedFrequency.observe(viewLifecycleOwner) {
             detectedFrequency.text = it
+        }
+
+        var _continousDetectionCheckbox = binding.continuousDetectionCheckbox
+        _continousDetectionCheckbox.setOnCheckedChangeListener { buttonView, isChecked ->
+            _viewModel!!.continuosDetection.postValue(isChecked)
         }
 
         val detectedRssi: TextView = binding.textViewDetectedRssi
@@ -167,6 +170,7 @@ class DetectSignalFragment: Fragment(), SubmarineResultListenerInterface {
 
     override fun onPause() {
         _submarineService.removeResultListener(this)
+
         super.onPause()
     }
 
@@ -230,10 +234,16 @@ class DetectSignalFragment: Fragment(), SubmarineResultListenerInterface {
 
 
         val previousLog = _viewModel!!.log.value
-        _viewModel!!.log.postValue(previousLog + timestamp + " | " + detectedFrequency.toString() + " Mhz" + " | " + detectedRssi.toString() + " dBm" +"\n")
+        _viewModel!!.log.postValue(timestamp + " | " + detectedFrequency.toString() + " Mhz" + " | " + detectedRssi.toString() + " dBm" +"\n" + previousLog)
+
+        _detectedSignals++
+        _viewModel!!.footerText1.postValue(_detectedSignals.toString() + " Signals detected")
 
 
-        _submarineService.setOperationMode(Constants.OPERATIONMODE_DETECT_SIGNAL, _minRssi)
+        if(_viewModel!!.continuosDetection.value == true){
+            _submarineService.setOperationMode(Constants.OPERATIONMODE_DETECT_SIGNAL, _minRssi)
+        }
+
     }
 
 
