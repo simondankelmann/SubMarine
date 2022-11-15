@@ -43,6 +43,7 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
     private var _bluetoothSerialUuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
     private var _inputReaderThread:Thread? = null
     private var _maxReconnectionAttempts = 3
+    private var _maxReconnectionAttemptsSocket = 1
     //private var _callback: KFunction1<String, Unit>? = null
     //private var _connectionChangedCallback: KFunction1<Int, Unit>? = null
     // PUBLIC VAR
@@ -56,27 +57,27 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
 
     fun connect(macAddress: String, attempt: Int){
         //_callback = receivedDataCallback
-        try{
-            if(_bluetoothAdapter != null){
-                _bluetoothDevice = _bluetoothAdapter?.getRemoteDevice(macAddress)
-                if(_bluetoothDevice != null){
-                    if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
-                        Log.d(_logTag, "Connecting to Socket")
-                        connectSocket()
+            try{
+                if(_bluetoothAdapter != null ){
+                    _bluetoothDevice = _bluetoothAdapter?.getRemoteDevice(macAddress)
+                    if(_bluetoothDevice != null){
+                        if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
+                            Log.d(_logTag, "Connecting to Socket")
+                            connectSocket()
+                        }
                     }
                 }
-            }
-        } catch (ex:java.lang.Exception){
-            Log.d(_logTag, "Could not connect to Socket on Attempt  " + attempt + ":"+ ex.message)
+            } catch (ex:java.lang.Exception){
+                Log.d(_logTag, "Could not connect on Attempt  " + attempt + ":"+ ex.message)
 
-            if(attempt <= _maxReconnectionAttempts){
-                // SLEEP
-                Thread.sleep(1000)
-                connect(macAddress, attempt + 1)
-            } else {
-                connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
+                if(attempt <= _maxReconnectionAttempts){
+                    // SLEEP
+                    Thread.sleep(1000)
+                    connect(macAddress, attempt + 1)
+                } else {
+                    connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
+                }
             }
-        }
     }
 
     private fun resetConnection() {
@@ -112,14 +113,16 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
     fun connectionStateChanged(connectionState:Int){
         if(connectionState == SubMarineService.ConnectionStates.Connected.value){
             isConnected = true
-        } else {
+        } else if(connectionState == SubMarineService.ConnectionStates.Connecting.value) {
+            isConnected = false
+        } else if(connectionState == SubMarineService.ConnectionStates.Disconnected.value) {
             isConnected = false
         }
         submarineService.connectionStateChanged(connectionState)
         Log.d(_logTag, "Connection State was changed: " + connectionState)
     }
 
-    fun connectSocket(){
+    fun connectSocket(attempt:Int = 1){
         resetConnection()
         //_connectionChangedCallback!!(connectionState_Connecting)
 
@@ -129,26 +132,40 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
         if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
             _bluetoothSocket = _bluetoothDevice?.createInsecureRfcommSocketToServiceRecord(_bluetoothSerialUuid)
             if(_bluetoothSocket != null){
-                _bluetoothSocket?.connect()
-                Thread.sleep(500)
-                if(_bluetoothSocket!!.isConnected){
-                    isConnected = true
-                    _bluetoothSocketOutputStream = _bluetoothSocket?.getOutputStream()
-                    _bluetoothSocketInputStream = _bluetoothSocket?.getInputStream()
+                try{
+                    _bluetoothSocket?.connect()
+                    Thread.sleep(1000)
+                    if(_bluetoothSocket!!.isConnected){
+                        isConnected = true
+                        _bluetoothSocketOutputStream = _bluetoothSocket?.getOutputStream()
+                        _bluetoothSocketInputStream = _bluetoothSocket?.getInputStream()
 
-                    //_connectionChangedCallback!!(connectionState_Connected)
+                        //_connectionChangedCallback!!(connectionState_Connected)
 
-                    // BEGIN LISTENING
-                    //beginListeningOnInputStream(_callback!!)
-                    beginListeningOnInputStream()
+                        // BEGIN LISTENING
+                        //beginListeningOnInputStream(_callback!!)
+                        beginListeningOnInputStream()
 
-                    // EXECUTE CALLBACKS
-                    connectionStateChanged(SubMarineService.ConnectionStates.Connected.value)
-                } else {
-                    //_connectionChangedCallback!!(connectionState_Disconnected)
-                    // EXECUTE CALLBACKS
-                    connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
+                        // EXECUTE CALLBACKS
+                        connectionStateChanged(SubMarineService.ConnectionStates.Connected.value)
+                        return
+                    } else {
+                        //_connectionChangedCallback!!(connectionState_Disconnected)
+                        // EXECUTE CALLBACKS
+                        //connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
+                    }
+                } catch(ex:Exception){
+                    Log.d(_logTag, "Could not connect to Socket on Attempt  " + attempt + ":"+ ex.message)
+
+                    if(attempt <= _maxReconnectionAttemptsSocket){
+                        // SLEEP
+                        Thread.sleep(1000)
+                        connectSocket(attempt + 1)
+                    } else {
+                        connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
+                    }
                 }
+
             }
         }
     }

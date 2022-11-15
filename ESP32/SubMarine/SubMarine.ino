@@ -29,10 +29,6 @@ String incomingCommand = "";
 String incomingCommandId = "";
 String incomingCommandDataString = "";
 
-//String incomingBluetoothCommandParsed = "";
-//String incomingBluetoothCommandIdParsed = "";
-//String incomingBluetoothCommandDataStringParsed = "";
-
 // COMMAND IDS
 #define COMMAND_ID_DUMMY "0000"
 
@@ -49,10 +45,15 @@ int incomingBluetoothSignal[INCOMING_BLUETOOTH_SIGNAL_BUFFER_SIZE];
 String _lastExecutedOperationMode = "0000"; 
 String _operationMode = "0000";
 
-// RECORDED SAMPLES BUFFER
+// RECORDING SINGAL PARAMERS
+#define MAX_EMPTY_RECORDING_CYCLES 32 // 32 RESET CYCLES
+#define MINIMUM_RECORDED_TRANSITIONS 32
+#define MINIMUM_RECORDTIME_MICROSECONDS 16000
 #define MAX_LENGHT_RECORDED_SIGNAL 4096
+#define MAX_TRANSITION_TIME_MICROSECONDS 32000
 int recordedSignal[MAX_LENGHT_RECORDED_SIGNAL];
 int recordedSamples = 0;
+long lastRecordDuration = 0;
 
 // SINGAL DETECTION
 #define SIGNAL_DETECTION_FREQUENCIES_LENGTH 16
@@ -591,26 +592,21 @@ void handleIncomingCommand(){
   }
 }
 
-#define MINIMUM_TRANSITIONS 32
-#define MINIMUM_COPYTIME_US 16000
-#define RESET443 32000 //32m
-long lastCopyTime = 0;
-
 void recordSignal(){
   int i, transitions = 0;
-  lastCopyTime = 0;
+  lastRecordDuration = 0;
  
   // RECORD TO BUFFER AND THEN WRITE TO SPIFFS
-  while(transitions < MINIMUM_TRANSITIONS && lastCopyTime < MINIMUM_COPYTIME_US && CC1101_TX == false){ /*&& (getOperationMode() == OPERATIONMODE_PERISCOPE  || getOperationMode() == OPERATIONMODE_RECORD_SIGNAL))*/
+  while(transitions < MINIMUM_RECORDED_TRANSITIONS && lastRecordDuration < MINIMUM_RECORDTIME_MICROSECONDS && CC1101_TX == false){ /*&& (getOperationMode() == OPERATIONMODE_PERISCOPE  || getOperationMode() == OPERATIONMODE_RECORD_SIGNAL))*/
     transitions = tryRecordSignalToBuffer();          
   }
 
   bool isSuccess = false;
-  if(transitions >= MINIMUM_TRANSITIONS){
-    if(lastCopyTime >= MINIMUM_COPYTIME_US){
+  if(transitions >= MINIMUM_RECORDED_TRANSITIONS){
+    if(lastRecordDuration >= MINIMUM_RECORDTIME_MICROSECONDS){
       isSuccess = true;
     } else {
-      Serial.println("Copytime too small: " + String(lastCopyTime));
+      Serial.println("Copytime too small: " + String(lastRecordDuration));
     }
   } else {
     Serial.println("Not enough Transitions: " + String(transitions));
@@ -639,7 +635,14 @@ void recordSignal(){
     dumpSpiffsFileToSerial(SPIFFS_FILENAME_RECORDED_SIGNAL);
     sendSignalFromFile(SPIFFS_FILENAME_RECORDED_SIGNAL);    
   } else {
-    return;
+    
+    if(getOperationMode() == OPERATIONMODE_PERISCOPE  || getOperationMode() == OPERATIONMODE_RECORD_SIGNAL){
+      Serial.println("Recording again...");
+      recordSignal();
+    } else {
+       Serial.println("Not Recording again." + getOperationMode());
+    }
+    
   }
 }
 
@@ -740,8 +743,6 @@ void operationModeDetectSignal(){
       if(parsedMinRssi < 0){
         signalDetectionMinRssi = parsedMinRssi;          
       }
-  } else {
-    Serial.println("NOE " + incomingCommandDataString);
   }
 
   Serial.println("Detecting a Signal with min. RSSI: " + String(signalDetectionMinRssi));
@@ -796,17 +797,6 @@ void sendSamples(int samples[], int samplesLenght) {
   Serial.println("Transmission completed.");
 }
 
-// ------------------------- COPY REPLAY STUFF --> REFACTOR THIS !!!
-#define LOOPDELAY 20
-#define HIBERNATEMS 30*1000
-//#define BUFSIZE MAX_LENGHT_RECORDED_SIGNAL
-#define REPLAYDELAY 0
-// THESE VALUES WERE FOUND PRAGMATICALLY
-#define WAITFORSIGNAL 32 // 32 RESET CYCLES
-#define DUMP_RAW_MBPS 0.1 // as percentage of 1Mbps, us precision. (100kbps) This is mainly to dump and analyse in, ex, PulseView
-#define BOUND_SAMPLES true
-int delayus = REPLAYDELAY;
-
 void dumpSpiffsFileToSerial(String fileName){
   Serial.println("Content of File: " + fileName);
   
@@ -820,23 +810,92 @@ void dumpSpiffsFileToSerial(String fileName){
   file.close(); 
 }
 
+int tryRecordSignalToBuffer(){
+  // RESET
+  memset(recordedSignal,0,MAX_LENGHT_RECORDED_SIGNAL*sizeof(int));
+  byte currentInput = 0;
+  int sign = -1;
+  int64_t attempts = 0;
+  int maxAttempts = 32;
+  int recordedTransitions = 0;
+  int64_t recordingStarted = esp_timer_get_time();
+
+  for (recordedTransitions = 0; recordedTransitions < MAX_LENGHT_RECORDED_SIGNAL; recordedTransitions++) {
+    // RECORD TRANSITION TIMES 
+    int64_t transitionTime = 0;
+    int64_t readingStarted = esp_timer_get_time();
+
+    while (transitionTime < MAX_TRANSITION_TIME_MICROSECONDS) {
+      transitionTime = esp_timer_get_time() - readingStarted;
+      if(digitalRead(PIN_GDO0) != currentInput){
+        //BREAK THE LOOP IF THE PIN STATE CHANGES
+        break;
+      }
+    }
+
+    int transitionValue;
+    if (transitionTime >= MAX_TRANSITION_TIME_MICROSECONDS) {
+      transitionValue = MAX_TRANSITION_TIME_MICROSECONDS * sign;
+      recordedSignal[recordedTransitions] = transitionValue;
+      // RESET ITERATOR WHEN -3200 WAS RECORDED FOR THE FIRST TIME
+      if (recordedTransitions == 0) {
+        recordedTransitions = -1;
+        attempts++;
+        if (attempts > maxAttempts) {
+          //Serial.println("No signal detected!");
+          return -1;
+        }
+      } else {
+        // -32000 WAS RECORDED AFTER SOME POSITIVES VALUES --> END OF SIGNAL
+        attempts++;
+        if (attempts > MAX_EMPTY_RECORDING_CYCLES) {
+          //Serial.println("End of signal detected!");
+          break;
+        }
+      }
+
+    } else {
+      transitionValue = transitionTime * sign;
+      recordedSignal[recordedTransitions] = transitionValue;
+      currentInput = !currentInput;
+      if(currentInput) {
+        sign = 1;
+      } else {
+        sign = -1;
+      }
+    }
+  }
+
+  int64_t recordingEnded = esp_timer_get_time();
+  lastRecordDuration = (long)(recordingEnded - recordingStarted);
+
+  CC1101_LAST_AVG_LQI = 0.0;
+  CC1101_LAST_AVG_RSSI = 0.0;
+  
+  return recordedTransitions;
+}
+
+void writeStringToFile(File file, String data){
+  for(char c : data){
+    file.write(c);    
+  }
+}
+
+
+
+/*
 int lqiCounter = 1;
 int lqiRecorded = 1;
 int rssiCounter = 1;
 int rssiRecorded = 1;
-
+*/
+/*
 int tryRecordSignalToBuffer(){
   int i;
-  lastCopyTime = 0;
+  lastRecordDuration = 0;
   //Serial.println("Copying...");
   // CLEAR ANY PREVIOUSLY RECORDED SIGNAL
   memset(recordedSignal,0,MAX_LENGHT_RECORDED_SIGNAL*sizeof(int));
-  /*
-  lqiCounter = 0;
-  lqiRecorded = 0;
-  rssiCounter = 0;
-  rssiRecorded = 0;*/
-
   byte n = 0;
   int sign = -1;
 
@@ -848,26 +907,26 @@ int tryRecordSignalToBuffer(){
     startread = esp_timer_get_time();
     dif = 0;
     //WAIT FOR INIT
-    while (dif < RESET443) {
+    while (dif < MAX_TRANSITION_TIME_MICROSECONDS) {
       dif = esp_timer_get_time() - startread;
       if (CCAvgRead() != n) {
         break;
       }
     }
-    if (dif >= RESET443) {
-      recordedSignal[i] = RESET443 * sign;
+    if (dif >= MAX_TRANSITION_TIME_MICROSECONDS) {
+      recordedSignal[i] = MAX_TRANSITION_TIME_MICROSECONDS * sign;
       //if not started wait...
       if (i == 0) {
         i = -1;
         ttime++;
-        if (ttime > WAITFORSIGNAL) {
+        if (ttime > MAX_EMPTY_RECORDING_CYCLES) {
           //Serial.println("No signal detected!");
           return -1;
         }
       }
       else {
         ttime++;
-        if (ttime > WAITFORSIGNAL) {
+        if (ttime > MAX_EMPTY_RECORDING_CYCLES) {
           //Serial.println("End of signal detected!");
           break;
         }
@@ -885,20 +944,11 @@ int tryRecordSignalToBuffer(){
   }
 
   recordedSamples = i;
-
   int64_t stopus = esp_timer_get_time();
-  lastCopyTime = (long)(stopus - startus);
-
+  lastRecordDuration = (long)(stopus - startus);
   CC1101_LAST_AVG_LQI = lqiRecorded / lqiCounter;
   CC1101_LAST_AVG_RSSI = rssiRecorded / rssiCounter;
-
   return i;  
-}
-
-void writeStringToFile(File file, String data){
-  for(char c : data){
-    file.write(c);    
-  }
 }
 
 #define BAVGSIZE 11
@@ -915,3 +965,4 @@ byte CCAvgRead() {
   if (cres > BAVGSIZE/2) return 1;
   return 0;
 }
+*/

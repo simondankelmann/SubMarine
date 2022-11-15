@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import com.airbnb.lottie.LottieAnimationView
 import de.simon.dankelmann.submarine.AppContext.AppContext
+import de.simon.dankelmann.submarine.Constants.Constants
 import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.Interfaces.SubmarineResultListenerInterface
 import de.simon.dankelmann.submarine.Models.SubmarineCommand
@@ -157,6 +158,7 @@ class ConnectedDeviceFragment: Fragment(), SubmarineResultListenerInterface {
         when(connectionState){
             SubMarineService.ConnectionStates.Connected.value-> {
                 _viewModel!!.animationResourceId.postValue(R.raw.submarine)
+                _submarineService.setOperationMode(Constants.OPERATIONMODE_IDLE)
             }
 
             SubMarineService.ConnectionStates.Connecting.value-> {
