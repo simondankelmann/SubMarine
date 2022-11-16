@@ -7,12 +7,16 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.lifecycle.ViewModel
 import de.simon.dankelmann.submarine.BuildConfig
 import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.Entities.LocationEntity
 import de.simon.dankelmann.submarine.Entities.SignalEntity
 import de.simon.dankelmann.submarine.R
+import de.simon.dankelmann.submarine.databinding.FragmentSignalDataTabBinding
+import de.simon.dankelmann.submarine.databinding.FragmentSignalDatabaseBinding
+import de.simon.dankelmann.submarine.databinding.FragmentSignalMapTabBinding
 import de.simon.dankelmann.submarine.ui.ViewSignalEntity.TabFragments.SignalDataTab.SignalDataTabViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,45 +31,50 @@ import org.osmdroid.views.overlay.TilesOverlay
 
 class SignalMapTabFragment (signalEntity: SignalEntity?): Fragment() {
 
-    private var _signalEntity: SignalEntity? = null
     private var _map: MapView? = null
     private var _mapController: IMapController? = null
     private var _initialMapZoom = 20.5
     private lateinit var viewModel: SignalMapTabViewModel
-    private var _view:View? = null
-    private var _viewModel:ViewModel? = null
     private var _logTag = "SignalMapTab"
+
+    private var _binding: FragmentSignalMapTabBinding? = null
+    private var _signalEntity:SignalEntity? = null
+    private var _viewModel:SignalDataTabViewModel? = null
 
     init{
         _signalEntity = signalEntity
     }
 
     companion object {
-        fun newInstance() = SignalMapTabFragment(null)
+        fun newInstance(signalEntity: SignalEntity?) = SignalMapTabFragment(signalEntity)
     }
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val viewModel = ViewModelProvider(this).get(SignalMapTabViewModel::class.java)
-        val view = inflater.inflate(R.layout.fragment_signal_map_tab, container, false)
-        _viewModel = viewModel
-        _view = view
-        return view
+        _viewModel = ViewModelProvider(this).get(SignalDataTabViewModel::class.java)
+        _binding = FragmentSignalMapTabBinding.inflate(inflater, container, false)
+        _viewModel!!.signalEntity.postValue(_signalEntity)
+
+        setupUi()
+
+        return _binding!!.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    fun setupUi(){
         loadMap(_signalEntity)
+
+        _viewModel!!.signalEntity.observe(viewLifecycleOwner) {
+            loadMap(_signalEntity)
+        }
     }
 
     override fun onResume() {
         super.onResume()
+        //loadMap(_signalEntity)
         if(_map != null){
             _map!!.onResume()
-        } else {
-            loadMap(_signalEntity)
         }
     }
 
@@ -99,9 +108,9 @@ class SignalMapTabFragment (signalEntity: SignalEntity?): Fragment() {
     }
 
     fun setupMap(locationEntity: LocationEntity, signalEntity: SignalEntity){
-        if(_view != null){
+        if(_binding != null){
             Log.d(_logTag, "Setting up Map")
-            var map:MapView = _view!!.findViewById(R.id.signalMapTapMapView)
+            var map:MapView = _binding!!.signalMapTapMapView
             if(map != null){
                 var signalPoint = GeoPoint(locationEntity.latitude!!, locationEntity.longitude!!)
 
@@ -120,9 +129,6 @@ class SignalMapTabFragment (signalEntity: SignalEntity?): Fragment() {
                 _map!!.getOverlayManager().getTilesOverlay().setColorFilter(TilesOverlay.INVERT_COLORS);
                 _map!!.getOverlayManager().getTilesOverlay().setLoadingBackgroundColor(R.color.background_dark);
                 _map!!.getOverlayManager().getTilesOverlay().setLoadingLineColor(R.color.fontcolor_component_dark_inactive);
-
-
-
 
                 var signalMarker = Marker(_map!!)
                 signalMarker.position = signalPoint

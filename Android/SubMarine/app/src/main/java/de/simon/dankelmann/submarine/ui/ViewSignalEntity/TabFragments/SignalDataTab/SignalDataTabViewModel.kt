@@ -2,9 +2,10 @@ package de.simon.dankelmann.submarine.ui.ViewSignalEntity.TabFragments.SignalDat
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import de.simon.dankelmann.submarine.Entities.SignalEntity
 
 class SignalDataTabViewModel : ViewModel() {
-    val signalData = MutableLiveData<String>().apply {
-        value = "-"
+    val signalEntity = MutableLiveData<SignalEntity?>().apply {
+        value = null
     }
 }

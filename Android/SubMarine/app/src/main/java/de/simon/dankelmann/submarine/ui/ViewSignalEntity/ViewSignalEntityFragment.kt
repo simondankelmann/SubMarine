@@ -62,6 +62,8 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
     private var _mapController: IMapController? = null
     private var _initialMapZoom = 20.5
 
+    private var _collectionAdapter:DetectedSignalTabCollectionAdapter? = null
+
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
@@ -141,23 +143,7 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
 
         val saveButton: ImageButton = binding.SaveButton
 
-        // TAB LAYOUT
-        var collectionAdapter = DetectedSignalTabCollectionAdapter(this, _signalEntity)
-        val tabLayout:TabLayout = binding.tabLayoutDetectedSignal
-        var viewPager:ViewPager2 =  binding.viewPagerDetectedSignalTabLayout
-        viewPager.adapter = collectionAdapter
-
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            when(position){
-                0 -> {
-                    tab.text = "Signal Data"
-                }
-
-                1 -> {
-                    tab.text = "Map"
-                }
-            }
-       }.attach()
+        setupTabs()
 
         _viewModel!!.footerText3.observe(viewLifecycleOwner) {
             footerText3.text = it
@@ -249,6 +235,26 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
                 }
             }
         }
+    }
+
+    fun setupTabs(){
+        // TAB LAYOUT
+        _collectionAdapter = DetectedSignalTabCollectionAdapter(this, _signalEntity)
+        val tabLayout:TabLayout = binding.tabLayoutDetectedSignal
+        var viewPager:ViewPager2 =  binding.viewPagerDetectedSignalTabLayout
+        viewPager.adapter = _collectionAdapter
+
+        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            when(position){
+                0 -> {
+                    tab.text = "Signal Data"
+                }
+
+                1 -> {
+                    tab.text = "Map"
+                }
+            }
+        }.attach()
     }
 
     /*
@@ -443,6 +449,7 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
 
     override fun onResume() {
         _submarineService.addResultListener(this)
+        setupTabs()
         super.onResume()
     }
 

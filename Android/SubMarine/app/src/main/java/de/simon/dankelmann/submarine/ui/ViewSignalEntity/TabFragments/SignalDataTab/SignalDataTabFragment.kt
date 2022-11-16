@@ -12,50 +12,58 @@ import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import de.simon.dankelmann.submarine.Entities.SignalEntity
 import de.simon.dankelmann.submarine.R
+import de.simon.dankelmann.submarine.databinding.FragmentSignalDataTabBinding
+import de.simon.dankelmann.submarine.databinding.FragmentViewSignalEntityBinding
 import de.simon.dankelmann.submarine.ui.SignalMap.SignalMapViewModel
+import de.simon.dankelmann.submarine.ui.ViewSignalEntity.SignalMapTab.SignalMapTabFragment
 
 class SignalDataTabFragment (signalEntity: SignalEntity?): Fragment() {
 
-
+    private var _binding: FragmentSignalDataTabBinding? = null
+    private var _signalEntity:SignalEntity? = null
+    private var _viewModel:SignalDataTabViewModel? = null
 
     companion object {
-        fun newInstance() = SignalDataTabFragment(null)
+        fun newInstance(signalEntity: SignalEntity?) = SignalDataTabFragment(signalEntity)
     }
-
-    private var _signalEntity:SignalEntity? = null
 
     init{
         _signalEntity = signalEntity
     }
 
-    private lateinit var viewModel: SignalDataTabViewModel
+    fun updateSignalEntity(signalEntity: SignalEntity?){
+        _signalEntity = signalEntity
+        _viewModel!!.signalEntity.postValue(signalEntity)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val viewModel = ViewModelProvider(this).get(SignalDataTabViewModel::class.java)
-        var view = inflater.inflate(R.layout.fragment_signal_data_tab, container, false)
+        _viewModel = ViewModelProvider(this).get(SignalDataTabViewModel::class.java)
+        _binding = FragmentSignalDataTabBinding.inflate(inflater, container, false)
 
-        if(_signalEntity != null){
-            viewModel.signalData.postValue(_signalEntity!!.signalData)
-        }
+        _viewModel!!.signalEntity.postValue(_signalEntity)
 
-        val signalDataTextView: TextView = view.findViewById(R.id.signalDataTabTextView)
-        viewModel.signalData.observe(viewLifecycleOwner) {
-            signalDataTextView.text = it
-        }
+        setupUi()
 
-        return view
+        return _binding!!.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
+    fun setupUi(){
+        val signalDataTextView: TextView = _binding!!.signalDataTabTextView
+        _viewModel!!.signalEntity.observe(viewLifecycleOwner) {
+            if(it != null){
+                signalDataTextView.text = it.signalData
+            } else {
+                signalDataTextView.text = "Loading..."
+            }
+        }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProvider(this).get(SignalDataTabViewModel::class.java)
+        _viewModel = ViewModelProvider(this).get(SignalDataTabViewModel::class.java)
         // TODO: Use the ViewModel
     }
 

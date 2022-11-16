@@ -23,7 +23,7 @@
             android:layout_height="60dp"
             android:src="@drawable/ic_baseline_signal"
             android:layout_gravity="left"
-            android:scaleType="fitCenter"
+            android:scaleType="center"
             app:tint="@color/fontcolor_component_dark_inactive"
            >
         </ImageView>

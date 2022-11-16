@@ -40,33 +40,18 @@
             app:layout_constraintTop_toBottomOf="@id/textViewSignalDatabaseTitle"></TextView>-->
 
         <!-- SEARCH BUTTON -->
-        <LinearLayout
-            android:layout_height="@dimen/height_switchButton"
-            android:layout_width="@dimen/width_switchButton"
-            android:layout_weight="1"
-            android:background="@drawable/switch_layout_bg"
-            android:backgroundTint="@color/backgroundcolor_component_dark_inactive"
-            android:id="@+id/layoutSearchButton"
-            android:orientation="vertical"
-            android:bottomRightRadius="@dimen/border_radius_button"
-            android:bottomLeftRadius="@dimen/border_radius_button"
-            android:topLeftRadius="@dimen/border_radius_button"
-            android:topRightRadius="@dimen/border_radius_button"
+        <ImageButton
             android:layout_margin="5dp"
+            android:id="@+id/searchButton"
+            android:layout_width="@dimen/width_image_switchButton"
+            android:layout_height="@dimen/height_image_switchButton"
+            android:background="@color/backgroundcolor_component_dark_inactive"
+            android:scaleType="fitCenter"
             android:layout_gravity="center"
-            >
-            <ImageButton
-                android:layout_margin="5dp"
-                android:id="@+id/searchButton"
-                android:layout_width="@dimen/width_image_switchButton"
-                android:layout_height="@dimen/height_image_switchButton"
-                android:background="@null"
-                android:scaleType="fitCenter"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_search"
-                app:tint="@color/fontcolor_component_dark_inactive">
-            </ImageButton>
-        </LinearLayout>
+            android:src="@drawable/ic_search"
+            app:tint="@color/fontcolor_component_dark_inactive"
+            android:padding="5dp">
+        </ImageButton>
         <!-- END: SEARCH BUTTON -->
 
     </LinearLayout>
