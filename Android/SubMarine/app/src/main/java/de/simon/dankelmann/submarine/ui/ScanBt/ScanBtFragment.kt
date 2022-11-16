@@ -158,10 +158,7 @@ class ScanBtFragment : Fragment(), AdapterView.OnItemClickListener {
 
         var selectedDevice = _viewModel.getBluetoothDeviceModel(p2)
 
-        CoroutineScope(Dispatchers.IO).launch {
-            AppContext.submarineService.setBluetoothDevice(selectedDevice!!.device!!)
-            AppContext.submarineService.connect()
-        }
+        AppContext.submarineService.setBluetoothDevice(selectedDevice!!.device!!)
 
         requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_scanbt_to_nav_connected_device)
     }

@@ -17,6 +17,11 @@ bool receivingBluetoothCommand = false;
 int incomingCommandStartTime = 0;
 int incomingCommandEndTime = 0;
 
+// CONNECTION STATES
+#define CONNECTION_STATE_DISCONNECTED "0000" 
+#define CONNECTION_STATE_CONNECTING "0001" 
+#define CONNECTION_STATE_CONNECTED "0002" 
+
 // COMMANDS
 #define COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND "0001" 
 #define COMMAND_SET_OPERATION_MODE "0002" 
@@ -24,6 +29,7 @@ int incomingCommandEndTime = 0;
 #define COMMAND_SET_ADAPTER_CONFIGURATION "0004"
 #define COMMAND_GET_ADAPTER_CONFIGURATION "0005"
 #define COMMAND_DETECTED_FREQUENCY "0006"
+#define COMMAND_UPDATE_CONNECTION_STATUS "0007" 
 
 String incomingCommand = "";
 String incomingCommandId = "";
@@ -159,7 +165,10 @@ void initCC1101(){
 void btCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
   if(event == ESP_SPP_SRV_OPEN_EVT){
     Serial.println("Bluetooth Client Connected!");
+    // INFORM ABOUT CONNECTION SUCCESS
     delay(100);
+    //sendCommand(COMMAND_UPDATE_CONNECTION_STATUS,COMMAND_ID_DUMMY,CONNECTION_STATE_CONNECTED);
+    //delay(1000);
   } else if(event == ESP_SPP_DATA_IND_EVT){
     // RECEIVE INCOMING BLUETOOTH COMMAND
     if(receivingBluetoothCommand == false){

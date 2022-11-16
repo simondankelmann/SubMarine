@@ -35,6 +35,7 @@ class BluetoothService (context: Context){
     fun stopDiscovery(){
         if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_SCAN)){
             if (_bluetoothAdapter?.isDiscovering == true){
+                Log.d(_logTag, "Discovery canceled")
                 _bluetoothAdapter?.cancelDiscovery()
             }
         }
