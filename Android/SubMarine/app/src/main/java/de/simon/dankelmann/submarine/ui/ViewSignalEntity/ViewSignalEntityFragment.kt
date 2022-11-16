@@ -15,8 +15,13 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.viewpager.widget.ViewPager
+import androidx.viewpager2.widget.ViewPager2
 import com.airbnb.lottie.LottieAnimationView
 import com.airbnb.lottie.LottieDrawable
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
+import de.simon.dankelmann.submarine.Adapters.DetectedSignalTabCollectionAdapter
 import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.BuildConfig
 import de.simon.dankelmann.submarine.Constants.Constants
@@ -94,6 +99,7 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
                     Log.d(_logTag, "POW IS: " + signalEntity.proofOfWork)
 
                     //MAP SETUP
+                    /*
                     if(_signalEntity != null && _locationId != -1){
                         val locationEntity = locationDao.getById(_locationId)
                         if(locationEntity != null){
@@ -101,7 +107,7 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
                         }
                     } else {
                         Log.d(_logTag, "No Map Setup")
-                    }
+                    }*/
                 }
             }
 
@@ -113,24 +119,45 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
         return root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
+    }
+
     fun setupUi(){
         // SETUP UI
         val replayButton: ImageButton = binding.replaySignalDetailButton
         val animationView: LottieAnimationView = binding.animationSignalDetail
-        val mapView = binding.signalMapView
+        //val mapView = binding.signalMapView
         val titleText: EditText = binding.textViewSignalDetailTitle
         val descriptionText: TextView = binding.textViewSignalDetailDescription
         //val frequencyText: TextView = binding.textViewSignalFrequency
-        val dataText: EditText = binding.textViewSignalDetailData
+        //val dataText: EditText = binding.textViewSignalDetailData
         val footerText1: TextView = binding.textViewFooter1
         val footerText2: TextView = binding.textViewFooter2
         val footerText3: TextView = binding.textViewFooter3
 
         val powButton: ImageButton = binding.proofOfWorkButton
-        var layoutPowButton:LinearLayout = binding.layoutPOWButton
+        //var layoutPowButton:LinearLayout = binding.layoutPOWButton
 
         val saveButton: ImageButton = binding.SaveButton
 
+        // TAB LAYOUT
+        var collectionAdapter = DetectedSignalTabCollectionAdapter(this, _signalEntity)
+        val tabLayout:TabLayout = binding.tabLayoutDetectedSignal
+        var viewPager:ViewPager2 =  binding.viewPagerDetectedSignalTabLayout
+        viewPager.adapter = collectionAdapter
+
+        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            when(position){
+                0 -> {
+                    tab.text = "Signal Data"
+                }
+
+                1 -> {
+                    tab.text = "Map"
+                }
+            }
+       }.attach()
 
         _viewModel!!.footerText3.observe(viewLifecycleOwner) {
             footerText3.text = it
@@ -147,15 +174,15 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
                 titleText.setText( _viewModel!!.signalEntity.value!!.name)
                 descriptionText.text = _viewModel!!.signalEntity.value!!.frequency.toString() + " Mhz" + " | " +_viewModel!!.signalEntity.value!!.signalDataLength.toString() + " Samples"
                 //frequencyText.text =
-                dataText.setText( _viewModel!!.signalEntity.value!!.signalData)
+                //dataText.setText( _viewModel!!.signalEntity.value!!.signalData)
                 footerText1.text = getModulationString(_viewModel!!.signalEntity.value!!.modulation!!) + " | " + _viewModel!!.signalEntity.value!!.type!!
                 footerText2.text = "RX-BW: " + _viewModel!!.signalEntity.value!!.rxBw.toString()+" Khz"
 
                 if(_viewModel!!.signalEntity.value!!.proofOfWork){
-                    layoutPowButton.background.setTint(resources.getColor(R.color.backgroundcolor_component_dark_active))
+                    powButton.background.setTint(resources.getColor(R.color.backgroundcolor_component_dark_active))
                     powButton.setColorFilter(ContextCompat.getColor(requireContext(), R.color.fontcolor_component_dark_active))
                 } else {
-                    layoutPowButton.background.setTint(resources.getColor(R.color.backgroundcolor_component_dark_inactive))
+                    powButton.background.setTint(resources.getColor(R.color.backgroundcolor_component_dark_inactive))
                     powButton.setColorFilter(ContextCompat.getColor(requireContext(), R.color.fontcolor_component_dark_inactive))
                 }
             }
@@ -207,12 +234,12 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
             if(_viewModel!!.signalEntity.value != null){
                 var signalId = _viewModel!!.signalEntity.value!!.uid
                 var signalName = titleText.text.toString()
-                var signalData = dataText.text.toString()
-                var signalDataLength = dataText.text.toString().split(",").size
+                //var signalData = dataText.text.toString()
+                //var signalDataLength = dataText.text.toString().split(",").size
 
                 CoroutineScope(Dispatchers.IO).launch {
                     val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
-                    signalDao.updateValues(signalId, signalName, signalData, signalDataLength )
+                    signalDao.updateValues(signalId, signalName)
                     val signalEntity = signalDao.getById(signalId)
                     if(signalEntity != null){
                         _viewModel!!.signalEntity.postValue(signalEntity)
@@ -224,6 +251,7 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
         }
     }
 
+    /*
     fun setupMap(locationEntity:LocationEntity, signalEntity: SignalEntity){
         if(_binding != null){
             Log.d(_logTag, "Setting up Map")
@@ -267,7 +295,7 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
                 _map!!.overlays.add(signalMarker)
             }
         }
-    }
+    }*/
 
 
     fun getModulationString(modulation:Int):String{

@@ -265,7 +265,6 @@ class DetectSignalFragment: Fragment(), SubmarineResultListenerInterface {
                 _viewModel!!.footerText3.postValue("Connected")
                 // ACTIVATE OPERATIONMODE_DETECT_SIGNAL
                 _submarineService.setOperationMode(Constants.OPERATIONMODE_DETECT_SIGNAL, _minRssi)
-                _viewModel!!.animationResourceId.postValue(R.raw.wave2)
             }
         }
     }

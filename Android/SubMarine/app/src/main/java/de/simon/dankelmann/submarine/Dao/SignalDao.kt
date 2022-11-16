@@ -29,8 +29,8 @@ interface SignalDao {
     @Query("UPDATE signalentity SET proofofwork = :pow WHERE uid = :singalId")
     fun updateProofOfWork(singalId: Int, pow:Boolean)
 
-    @Query("UPDATE signalentity SET name = :name , signalData = :signalData, signalDataLength = :signalDataLength WHERE uid = :singalId")
-    fun updateValues(singalId: Int, name:String, signalData:String, signalDataLength: Int)
+    @Query("UPDATE signalentity SET name = :name  WHERE uid = :singalId")
+    fun updateValues(singalId: Int, name:String)
 
     @Insert
     fun insertAll(vararg signalEntities: SignalEntity)

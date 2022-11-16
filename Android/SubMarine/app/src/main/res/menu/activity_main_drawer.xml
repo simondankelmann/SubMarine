@@ -28,6 +28,11 @@
             android:title="@string/menu_recordSignal" />
 
         <item
+            android:id="@+id/nav_detect_signal"
+            android:icon="@drawable/ic_search"
+            android:title="@string/menu_detectSignal" />
+
+        <item
             android:id="@+id/nav_periscope"
             android:icon="@drawable/ic_baseline_search_24"
             android:title="@string/menu_periscope" />
