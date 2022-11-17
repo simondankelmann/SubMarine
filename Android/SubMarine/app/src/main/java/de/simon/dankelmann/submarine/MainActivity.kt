@@ -1,7 +1,12 @@
 package de.simon.dankelmann.submarine
 
+import android.app.Application
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.util.Log
 import android.view.Menu
+import androidx.annotation.RequiresApi
 import com.google.android.material.navigation.NavigationView
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -11,14 +16,20 @@ import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import de.simon.dankelmann.submarine.AppContext.AppContext
+import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.databinding.ActivityMainBinding
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     private lateinit var appContext:AppContext
+    private var _logTag = "MainActivity"
 
+    @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -52,6 +63,10 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_home, R.id.nav_scanbt, R.id.nav_periscope, R.id.nav_signal_database, R.id.nav_record_signal, R.id.nav_adapter_setup, R.id.nav_signal_map
             ), drawerLayout
         )
+
+        // CREATE DB BACKUP
+        //AppDatabase.exportToFile()
+
 
         // FOREGROUND SERVICE
         /*

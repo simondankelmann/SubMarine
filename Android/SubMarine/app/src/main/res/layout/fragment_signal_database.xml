@@ -85,7 +85,8 @@
         app:layout_constraintBottom_toBottomOf="@id/signalDatabaseLayout">
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="wrap_content"
             android:id="@+id/textViewSignalDatabaseFooter"
             android:text="-"
@@ -93,6 +94,13 @@
             android:textAlignment="center"
             android:padding="10dp"
             app:layout_constraintBottom_toBottomOf="@id/connectedDeviceLayout"></TextView>
+
+        <Button
+            android:id="@+id/exportDatabaseButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Export Database"></Button>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

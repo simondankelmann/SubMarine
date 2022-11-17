@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ListView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -33,7 +34,6 @@ class SignalDatabaseFragment: Fragment(), AdapterView.OnItemClickListener {
     // onDestroyView.
     private val binding get() = _binding!!
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -74,6 +74,13 @@ class SignalDatabaseFragment: Fragment(), AdapterView.OnItemClickListener {
         val searchInput = binding.signalDatabaseSearchString
         searchButton.setOnClickListener{
             loadData(searchInput.text.toString())
+        }
+
+
+        val exportButton = binding.exportDatabaseButton
+        exportButton.setOnClickListener{
+            var exportedFileSize = AppDatabase.exportToFile()
+            Toast.makeText(requireActivity(), "Exported Filesize: " + exportedFileSize, Toast.LENGTH_SHORT).show()
         }
 
         // LOAD DATA FROM DB

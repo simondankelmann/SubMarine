@@ -8,12 +8,15 @@ import androidx.annotation.RequiresApi
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.Dao.LocationDao
 import de.simon.dankelmann.submarine.Dao.SignalDao
 import de.simon.dankelmann.submarine.Entities.LocationEntity
 import de.simon.dankelmann.submarine.Entities.SignalEntity
 import java.io.*
 import java.nio.channels.FileChannel
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,71 +42,53 @@ abstract class AppDatabase: RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
         private var _logTag = "AppDatabase"
+        private val _dbDirectoryPath = Environment.getExternalStorageDirectory().absolutePath + "/Submarine/Database/"
+        private val _dbFileName = "submarine-database.db"
 
         fun getDatabase(context: Context): AppDatabase {
             if (INSTANCE == null) {
+                var directory = File(_dbDirectoryPath)
+                if(!directory.exists()){
+                    directory.mkdirs()
+                }
+
                 synchronized(this) {
                     INSTANCE = Room.databaseBuilder(
                         context.applicationContext,
                         AppDatabase::class.java,
-                        "submarine-database.db"
-                    ).build()                }
+                        _dbDirectoryPath + _dbFileName
+                    ).build()
+                }
             }
             return INSTANCE!!
         }
 
         @RequiresApi(Build.VERSION_CODES.R)
-        fun exportToSdCard(){
-            val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-            //var destinationPath = Environment.getExternalStorageDirectory().absolutePath + "/exportedDb_"+timeStamp+".db"
-            var destinationPath = Environment.getDataDirectory().absolutePath + "/test.db"
-            var scrFile:File = File(INSTANCE!!.openHelper.writableDatabase.path)
-            var destinationFile = File(destinationPath)
+        fun exportToFile():Long{
+            var scrFile = File(getDatabase(AppContext.getContext()).openHelper.writableDatabase.path)
 
-            Log.d(_logTag,"SRC: " + scrFile)
-            if(!scrFile.exists()){
-                Log.d(_logTag,"SRC NON EXISTENT ")
+            var destinationDirectoryPath = _dbDirectoryPath + "/Backup/"
+            // CREATE THE BACKUP LOCATION IF IT DOES NOT EXIST
+            var destinationDirectory = File(destinationDirectoryPath)
+            if(!destinationDirectory.exists()){
+                destinationDirectory.mkdir()
             }
 
+            // CREATE A BACKUP FILENAME
+            val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+            var destinationFileName = "submarine_exportedDb_"+timeStamp+".db"
+            var destinationFilePath = destinationDirectoryPath + destinationFileName
 
-
-            Log.d(_logTag,"DEST: " + destinationPath)
+            var destinationFile = File(destinationFilePath)
+            // CREATE THE EMPTY FILE IF IT DOES NOT EXIST
             if(!destinationFile.exists()){
-                Log.d(_logTag,"DEST NON EXISTENT ")
                 destinationFile.createNewFile()
             }
+            // COPY THE FILES CONTENT
+            Files.copy(scrFile.toPath(), destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
 
-            Log.d(_logTag,"TRYING TO COPY")
-            scrFile.copyTo(destinationFile, true)
+            destinationFile = File(destinationFilePath)
+            return destinationFile.length()
         }
-
-        /*
-        @Throws(IOException::class)
-        private fun exportFile(src: File, dst: File): File? {
-
-            //if folder does not exist
-            if (!dst.exists()) {
-                if (!dst.mkdir()) {
-                    return null
-                }
-            }
-            val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-            val expFile = File(dst.path + File.separator + "IMG_" + timeStamp + ".jpg")
-            var inChannel: FileChannel? = null
-            var outChannel: FileChannel? = null
-            try {
-                inChannel = FileInputStream(src).channel
-                outChannel = FileOutputStream(expFile).channel
-            } catch (e: FileNotFoundException) {
-                e.printStackTrace()
-            }
-            try {
-                inChannel!!.transferTo(0, inChannel.size(), outChannel)
-            } finally {
-                inChannel?.close()
-                outChannel?.close()
-            }
-            return expFile
-        }*/
     }
 }
