@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.SignalGenerator.TabFragments.TimingsTab.TimingsTabFragment"
+    android:id="@+id/TimingsTabLayout"
+    >
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <EditText
+            android:id="@+id/editTextSignalTimings"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            ></EditText>
+    </ScrollView>
+</FrameLayout>

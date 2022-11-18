@@ -72,6 +72,9 @@
         android:name="de.simon.dankelmann.submarine.ui.ViewSignalEntity.ViewSignalEntityFragment"
         android:label="@string/menu_signalDetail"
         tools:layout="@layout/fragment_view_signal_entity" >
+        <action
+            android:id="@+id/action_nav_signalDetail_to_nav_signal_generator"
+            app:destination="@id/nav_signal_generator" />
     </fragment>
 
     <fragment
@@ -86,6 +89,13 @@
         android:name="de.simon.dankelmann.submarine.ui.DetectSignal.DetectSignalFragment"
         android:label="@string/menu_detectSignal"
         tools:layout="@layout/fragment_detect_signal" >
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_signal_generator"
+        android:name="de.simon.dankelmann.submarine.ui.SignalGenerator.SignalGeneratorFragment"
+        android:label="@string/menu_signalGenerator"
+        tools:layout="@layout/fragment_signal_generator" >
     </fragment>
 
     <fragment

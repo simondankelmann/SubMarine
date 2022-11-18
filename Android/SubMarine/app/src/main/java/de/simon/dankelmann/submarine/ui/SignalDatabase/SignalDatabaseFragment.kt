@@ -76,7 +76,6 @@ class SignalDatabaseFragment: Fragment(), AdapterView.OnItemClickListener {
             loadData(searchInput.text.toString())
         }
 
-
         val exportButton = binding.exportDatabaseButton
         exportButton.setOnClickListener{
             var exportedFileSize = AppDatabase.exportToFile()
@@ -85,7 +84,6 @@ class SignalDatabaseFragment: Fragment(), AdapterView.OnItemClickListener {
 
         // LOAD DATA FROM DB
         loadData("")
-
     }
 
     fun loadData(searchString:String){

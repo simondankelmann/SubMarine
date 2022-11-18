@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.SignalGenerator.SignalGeneratorFragment"
+    android:id="@+id/SignalGeneratorLayout"
+    android:background="@color/background_dark"
+    >
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewSignalGeneratorTitle"
+        android:text="Signal Generator"
+        android:textColor="@color/fontcolor_component_dark_active"
+        android:textAlignment="center"
+        android:textSize="22dp"
+        android:textStyle="bold"
+        android:padding="10dp"
+        app:layout_constraintTop_toTopOf="@id/SignalGeneratorLayout"></TextView>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewSignalGeneratorDescription"
+        android:text="-"
+        android:textColor="@color/fontcolor_component_dark_inactive"
+        android:textAlignment="center"
+        android:padding="10dp"
+        app:layout_constraintTop_toBottomOf="@id/textViewSignalGeneratorTitle"></TextView>
+
+    <LinearLayout
+        android:id="@+id/SignalGeneratorButtonRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/textViewSignalGeneratorDescription">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Replace me"></Button>
+    </LinearLayout>
+
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/tabLayoutWrapper"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@id/SignalGeneratorButtonRow"
+        app:layout_constraintBottom_toTopOf="@id/SignalGeneratorSeekBarRow">
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayoutSignalGenerator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/background_dark"
+            app:tabSelectedTextColor="@color/fontcolor_component_dark_active"
+            app:tabTextColor="@color/fontcolor_component_dark_inactive"/>
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPagerSignalGenerator"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/SignalGeneratorSeekBarRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@id/SignalGeneratorFooter">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="300 Symbols / Bit"
+            android:textAlignment="center"
+            android:textColor="@color/fontcolor_component_dark_inactive"></TextView>
+
+        <SeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:progress="300"
+            android:min="10"
+            android:max="1000"></SeekBar>
+    </LinearLayout>
+
+
+
+
+
+
+    <LinearLayout
+        android:id="@+id/SignalGeneratorFooter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="@id/SignalGeneratorLayout">
+
+        <TextView
+            android:id="@+id/textviewFooter1"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            android:padding="10dp"
+            android:textAlignment="center"
+            android:text="-">
+        </TextView>
+
+        <TextView
+            android:id="@+id/textviewFooter2"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            android:padding="10dp"
+            android:textAlignment="center"
+            android:text="-">
+        </TextView>
+
+        <TextView
+            android:id="@+id/textviewFooter3"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textColor="@color/fontcolor_component_dark_inactive"
+            android:padding="10dp"
+            android:textAlignment="center"
+            android:text="-">
+        </TextView>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

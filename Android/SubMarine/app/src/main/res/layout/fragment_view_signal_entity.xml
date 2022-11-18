@@ -100,6 +100,18 @@
             app:tint="@color/fontcolor_component_dark_inactive">
         </ImageButton>
 
+        <ImageButton
+            android:layout_margin="5dp"
+            android:id="@+id/OpenInGenerator"
+            android:layout_width="@dimen/width_image_switchButton"
+            android:layout_height="@dimen/height_image_switchButton"
+            android:background="@color/backgroundcolor_component_dark_inactive"
+            android:scaleType="fitCenter"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_code"
+            app:tint="@color/fontcolor_component_dark_inactive">
+        </ImageButton>
+
         <Space
             android:layout_width="0dp"
             android:layout_height="match_parent"

@@ -15,6 +15,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.findNavController
 import androidx.viewpager.widget.ViewPager
 import androidx.viewpager2.widget.ViewPager2
 import com.airbnb.lottie.LottieAnimationView
@@ -235,6 +236,18 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
                 }
             }
         }
+
+        // OPEN IN GENERATOR
+        val openInGeneratorButton = _binding!!.OpenInGenerator;
+        openInGeneratorButton.setOnClickListener { view ->
+            if(_viewModel!!.signalEntity.value != null){
+                var signalId = _viewModel!!.signalEntity.value!!.uid
+                val bundle = Bundle()
+                bundle.putInt("SignalEntityId", signalId)
+                requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_signalDetail_to_nav_signal_generator, bundle)
+            }
+        }
+
     }
 
     fun setupTabs(){
