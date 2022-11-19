@@ -76,13 +76,15 @@
         app:layout_constraintBottom_toTopOf="@id/SignalGeneratorFooter">
 
         <TextView
+            android:id="@+id/textviewSamplePerSymbol"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="300 Symbols / Bit"
+            android:text="300 Samples / Symbol"
             android:textAlignment="center"
             android:textColor="@color/fontcolor_component_dark_inactive"></TextView>
 
         <SeekBar
+            android:id="@+id/seekbarSamplesPerSymbol"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:progress="300"

@@ -49,28 +49,30 @@ class SignalAnalyzer {
     }
 
     fun ConvertBinaryStringToHexString(binaryString:String):String{
-        Log.d(_logTag, "BINARY STRING: " + binaryString)
+        //Log.d(_logTag, "BINARY STRING: " + binaryString)
         var hexString = "0x"
 
         // GET SUBSTRINGS OF 8 CHARS
-        var numberOfBytes = binaryString.length / 8
+        val bitStringLength = 4
+        var numberOfBytes = binaryString.length / bitStringLength
         for (i in 0 .. numberOfBytes) {
-            val startIndex = i * 8
-            var endIndex = startIndex + 8
+            val startIndex = i * bitStringLength
+            var endIndex = startIndex + bitStringLength
             if(binaryString.length <= endIndex){
                 endIndex = binaryString.length
             }
             var byteString = binaryString.substring(startIndex, endIndex)
 
-            Log.d(_logTag, "ByteString: " + byteString)
+            //Log.d(_logTag, "ByteString: " + byteString)
 
-            while(byteString.length < 8){
-                byteString = byteString + 0
+
+            while(byteString.length < bitStringLength){
+                byteString = byteString + "0"
             }
 
             try {
                 val byte: Byte = Integer.valueOf(byteString, 2).toByte()
-                var byteAsHex = String.format("%02X", byte)
+                var byteAsHex = byte.toString(16)// String.format("%02X", byte)
                 hexString += byteAsHex
             } catch (e:Exception){
                 Log.d(_logTag, e.message.toString())
@@ -79,7 +81,7 @@ class SignalAnalyzer {
 
         }
 
-
+        Log.d(_logTag,"hexString: " + hexString)
         return hexString
     }
 

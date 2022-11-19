@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import de.simon.dankelmann.submarine.Entities.SignalEntity
+import de.simon.dankelmann.submarine.Models.SignalGeneratorDataModel
 import de.simon.dankelmann.submarine.R
 import de.simon.dankelmann.submarine.Services.SignalAnalyzer
 import de.simon.dankelmann.submarine.databinding.FragmentHexTabBinding
@@ -14,21 +15,17 @@ import de.simon.dankelmann.submarine.databinding.FragmentTimingsTabBinding
 import de.simon.dankelmann.submarine.ui.SignalGenerator.TabFragments.TimingsTab.TimingsTabFragment
 import de.simon.dankelmann.submarine.ui.SignalGenerator.TabFragments.TimingsTab.TimingsTabViewModel
 
-class HexTabFragment(signalEntity: SignalEntity?)  : Fragment() {
+class HexTabFragment(signalGeneratorDataModel: SignalGeneratorDataModel)  : Fragment() {
 
     private var _logTag = "HexTab"
-    private var _signalEntity:SignalEntity? = null
+    private var _signalGeneratorDataModel:SignalGeneratorDataModel? = null
     private var _binding: FragmentHexTabBinding? = null
     private var _viewModel: HexTabViewModel? = null
     private var _signalAnalyzer = SignalAnalyzer()
-    private var _symbolsPerBit = 300
 
-    companion object {
-        fun newInstance(signalEntity: SignalEntity?) = HexTabFragment(signalEntity)
-    }
 
     init{
-        _signalEntity = signalEntity
+        _signalGeneratorDataModel = signalGeneratorDataModel
     }
 
     override fun onCreateView(
@@ -38,7 +35,7 @@ class HexTabFragment(signalEntity: SignalEntity?)  : Fragment() {
         _viewModel = ViewModelProvider(this).get(HexTabViewModel::class.java)
         _binding = FragmentHexTabBinding.inflate(inflater, container, false)
 
-        _viewModel!!.signalEntity.postValue(_signalEntity)
+        _viewModel!!.signalGeneratorDataModel.postValue(_signalGeneratorDataModel)
 
         setupUi()
 
@@ -47,17 +44,17 @@ class HexTabFragment(signalEntity: SignalEntity?)  : Fragment() {
 
     fun setupUi(){
         val editTextHexSignal = _binding!!.editTextHexSignal
-        _viewModel!!.signalEntity.observe(viewLifecycleOwner) {
-            if(it != null){
+        _viewModel!!.signalGeneratorDataModel.observe(viewLifecycleOwner) {
+            if(it != null && it.signalEntity != null){
 
                 var timingsList:MutableList<Int> = mutableListOf()
-                it!!.signalData!!.split(",").map {
+                it!!.signalEntity!!.signalData!!.split(",").map {
                     timingsList.add(it.toInt())
                 }
 
                 editTextHexSignal.setText("")
                 var prepend = ""
-                var binaryList = _signalAnalyzer.ConvertTimingsToBinaryStringList(timingsList, _symbolsPerBit)
+                var binaryList = _signalAnalyzer.ConvertTimingsToBinaryStringList(timingsList, it.samplesPerSymbol)
                 binaryList.map {
                     val hexString = _signalAnalyzer.ConvertBinaryStringToHexString(it)
                     editTextHexSignal.append(prepend + hexString)
@@ -67,6 +64,13 @@ class HexTabFragment(signalEntity: SignalEntity?)  : Fragment() {
             } else {
                 editTextHexSignal.setText("-")
             }
+        }
+    }
+
+    fun updateSignalGeneratorDataModel(signalGeneratorDataModel: SignalGeneratorDataModel){
+        _signalGeneratorDataModel = signalGeneratorDataModel
+        if(_viewModel != null){
+            _viewModel!!.signalGeneratorDataModel.postValue(signalGeneratorDataModel)
         }
     }
 

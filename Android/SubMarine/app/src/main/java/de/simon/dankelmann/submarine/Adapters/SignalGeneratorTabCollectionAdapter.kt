@@ -3,6 +3,7 @@ package de.simon.dankelmann.submarine.Adapters
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import de.simon.dankelmann.submarine.Entities.SignalEntity
+import de.simon.dankelmann.submarine.Models.SignalGeneratorDataModel
 import de.simon.dankelmann.submarine.ui.SignalGenerator.TabFragments.BinaryTab.BinaryTabFragment
 import de.simon.dankelmann.submarine.ui.SignalGenerator.TabFragments.ConfigTab.ConfigTabFragment
 import de.simon.dankelmann.submarine.ui.SignalGenerator.TabFragments.HexTab.HexTabFragment
@@ -10,35 +11,42 @@ import de.simon.dankelmann.submarine.ui.SignalGenerator.TabFragments.TimingsTab.
 import de.simon.dankelmann.submarine.ui.ViewSignalEntity.SignalMapTab.SignalMapTabFragment
 import de.simon.dankelmann.submarine.ui.ViewSignalEntity.TabFragments.SignalDataTab.SignalDataTabFragment
 
-class SignalGeneratorTabCollectionAdapter (fragment: Fragment, signalEntity: SignalEntity?) : FragmentStateAdapter(fragment) {
+class SignalGeneratorTabCollectionAdapter (fragment: Fragment, signalGeneratorDataModel: SignalGeneratorDataModel) : FragmentStateAdapter(fragment) {
 
-    private var _signalEntity:SignalEntity? = null
+    private lateinit var _signalGeneratorDataModel:SignalGeneratorDataModel
 
-    private var _signalDataTabFragment:SignalDataTabFragment? = null
-    private var _signalMapTabFragment:SignalMapTabFragment? = null
+    private lateinit var _timingsTabFragment:TimingsTabFragment
+    private lateinit var _binaryTabFragment:BinaryTabFragment
+    private lateinit var _hexTabFragment:HexTabFragment
+    private lateinit var _configTabFragment:ConfigTabFragment
 
     init{
-        _signalEntity = signalEntity
+        _signalGeneratorDataModel = signalGeneratorDataModel
 
-        _signalDataTabFragment = SignalDataTabFragment(_signalEntity)
-        _signalMapTabFragment = SignalMapTabFragment(_signalEntity)
+        _timingsTabFragment = TimingsTabFragment(_signalGeneratorDataModel)
+        _binaryTabFragment = BinaryTabFragment(_signalGeneratorDataModel)
+        _hexTabFragment = HexTabFragment(_signalGeneratorDataModel)
+        _configTabFragment = ConfigTabFragment(_signalGeneratorDataModel)
     }
 
-    fun updateSignalEntity(signalEntity: SignalEntity?){
-        _signalEntity = signalEntity
-        _signalDataTabFragment!!.updateSignalEntity(signalEntity)
+    fun updateSignalGeneratorDataModel(signalGeneratorDataModel: SignalGeneratorDataModel){
+        _signalGeneratorDataModel = signalGeneratorDataModel
+        _timingsTabFragment.updateSignalGeneratorDataModel(_signalGeneratorDataModel)
+        _binaryTabFragment.updateSignalGeneratorDataModel(_signalGeneratorDataModel)
+        _hexTabFragment.updateSignalGeneratorDataModel(_signalGeneratorDataModel)
+        _configTabFragment.updateSignalGeneratorDataModel(_signalGeneratorDataModel)
     }
 
     override fun getItemCount(): Int = 4
 
     override fun createFragment(position: Int): Fragment {
         when (position) {
-            0 -> return TimingsTabFragment.newInstance(_signalEntity)
-            1 -> return BinaryTabFragment.newInstance(_signalEntity)
-            2 -> return HexTabFragment.newInstance(_signalEntity)
-            3 -> return ConfigTabFragment.newInstance(_signalEntity)
+            0 -> return _timingsTabFragment
+            1 -> return _binaryTabFragment
+            2 -> return _hexTabFragment
+            3 -> return _configTabFragment
         }
-        return SignalDataTabFragment.newInstance(_signalEntity)
+        return _timingsTabFragment
     }
 
 

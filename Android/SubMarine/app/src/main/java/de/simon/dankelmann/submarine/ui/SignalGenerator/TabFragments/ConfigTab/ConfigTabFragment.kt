@@ -7,25 +7,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import de.simon.dankelmann.submarine.Entities.SignalEntity
+import de.simon.dankelmann.submarine.Models.SignalGeneratorDataModel
 import de.simon.dankelmann.submarine.R
 import de.simon.dankelmann.submarine.databinding.FragmentConfigTabBinding
 import de.simon.dankelmann.submarine.databinding.FragmentTimingsTabBinding
 import de.simon.dankelmann.submarine.ui.SignalGenerator.TabFragments.TimingsTab.TimingsTabFragment
 import de.simon.dankelmann.submarine.ui.SignalGenerator.TabFragments.TimingsTab.TimingsTabViewModel
 
-class ConfigTabFragment(signalEntity: SignalEntity?)  : Fragment() {
+class ConfigTabFragment(signalGeneratorDataModel: SignalGeneratorDataModel)  : Fragment() {
 
     private var _logTag = "ConfigTab"
-    private var _signalEntity:SignalEntity? = null
+    private var _signalGeneratorDataModel:SignalGeneratorDataModel? = null
     private var _binding: FragmentConfigTabBinding? = null
     private var _viewModel: ConfigTabViewModel? = null
 
-    companion object {
-        fun newInstance(signalEntity: SignalEntity?) = ConfigTabFragment(signalEntity)
-    }
-
     init{
-        _signalEntity = signalEntity
+        _signalGeneratorDataModel = signalGeneratorDataModel
     }
 
     override fun onCreateView(
@@ -35,7 +32,7 @@ class ConfigTabFragment(signalEntity: SignalEntity?)  : Fragment() {
         _viewModel = ViewModelProvider(this).get(ConfigTabViewModel::class.java)
         _binding = FragmentConfigTabBinding.inflate(inflater, container, false)
 
-        _viewModel!!.signalEntity.postValue(_signalEntity)
+        _viewModel!!.signalGeneratorDataModel.postValue(_signalGeneratorDataModel)
 
         setupUi()
 
@@ -44,6 +41,13 @@ class ConfigTabFragment(signalEntity: SignalEntity?)  : Fragment() {
 
     fun setupUi(){
 
+    }
+
+    fun updateSignalGeneratorDataModel(signalGeneratorDataModel: SignalGeneratorDataModel){
+        _signalGeneratorDataModel = signalGeneratorDataModel
+        if(_viewModel != null){
+            _viewModel!!.signalGeneratorDataModel.postValue(signalGeneratorDataModel)
+        }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {

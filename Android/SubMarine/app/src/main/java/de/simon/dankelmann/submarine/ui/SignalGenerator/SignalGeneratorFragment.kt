@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -21,6 +22,7 @@ import de.simon.dankelmann.submarine.Constants.Constants
 import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.Interfaces.SubmarineResultListenerInterface
 import de.simon.dankelmann.submarine.Models.CC1101Configuration
+import de.simon.dankelmann.submarine.Models.SignalGeneratorDataModel
 import de.simon.dankelmann.submarine.Models.SubmarineCommand
 import de.simon.dankelmann.submarine.R
 import de.simon.dankelmann.submarine.databinding.FragmentSignalGeneratorBinding
@@ -28,6 +30,7 @@ import de.simon.dankelmann.submarine.Services.SubMarineService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.math.sign
 
 class SignalGeneratorFragment : Fragment(), SubmarineResultListenerInterface {
 
@@ -35,6 +38,8 @@ class SignalGeneratorFragment : Fragment(), SubmarineResultListenerInterface {
     private val _logTag = "SignalGeneratorFragment"
     private var _viewModel: SignalGeneratorViewModel? = null
     private var _submarineService:SubMarineService = AppContext.submarineService
+    private lateinit var _collectionAdapter: SignalGeneratorTabCollectionAdapter
+
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -121,6 +126,33 @@ class SignalGeneratorFragment : Fragment(), SubmarineResultListenerInterface {
             descriptionTextView.text = it
         }
 
+        val samplesPerSymbolTextView: TextView = binding.textviewSamplePerSymbol
+        _viewModel!!.samplesPerSymbol.observe(viewLifecycleOwner) {
+            samplesPerSymbolTextView.text = it.toString() + " Samples / Symbol"
+        }
+
+        //SEEKBAR
+        val seekbarSamplesPerSymbol = binding.seekbarSamplesPerSymbol
+        seekbarSamplesPerSymbol.setOnSeekBarChangeListener(object :
+            SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seek: SeekBar, progress: Int, fromUser: Boolean) {
+                _viewModel!!.samplesPerSymbol.postValue(seek.progress)
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                // NOT IN USE
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                // POST THE NEW VALUE TO THE TAB FRAGMENTS
+                var signalGeneratorDataModel = SignalGeneratorDataModel()
+                signalGeneratorDataModel.signalEntity =  _viewModel!!.signalEntity.value
+                signalGeneratorDataModel.samplesPerSymbol = seekBar!!.progress
+                _collectionAdapter.updateSignalGeneratorDataModel(signalGeneratorDataModel)
+
+            }
+        });
+
         val footerTextView1: TextView = binding.textviewFooter1
         _viewModel!!.footerText1.observe(viewLifecycleOwner) {
             footerTextView1.text = it
@@ -139,10 +171,14 @@ class SignalGeneratorFragment : Fragment(), SubmarineResultListenerInterface {
     fun setupTabs(){
         requireActivity().runOnUiThread{
             // TAB LAYOUT
-            var collectionAdapter = SignalGeneratorTabCollectionAdapter(this, _viewModel!!.signalEntity.value)
+            var signalGeneratorDataModel = SignalGeneratorDataModel()
+            signalGeneratorDataModel.signalEntity =  _viewModel!!.signalEntity.value
+            signalGeneratorDataModel.samplesPerSymbol = _viewModel!!.samplesPerSymbol.value!!
+
+            _collectionAdapter = SignalGeneratorTabCollectionAdapter(this, signalGeneratorDataModel)
             val tabLayout: TabLayout = binding.tabLayoutSignalGenerator
             var viewPager: ViewPager2 =  binding.viewPagerSignalGenerator
-            viewPager.adapter = collectionAdapter
+            viewPager.adapter = _collectionAdapter
 
             TabLayoutMediator(tabLayout, viewPager) { tab, position ->
                 when(position){
