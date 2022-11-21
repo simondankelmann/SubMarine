@@ -64,7 +64,7 @@
                         android:id="@+id/textViewLabelMhz"
                         android:text="Frequency (Mhz)"
                         android:textColor="@color/fontcolor_component_dark_inactive"
-                        android:textAlignment="center"
+                        android:textAlignment="textStart"
                         android:padding="10dp"
                        ></TextView>
 
@@ -91,10 +91,18 @@
                         android:id="@+id/textViewLabelModulation"
                         android:text="Modulation"
                         android:textColor="@color/fontcolor_component_dark_inactive"
-                        android:textAlignment="center"
+                        android:textAlignment="textStart"
                         android:padding="10dp"
                         ></TextView>
 
+                    <Spinner
+                        android:id="@+id/modulationSpinner"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        />
+
+                    <!--
                     <EditText
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -104,7 +112,7 @@
                         android:textSize="14dp"
                         android:textColor="@color/fontcolor_component_dark_inactive"
                         android:textAlignment="center"
-                        ></EditText>
+                        ></EditText>-->
                 </LinearLayout>
 
 
@@ -119,7 +127,7 @@
                     android:id="@+id/textViewLabelDrate"
                     android:text="D-Rate"
                     android:textColor="@color/fontcolor_component_dark_inactive"
-                    android:textAlignment="center"
+                    android:textAlignment="textStart"
                     android:padding="10dp"
                     ></TextView>
 
@@ -146,7 +154,7 @@
                     android:id="@+id/textViewLabelRxBw"
                     android:text="RX Bandwidth"
                     android:textColor="@color/fontcolor_component_dark_inactive"
-                    android:textAlignment="center"
+                    android:textAlignment="textStart"
                     android:padding="10dp"
                     ></TextView>
 
@@ -174,10 +182,18 @@
                     android:id="@+id/textViewLabelPktFormat"
                     android:text="PKT Format"
                     android:textColor="@color/fontcolor_component_dark_inactive"
-                    android:textAlignment="center"
+                    android:textAlignment="textStart"
                     android:padding="10dp"
                     ></TextView>
 
+                <Spinner
+                    android:id="@+id/pktFormatSpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    />
+
+                <!--
                 <EditText
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -187,7 +203,7 @@
                     android:textSize="14dp"
                     android:textColor="@color/fontcolor_component_dark_inactive"
                     android:textAlignment="center"
-                    ></EditText>
+                    ></EditText>-->
             </LinearLayout>
 
 

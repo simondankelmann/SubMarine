@@ -301,7 +301,10 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
                     _bluetoothSocketOutputStream!!.write(message.toByteArray(), offset, length)
 
                     try{
-                        Thread.sleep(delay.toLong())  // wait for 1 second
+                        if(i < (repeatitions - 1)){
+                            Thread.sleep(delay.toLong())  // wait for 1 second
+                        }
+
                     } catch (ex:java.lang.Exception){
                         Log.d(_logTag, "Exception caught: " + ex.message)
                     }

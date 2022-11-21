@@ -268,9 +268,4 @@ class SubMarineService {
         return mhz + tx + modulation + dRate + rxBw + pktFormat + lqi + rssi
     }
 
-
-    companion object{
-
-    }
-
 }

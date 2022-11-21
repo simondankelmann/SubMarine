@@ -1,7 +1,6 @@
 package de.simon.dankelmann.submarine.Services
 
 import android.util.Log
-import java.lang.Math.log
 import java.lang.Math.round
 
 class SignalAnalyzer {
@@ -84,5 +83,58 @@ class SignalAnalyzer {
         Log.d(_logTag,"hexString: " + hexString)
         return hexString
     }
+
+
+    fun convertHexStringToTimingsList(hexString:String, samplesPerSymbol:Int):List<String>{
+        var inputString = hexString
+        Log.d(_logTag, "Converting Hex:" + hexString + " to Timings with " + samplesPerSymbol + " Samples/Symbol")
+        var timingsList:MutableList<String> = mutableListOf()
+
+        if(hexString.startsWith("0x")){
+            inputString = hexString.substring(2)
+        }
+
+        if(inputString.length % 2 == 1){
+            inputString = "0" + inputString
+        }
+
+        var bytes = inputString.decodeHex()
+        Log.d(_logTag, "Bytes: " + bytes.size)
+        bytes.map {
+            //Log.d(_logTag, it.toString(2))
+            var byteToInt = it.toInt()
+            if(byteToInt < 0){
+                byteToInt = byteToInt * -1
+            }
+
+            var binString = byteToInt.toString(2)
+
+            binString.map {
+                var sign = ""
+                if(it == '0'){
+                    sign = "-"
+                }
+                timingsList.add(sign + samplesPerSymbol / 2)
+            }
+        }
+
+        Log.d(_logTag, "Timings: " + timingsList.size)
+
+
+
+
+
+        return timingsList
+    }
+
+    fun String.decodeHex(): ByteArray {
+        //check(length % 2 == 0) { "Must have an even length" }
+
+        return chunked(2)
+            .map { it.toInt(16).toByte() }
+            .toByteArray()
+    }
+
+
 
 }

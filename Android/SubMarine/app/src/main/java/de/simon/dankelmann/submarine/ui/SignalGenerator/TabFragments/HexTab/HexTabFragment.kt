@@ -23,6 +23,8 @@ class HexTabFragment(signalGeneratorDataModel: SignalGeneratorDataModel)  : Frag
     private var _viewModel: HexTabViewModel? = null
     private var _signalAnalyzer = SignalAnalyzer()
 
+    private var _hexStringList:MutableList<String> = mutableListOf()
+
 
     init{
         _signalGeneratorDataModel = signalGeneratorDataModel
@@ -55,8 +57,12 @@ class HexTabFragment(signalGeneratorDataModel: SignalGeneratorDataModel)  : Frag
                 editTextHexSignal.setText("")
                 var prepend = ""
                 var binaryList = _signalAnalyzer.ConvertTimingsToBinaryStringList(timingsList, it.samplesPerSymbol)
+
+                _hexStringList = mutableListOf()
+
                 binaryList.map {
                     val hexString = _signalAnalyzer.ConvertBinaryStringToHexString(it)
+                    _hexStringList.add(hexString)
                     editTextHexSignal.append(prepend + hexString)
                     prepend = "\n\n"
                 }
@@ -65,6 +71,19 @@ class HexTabFragment(signalGeneratorDataModel: SignalGeneratorDataModel)  : Frag
                 editTextHexSignal.setText("-")
             }
         }
+    }
+
+    fun getTimings():List<String>{
+        var timingsList:MutableList<String> = mutableListOf()
+
+        _hexStringList.map {
+            var convertedTimings = _signalAnalyzer.convertHexStringToTimingsList(it, _signalGeneratorDataModel!!.samplesPerSymbol)
+            convertedTimings.map {
+                timingsList.add(it)
+            }
+        }
+
+        return timingsList.toList()
     }
 
     fun updateSignalGeneratorDataModel(signalGeneratorDataModel: SignalGeneratorDataModel){

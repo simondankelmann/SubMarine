@@ -10,6 +10,8 @@ import de.simon.dankelmann.submarine.ui.SignalGenerator.TabFragments.HexTab.HexT
 import de.simon.dankelmann.submarine.ui.SignalGenerator.TabFragments.TimingsTab.TimingsTabFragment
 import de.simon.dankelmann.submarine.ui.ViewSignalEntity.SignalMapTab.SignalMapTabFragment
 import de.simon.dankelmann.submarine.ui.ViewSignalEntity.TabFragments.SignalDataTab.SignalDataTabFragment
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 class SignalGeneratorTabCollectionAdapter (fragment: Fragment, signalGeneratorDataModel: SignalGeneratorDataModel) : FragmentStateAdapter(fragment) {
 
@@ -47,6 +49,18 @@ class SignalGeneratorTabCollectionAdapter (fragment: Fragment, signalGeneratorDa
             3 -> return _configTabFragment
         }
         return _timingsTabFragment
+    }
+
+    fun getGeneratedSignalEntity():SignalEntity{
+        var configuration = _configTabFragment.getCC1101ConfigurationFromUi()
+        var timestamp = LocalDateTime.now().atZone(ZoneOffset.UTC)?.toInstant()?.toEpochMilli()
+
+        var signalData = _hexTabFragment.getTimings()
+        var samplesCount = signalData.size
+
+        var signalEntity: SignalEntity = SignalEntity(0, "SignalName", "Tag", 0, timestamp?.toInt(), "RAW", configuration.mhz, configuration.modulation,configuration.dRate,configuration.rxBw,configuration.pktFormat,signalData.joinToString(","),samplesCount,0f,0f,false,false)
+
+        return signalEntity
     }
 
 

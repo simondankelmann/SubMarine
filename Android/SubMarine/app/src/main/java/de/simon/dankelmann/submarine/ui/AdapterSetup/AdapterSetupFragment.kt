@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -147,16 +148,41 @@ class AdapterSetupFragment : Fragment(), SubmarineResultListenerInterface {
         }
 
         val editTextFrequency = binding.editTextViewMhz
-        val editTextModulation = binding.editTextViewModulation
+
+        //val editTextModulation = binding.editTextViewModulation
+        val spinnerModulation = binding.modulationSpinner
+        var spinnerAdapter:ArrayAdapter<String>? = null
+        if (spinnerModulation != null) {
+            spinnerAdapter = ArrayAdapter(requireContext(), R.layout.spinner_item_simple, resources.getStringArray(R.array.Modulations))
+            spinnerModulation.adapter = spinnerAdapter
+        }
+
         val editTextDrate = binding.editTextViewDrate
         val editTextRxBw = binding.editTextViewRxBw
-        val editTextPktFormat = binding.editTextViewPktFormat
+        //val editTextPktFormat = binding.editTextViewPktFormat
+        val spinnerPktFormat = binding.pktFormatSpinner
+        var spinnerAdapterPktFormat:ArrayAdapter<String>? = null
+        if (spinnerPktFormat != null) {
+            spinnerAdapterPktFormat = ArrayAdapter(requireContext(), R.layout.spinner_item_simple, resources.getStringArray(R.array.PktFormats))
+            spinnerPktFormat.adapter = spinnerAdapterPktFormat
+        }
+
+
+
         _viewModel!!.cC1101Configuration.observe(viewLifecycleOwner) {
             editTextFrequency.setText(it.mhz.toString())
-            editTextModulation.setText(it.modulation.toString())
+            //editTextModulation.setText(it.modulation.toString())
+
+            if(spinnerAdapter != null){
+                spinnerModulation.setSelection(it.modulation)
+            }
+
             editTextDrate.setText(it.dRate.toString())
             editTextRxBw.setText(it.rxBw.toString())
-            editTextPktFormat.setText(it.pktFormat.toString())
+            //editTextPktFormat.setText(it.pktFormat.toString())
+            if(spinnerAdapterPktFormat != null){
+                spinnerPktFormat.setSelection(it.pktFormat)
+            }
         }
 
         // SAVE BUTTON
@@ -187,16 +213,20 @@ class AdapterSetupFragment : Fragment(), SubmarineResultListenerInterface {
         var configuration = CC1101Configuration()
 
         val editTextFrequency = binding.editTextViewMhz
-        val editTextModulation = binding.editTextViewModulation
+        //val editTextModulation = binding.editTextViewModulation
+        val spinnerModulation = binding.modulationSpinner
         val editTextDrate = binding.editTextViewDrate
         val editTextRxBw = binding.editTextViewRxBw
-        val editTextPktFormat = binding.editTextViewPktFormat
+        //val editTextPktFormat = binding.editTextViewPktFormat
+        val spinnerPktFormat = binding.pktFormatSpinner
 
         configuration.mhz = editTextFrequency.text.toString().toFloat()
-        configuration.modulation = editTextModulation.text.toString().toInt()
+        //configuration.modulation = editTextModulation.text.toString().toInt()
+        configuration.modulation = spinnerModulation.selectedItemPosition
         configuration.dRate = editTextDrate.text.toString().toInt()
         configuration.rxBw = editTextRxBw.text.toString().toFloat()
-        configuration.pktFormat = editTextPktFormat.text.toString().toInt()
+        //configuration.pktFormat = editTextPktFormat.text.toString().toInt()
+        configuration.pktFormat = spinnerPktFormat.selectedItemPosition
 
         Log.d(_logTag, "ConfigString from UI:")
 

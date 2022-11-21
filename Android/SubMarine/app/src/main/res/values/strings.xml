@@ -18,4 +18,19 @@
     <string name="menu_signalMap">Signal Map</string>
     <string name="menu_detectSignal">Detect Signal</string>
     <string name="menu_signalGenerator">Signal Generator</string>
+
+    <string-array name="Modulations">
+        <item>2-FSK</item>
+        <item>GFSK</item>
+        <item>ASK/OOK</item>
+        <item>4-FSK</item>
+        <item>MSK</item>
+    </string-array>
+
+    <string-array name="PktFormats">
+        <item>-</item>
+        <item>Synchronous</item>
+        <item>Random</item>
+        <item>Asynchronous</item>
+    </string-array>
 </resources>

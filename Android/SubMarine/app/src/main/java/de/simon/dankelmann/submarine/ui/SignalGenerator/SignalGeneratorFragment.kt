@@ -153,6 +153,16 @@ class SignalGeneratorFragment : Fragment(), SubmarineResultListenerInterface {
             }
         });
 
+        // TRANSMIT BUTTON
+        val transmitGeneratedSignalButton = binding.transmitGeneratedSignalButton
+        transmitGeneratedSignalButton.setOnClickListener{
+            var signalEntity = _collectionAdapter.getGeneratedSignalEntity()
+
+            Log.d(_logTag, "Got signalEntity: " + signalEntity.signalDataLength)
+
+            _submarineService.sendCommandToDevice(SubmarineCommand(Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND,Constants.COMMAND_ID_DUMMY,_submarineService.getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData))
+        }
+
         val footerTextView1: TextView = binding.textviewFooter1
         _viewModel!!.footerText1.observe(viewLifecycleOwner) {
             footerTextView1.text = it

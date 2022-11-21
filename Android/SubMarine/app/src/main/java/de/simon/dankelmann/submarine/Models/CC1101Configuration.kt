@@ -1,5 +1,7 @@
 package de.simon.dankelmann.submarine.Models
 
+import de.simon.dankelmann.submarine.Entities.SignalEntity
+
 class CC1101Configuration {
 
     var mhz:Float = 433.92f
@@ -19,6 +21,16 @@ class CC1101Configuration {
         this.pktFormat = cc1101ConfigString[17].toString().toInt()
         this.lqi = cc1101ConfigString.substring(18,24).toFloat()
         this.rssi = cc1101ConfigString.substring(24,30).toFloat()
+    }
+
+    fun loadFromSignalEntity(signalEntity: SignalEntity){
+        this.mhz = signalEntity.frequency!!
+        this.modulation = signalEntity.modulation!!
+        this.dRate = signalEntity.modulation!!
+        this.rxBw = signalEntity.rxBw!!
+        this.pktFormat = signalEntity.pktFormat!!
+        this.lqi = signalEntity.lqi!!
+        this.rssi = signalEntity.rssi!!
     }
 
     fun getModulationName(modulation:Int):String{

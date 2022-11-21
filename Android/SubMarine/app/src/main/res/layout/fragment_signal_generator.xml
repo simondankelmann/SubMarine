@@ -39,9 +39,10 @@
         app:layout_constraintTop_toBottomOf="@id/textViewSignalGeneratorDescription">
 
         <Button
+            android:id="@+id/transmitGeneratedSignalButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Replace me"></Button>
+            android:text="Transmit"></Button>
     </LinearLayout>
 
 
