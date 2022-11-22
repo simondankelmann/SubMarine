@@ -1,12 +1,19 @@
 package de.simon.dankelmann.submarine.Services
 
+import android.Manifest
+import android.app.Application
 import android.bluetooth.BluetoothDevice
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.util.Log
 import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.Constants.Constants
 import de.simon.dankelmann.submarine.Entities.SignalEntity
 import de.simon.dankelmann.submarine.Interfaces.SubmarineResultListenerInterface
 import de.simon.dankelmann.submarine.Models.SubmarineCommand
+import de.simon.dankelmann.submarine.PermissionCheck.PermissionCheck
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -49,12 +56,6 @@ class SubMarineService {
                 CoroutineScope(Dispatchers.IO).launch {
                     _bluetoothSerial?.connect(macAddress, 1)
                 }
-                /*
-                Thread(Runnable {
-                    //_bluetoothSerial?.connect(deviceFromBundle.address, ::receivedDataCallback)
-                    //_bluetoothSerial?.connect(macAddress, ::bluetoothSerialReceivedDataCallback)
-
-                }).start()*/
             } else {
                 Log.d(_logTag, "Mac Address is not valid")
             }
@@ -62,10 +63,6 @@ class SubMarineService {
             Log.d(_logTag, "Already connected")
             connectionStateChanged(ConnectionStates.Connected.value)
         }
-
-        /*if(_connectionState == ConnectionStates.Connected.value){
-            connectionStateChangedCallback(2)
-        }*/
     }
 
     fun setBluetoothDevice(bluetoothDevice: BluetoothDevice){
@@ -120,57 +117,9 @@ class SubMarineService {
         Log.d(_logTag, "Connection State was changed: " + connectionState)
     }
 
-    private fun connectionStateChangedCallback(connectionState: Int){
-        Log.d(_logTag, "Submarine Service Connection Callback: " + connectionState)
-        _connectionState = connectionState
-        when(connectionState){
-            0 -> {
-                Log.d(_logTag, "Disconnected")
-                _isListening = false
-            }
-            1 -> {
-                Log.d(_logTag, "Connecting...")
-                _isListening = false
-            }
-            2 -> {
-                Log.d(_logTag, "Connected")
-                //_bluetoothSerial?.connect(deviceAddress!!, ::bluetoothSerialReceivedDataCallback)
-                _isListening = true
-            }
-        }
-
-        // TODO: REMOVE WHEN MOVED INTERFACE
-        /*
-        _connectionStateChangedCallbacks.map {
-            try{
-                if(it != null){
-                    it(connectionState)
-                } else {
-                    Log.d(_logTag, "Callback was null")
-                }
-            } catch(e:Exception){
-                Log.d(_logTag, "Connection State Callback could not be called: " + e.message)
-            }
-        }*/
-    }
-
     fun sendCommandToDevice(command:SubmarineCommand){
-        /*
-        val commandString = command + commandId + dataString
-        var callback = ::commandSentToDeviceCallback
-        if(command == Constants.COMMAND_SET_OPERATION_MODE){
-            callback = ::setOperationModeCallback
-        }
-        if(command == Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND){
-            callback = ::replaySignalCallback
-        }*/
-
-        //_bluetoothSerial!!.sendByteString(commandString + "\n", callback)
         _bluetoothSerial!!.sendCommand(command)
     }
-
-
-
 
     fun setOperationMode(operationMode:String, dataString: String? = null){
         var cmdData = operationMode
@@ -267,5 +216,7 @@ class SubMarineService {
 
         return mhz + tx + modulation + dRate + rxBw + pktFormat + lqi + rssi
     }
+
+
 
 }

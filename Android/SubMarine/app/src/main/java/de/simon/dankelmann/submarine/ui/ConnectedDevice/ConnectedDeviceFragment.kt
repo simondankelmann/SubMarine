@@ -56,6 +56,7 @@ class ConnectedDeviceFragment: Fragment(), SubmarineResultListenerInterface {
 
         _submarineService.addResultListener(this)
         _submarineService.connect()
+        _submarineService.setOperationMode(Constants.OPERATIONMODE_IDLE)
 
         setupUi()
 
@@ -150,6 +151,7 @@ class ConnectedDeviceFragment: Fragment(), SubmarineResultListenerInterface {
 
     override fun onResume() {
         _submarineService.addResultListener(this)
+        _submarineService.setOperationMode(Constants.OPERATIONMODE_IDLE)
         super.onResume()
     }
 
@@ -158,7 +160,6 @@ class ConnectedDeviceFragment: Fragment(), SubmarineResultListenerInterface {
         when(connectionState){
             SubMarineService.ConnectionStates.Connected.value-> {
                 _viewModel!!.animationResourceId.postValue(R.raw.submarine)
-                _submarineService.setOperationMode(Constants.OPERATIONMODE_IDLE)
             }
 
             SubMarineService.ConnectionStates.Connecting.value-> {

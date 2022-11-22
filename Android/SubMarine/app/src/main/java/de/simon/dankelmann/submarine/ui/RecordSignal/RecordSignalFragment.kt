@@ -90,12 +90,14 @@ class RecordSignalFragment: Fragment(), LocationResultListener, SubmarineResultL
         // REQUEST LOCATION UPDATES
         _locationService = LocationService(requireContext(), this)
 
-        setupUi()
-
         // LETS GO !
         _submarineService.addResultListener(this)
-        _submarineService.connect()
 
+
+        setupUi()
+
+
+        _submarineService.connect()
         return root
     }
 
@@ -353,7 +355,8 @@ class RecordSignalFragment: Fragment(), LocationResultListener, SubmarineResultL
                 // ACTIVATE PERISCOPE MODE
                 _isConnected = true
                 //setOperationMode(Constants.OPERATIONMODE_RECORD_SIGNAL,::setOperationModeRecordSignalCallback)
-                _submarineService.setOperationMode(Constants.OPERATIONMODE_RECORD_SIGNAL)
+                Log.d(_logTag, "Setting Operation Mode")
+                _submarineService.setOperationMode(Constants.OPERATIONMODE_RECORD_SIGNAL, "")
                 _viewModel!!.animationResourceId.postValue(R.raw.dots)
             }
         }

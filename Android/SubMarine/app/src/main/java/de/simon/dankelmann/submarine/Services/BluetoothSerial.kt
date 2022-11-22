@@ -5,10 +5,14 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.AppContext.AppContext.Companion.submarineService
 import de.simon.dankelmann.submarine.Constants.Constants
 import de.simon.dankelmann.submarine.Models.SubmarineCommand
@@ -51,15 +55,41 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
     //private var _connectionChangedCallback: KFunction1<Int, Unit>? = null
     // PUBLIC VAR
     var isConnected = false
+    var connectionAttempt = 0
+    private var _macAddress = ""
 
 
     init{
         _bluetoothManager = _context.getSystemService(BluetoothManager::class.java)
         _bluetoothAdapter = _bluetoothManager.adapter
         //_connectionChangedCallback = connectionChangedCallback
+        registerBroadcastReceivers()
+    }
+
+    fun registerBroadcastReceivers(){
+        var mReceiver = BluetoothBroadcastReceiver()
+        val intentFilterConnected = IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED)
+        val intentFilterDisonnected = IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED)
+        AppContext.getContext().registerReceiver(mReceiver, intentFilterConnected)
+        AppContext.getContext().registerReceiver(mReceiver, intentFilterDisonnected)
     }
 
     fun connect(macAddress: String, attempt: Int){
+        try{
+            _macAddress = macAddress
+            if(_bluetoothAdapter != null ){
+                _bluetoothDevice = _bluetoothAdapter?.getRemoteDevice(macAddress)
+                if(_bluetoothDevice != null){
+                    if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
+                        Log.d(_logTag, "Connecting to Socket")
+                        connectSocket()
+                    }
+                }
+            }
+        } catch (ex:java.lang.Exception){
+            Log.d(_logTag, "Could not connect on Attempt  " + attempt + ":"+ ex.message)
+        }
+        /*
         //_callback = receivedDataCallback
             try{
                 if(_bluetoothAdapter != null ){
@@ -79,15 +109,16 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
                     Thread.sleep(1000)
                     connect(macAddress, attempt + 1)
                 } else {
-                    connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
+                    //connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
                 }
-            }
+            }*/
     }
 
     private fun resetConnection() {
 
         //_connectionChangedCallback!!(connectionState_Disconnected)
         // EXECUTE CALLBACKS
+        /*
         connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
 
         if (_bluetoothSocketInputStream != null) {
@@ -111,7 +142,7 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
             }
             _bluetoothSocket = null
         }
-        Log.d(_logTag, "Connection was resetted")
+        Log.d(_logTag, "Connection was resetted")*/
     }
 
     fun connectionStateChanged(connectionState:Int){
@@ -135,7 +166,8 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
 
         if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
             _bluetoothSocket = _bluetoothDevice?.createInsecureRfcommSocketToServiceRecord(_bluetoothSerialUuid)
-            if(_bluetoothSocket != null){
+            if(_bluetoothSocket != null) {
+                CoroutineScope(Dispatchers.IO).launch {
                 var attempt = 1
 
                 while (_bluetoothSocket?.isConnected == false) {
@@ -144,15 +176,15 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
                     } catch (e: Exception) {
                         Thread.sleep(_connectionTimeoutSocket)
                         attempt++
-                        Log.d(_logTag, "Could not connect to Socket: "+e.toString())
-                        if(attempt >= _maxReconnectionAttemptsSocket){
+                        Log.d(_logTag, "Could not connect to Socket: " + e.toString())
+                        if (attempt >= _maxReconnectionAttemptsSocket) {
                             Log.d(_logTag, "Exceeded max Connection attempts for Socket")
                             break
                         }
                     }
                 }
 
-                if(_bluetoothSocket?.isConnected == true){
+                if (_bluetoothSocket?.isConnected == true) {
                     isConnected = true
                     Log.d(_logTag, "Connection to Socket established after attempt: $attempt")
                     _bluetoothSocketOutputStream = _bluetoothSocket?.getOutputStream()
@@ -163,7 +195,7 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
                 } else {
                     connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
                 }
-
+            }
                 /*
                     var connected = false
                     CoroutineScope(Dispatchers.IO).launch {
@@ -450,6 +482,32 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
     private fun stopListeningOnInputStream(){
         if(_inputReaderThread != null){
             _inputReaderThread?.stop()
+        }
+    }
+
+    inner class BluetoothBroadcastReceiver: BroadcastReceiver() {
+        override fun onReceive(ctx: Context?, intent: Intent?) {
+            Log.d(_logTag, "Broadcast Received: " + intent?.action )
+            if(ctx != null && intent != null) {
+                var action = intent.action
+                if (action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)) {
+                    connectionAttempt = 0
+                    //connectionStateChanged(SubMarineService.ConnectionStates.Connected.value)
+                }
+                if (action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
+
+                    // TRY AGAIN
+                    if(connectionAttempt <= _maxReconnectionAttempts){
+                        connectionAttempt++
+                        // SLEEP
+                        Thread.sleep(1000)
+                        connect(_macAddress, connectionAttempt)
+                    } else {
+                        connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
+                    }
+
+                }
+            }
         }
     }
 }
