@@ -51,10 +51,11 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
     private var _maxReconnectionAttempts = 3
     private var _maxReconnectionAttemptsSocket = 3
     private var _connectionTimeoutSocket:Long = 1000
+    private var _connectionState = SubMarineService.ConnectionStates.Disconnected.value
     //private var _callback: KFunction1<String, Unit>? = null
     //private var _connectionChangedCallback: KFunction1<Int, Unit>? = null
     // PUBLIC VAR
-    var isConnected = false
+    //var isConnected = false
     var connectionAttempt = 0
     private var _macAddress = ""
 
@@ -62,7 +63,6 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
     init{
         _bluetoothManager = _context.getSystemService(BluetoothManager::class.java)
         _bluetoothAdapter = _bluetoothManager.adapter
-        //_connectionChangedCallback = connectionChangedCallback
         registerBroadcastReceivers()
     }
 
@@ -89,29 +89,10 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
         } catch (ex:java.lang.Exception){
             Log.d(_logTag, "Could not connect on Attempt  " + attempt + ":"+ ex.message)
         }
-        /*
-        //_callback = receivedDataCallback
-            try{
-                if(_bluetoothAdapter != null ){
-                    _bluetoothDevice = _bluetoothAdapter?.getRemoteDevice(macAddress)
-                    if(_bluetoothDevice != null){
-                        if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
-                            Log.d(_logTag, "Connecting to Socket")
-                            connectSocket()
-                        }
-                    }
-                }
-            } catch (ex:java.lang.Exception){
-                Log.d(_logTag, "Could not connect on Attempt  " + attempt + ":"+ ex.message)
+    }
 
-                if(attempt <= _maxReconnectionAttempts){
-                    // SLEEP
-                    Thread.sleep(1000)
-                    connect(macAddress, attempt + 1)
-                } else {
-                    //connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
-                }
-            }*/
+    fun getConnectionState():Int{
+        return _connectionState
     }
 
     private fun resetConnection() {
@@ -146,20 +127,22 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
     }
 
     fun connectionStateChanged(connectionState:Int){
+        _connectionState = connectionState
         if(connectionState == SubMarineService.ConnectionStates.Connected.value){
-            isConnected = true
+            // DOME SOMETHING
         } else if(connectionState == SubMarineService.ConnectionStates.Connecting.value) {
-            isConnected = false
+            // DOME SOMETHING
         } else if(connectionState == SubMarineService.ConnectionStates.Disconnected.value) {
-            isConnected = false
+            // DOME SOMETHING
         }
+
+        // PASS THE CONNECTIONSTATE TO SUBMARINE SERVICE
         submarineService.connectionStateChanged(connectionState)
         Log.d(_logTag, "Connection State was changed: " + connectionState)
     }
 
     fun connectSocket(){
         resetConnection()
-        //_connectionChangedCallback!!(connectionState_Connecting)
 
         // EXECUTE CALLBACKS
         connectionStateChanged(SubMarineService.ConnectionStates.Connecting.value)
@@ -167,124 +150,39 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
         if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
             _bluetoothSocket = _bluetoothDevice?.createInsecureRfcommSocketToServiceRecord(_bluetoothSerialUuid)
             if(_bluetoothSocket != null) {
-                CoroutineScope(Dispatchers.IO).launch {
-                var attempt = 1
-
-                while (_bluetoothSocket?.isConnected == false) {
-                    try {
-                        _bluetoothSocket?.connect()
-                    } catch (e: Exception) {
-                        Thread.sleep(_connectionTimeoutSocket)
-                        attempt++
-                        Log.d(_logTag, "Could not connect to Socket: " + e.toString())
-                        if (attempt >= _maxReconnectionAttemptsSocket) {
-                            Log.d(_logTag, "Exceeded max Connection attempts for Socket")
-                            break
-                        }
-                    }
-                }
-
-                if (_bluetoothSocket?.isConnected == true) {
-                    isConnected = true
-                    Log.d(_logTag, "Connection to Socket established after attempt: $attempt")
-                    _bluetoothSocketOutputStream = _bluetoothSocket?.getOutputStream()
-                    _bluetoothSocketInputStream = _bluetoothSocket?.getInputStream()
-                    beginListeningOnInputStream()
-                    Thread.sleep(_connectionTimeoutSocket)
-                    connectionStateChanged(SubMarineService.ConnectionStates.Connected.value)
-                } else {
-                    connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
-                }
-            }
-                /*
-                    var connected = false
                     CoroutineScope(Dispatchers.IO).launch {
-                        try{
-
-                            while (connected == false) {
-                                try {
-                                    _bluetoothSocket?.connect()
-                                    Thread.sleep(_connectionTimeoutSocket)
-                                    _bluetoothSocketOutputStream = _bluetoothSocket?.getOutputStream()
-                                    _bluetoothSocketInputStream = _bluetoothSocket?.getInputStream()
-                                    Log.d("DEVICE_CONNECT_SUCCESS", "WORKS")
-                                    connected = true
-                                    break;
-                                } catch (e: Exception) {
-                                    Thread.sleep(_connectionTimeoutSocket)
-                                    Log.d("DEVICE_CONNECT_FAIL", e.toString())
+                        var attempt = 1
+                        while (_bluetoothSocket?.isConnected == false) {
+                            try {
+                                _bluetoothSocket?.connect()
+                            } catch (e: Exception) {
+                                Thread.sleep(_connectionTimeoutSocket)
+                                attempt++
+                                Log.d(_logTag, "Could not connect to Socket: " + e.toString())
+                                if (attempt >= _maxReconnectionAttemptsSocket) {
+                                    Log.d(_logTag, "Exceeded max Connection attempts for Socket")
+                                    break
                                 }
                             }
-                            //_bluetoothSocket?.connect()
-                        } catch(ex:Exception){
-                            Log.d(_logTag, "Could not connect to Socket on Attempt  " + attempt + ":"+ ex.message)
-
-                            /*
-                            if(attempt <= _maxReconnectionAttemptsSocket){
-                                // SLEEP
-                                Thread.sleep(_connectionTimeoutSocket)
-                                //connectSocket(attempt + 1)
-                            } else {
-                                connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
-                            }*/
-                        }
-                        // WAIT FOR IT
-                        Thread.sleep(_connectionTimeoutSocket)
-
-                        if(_bluetoothSocket!!.isConnected){
-                            isConnected = true
-                            _bluetoothSocketOutputStream = _bluetoothSocket?.getOutputStream()
-                            _bluetoothSocketInputStream = _bluetoothSocket?.getInputStream()
                         }
 
-                    }
-
-*/
-
-                /*
-                try{
-                    //_bluetoothSocket?.connect()
-                    //Thread.sleep(1000)
-
-
-                    if(_bluetoothSocket!!.isConnected){
-                        isConnected = true
-                        _bluetoothSocketOutputStream = _bluetoothSocket?.getOutputStream()
-                        _bluetoothSocketInputStream = _bluetoothSocket?.getInputStream()
-
-                        //_connectionChangedCallback!!(connectionState_Connected)
-
-                        // BEGIN LISTENING
-                        //beginListeningOnInputStream(_callback!!)
-                        beginListeningOnInputStream()
-
-                        // EXECUTE CALLBACKS
-                        connectionStateChanged(SubMarineService.ConnectionStates.Connected.value)
-                        return
-                    } else {
-                        //_connectionChangedCallback!!(connectionState_Disconnected)
-                        // EXECUTE CALLBACKS
-                        //connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
-                    }
-                } catch(ex:Exception){
-                    Log.d(_logTag, "Could not connect to Socket on Attempt  " + attempt + ":"+ ex.message)
-
-                    if(attempt <= _maxReconnectionAttemptsSocket){
-                        // SLEEP
-                        Thread.sleep(1000)
-                        connectSocket(attempt + 1)
-                    } else {
-                        connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
-                    }
-                }*/
-
+                        if (_bluetoothSocket?.isConnected == true) {
+                            Log.d(_logTag, "Connection to Socket established after attempt: $attempt")
+                            _bluetoothSocketOutputStream = _bluetoothSocket!!.getOutputStream()
+                            _bluetoothSocketInputStream = _bluetoothSocket!!.getInputStream()
+                            beginListeningOnInputStream()
+                            //Thread.sleep(_connectionTimeoutSocket)
+                            connectionStateChanged(SubMarineService.ConnectionStates.Connected.value)
+                        } else {
+                            connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
+                        }
+                }
             }
         }
     }
 
     fun disconnect(){
         stopListeningOnInputStream()
-        isConnected = false
         // EXECUTE CALLBACKS
         connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
     }
@@ -308,17 +206,12 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
                 var fRepeatitions:Float = bytes.size.toFloat() / max
                 var repeatitions = fRepeatitions.toInt()
 
-                //Log.d(_logTag, "REPEATS:" + fRepeatitions)
-
                 var res = fRepeatitions.rem(1)
                 if (res.equals(0.0F)){
-                    //Log.d(_logTag, "EVEN")
                 } else {
-                    //Log.d(_logTag, "UNEVEN ")
                     repeatitions++;
                 }
 
-               // Log.d(_logTag, "repeatitions:  " + repeatitions)
                 var alreadySent = 0
                 val begin = System.currentTimeMillis()
                 for (i in 0..(repeatitions - 1)){
@@ -329,14 +222,12 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
                         length = bytes.size - alreadySent
                     }
 
-                    Log.d(_logTag, "WRITING: " + message.toByteArray())
                     _bluetoothSocketOutputStream!!.write(message.toByteArray(), offset, length)
 
                     try{
                         if(i < (repeatitions - 1)){
                             Thread.sleep(delay.toLong())  // wait for 1 second
                         }
-
                     } catch (ex:java.lang.Exception){
                         Log.d(_logTag, "Exception caught: " + ex.message)
                     }
@@ -378,7 +269,6 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
                                 }
                             }
                         }
-                        //statusCallback("Transmisson completed after " + duration + "ms")
                     }
 
                     alreadySent += length
@@ -388,58 +278,19 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
                     Log.d(_logTag, "SENT: " + alreadySent)*/
                 }
 
-                //_bluetoothSocketOutputStream!!.write(message.toByteArray(), 0, message.toByteArray().size)
-
                 _bluetoothSocketOutputStream!!.flush()
 
             } catch (ex: java.lang.Exception) {
                 Log.e(_logTag, ex.message.toString())
-                isConnected = false
-                // EXECUTE CALLBACKS
-                connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
-
-                connectSocket()
-                //sendString(message)
             }
         }
     }
-    /*
-    fun sendString(message:String) {
-        try {
-            if(!_bluetoothSocket!!.isConnected){
-                connectSocket()
-            }
-            if(isConnected && _bluetoothSocketOutputStream != null){
-                Thread(Runnable {
-                    try {
-                        _bluetoothSocketOutputStream!!.write(message.toByteArray())
-                    } catch (ex: java.lang.Exception) {
-                        Log.e(_logTag, ex.message.toString())
-                        isConnected = false
-                        _connectionChangedCallback!!(connectionState_Disconnected)
-
-                        connectSocket()
-                        //sendString(message)
-                    }
-
-                }).start()
-            }
-        }catch (ex: java.lang.Exception) {
-            Log.e(_logTag, ex.message.toString())
-            isConnected = false
-            _connectionChangedCallback!!(connectionState_Disconnected)
-
-            connectSocket()
-            //sendString(message)
-        }
-    }
-    */
 
     private fun beginListeningOnInputStream(){
         _inputReaderThread = Thread(Runnable {
             val delimiter: Byte = 10 //This is the ASCII code for a newline character
             var receivedBytes: MutableList<Byte>  = mutableListOf()
-            while (!Thread.currentThread().isInterrupted && isConnected && _bluetoothSocket!!.isConnected){
+            while (!Thread.currentThread().isInterrupted && _connectionState == SubMarineService.ConnectionStates.Connected.value && _bluetoothSocket!!.isConnected){
                 try{
                     val bytesAvailable: Int = _bluetoothSocketInputStream!!.available()
                     //Log.d(_logTag, "BYTES INCOMING: " + bytesAvailable)
@@ -469,10 +320,8 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
                     }
                 } catch (ex: IOException) {
                     Log.e(_logTag, ex.message.toString())
-                    isConnected = false
                     // EXECUTE CALLBACKS
                     connectionStateChanged(SubMarineService.ConnectionStates.Disconnected.value)
-
                 }
             }
         })

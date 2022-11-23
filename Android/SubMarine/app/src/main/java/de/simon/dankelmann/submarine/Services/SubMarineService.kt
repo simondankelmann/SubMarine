@@ -99,7 +99,10 @@ class SubMarineService {
     }
 
     fun getConnectionState():Int{
-        return _connectionState
+        if(_bluetoothSerial != null){
+            return _bluetoothSerial!!.getConnectionState()
+        }
+        return ConnectionStates.Disconnected.value
     }
 
     fun connectionStateChanged(connectionState:Int){
