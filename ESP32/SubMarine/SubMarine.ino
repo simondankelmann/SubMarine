@@ -166,7 +166,8 @@ void btCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
   if(event == ESP_SPP_SRV_OPEN_EVT){
     Serial.println("Bluetooth Client Connected!");
     // INFORM ABOUT CONNECTION SUCCESS
-    delay(100);
+    blinkLed(1);
+    //delay(100);
     //sendCommand(COMMAND_UPDATE_CONNECTION_STATUS,COMMAND_ID_DUMMY,CONNECTION_STATE_CONNECTED);
     //delay(1000);
   } else if(event == ESP_SPP_DATA_IND_EVT){
