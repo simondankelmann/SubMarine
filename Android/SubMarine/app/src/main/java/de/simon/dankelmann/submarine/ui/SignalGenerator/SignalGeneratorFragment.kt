@@ -2,7 +2,10 @@ package de.simon.dankelmann.submarine.ui.SignalGenerator
 
 import android.bluetooth.BluetoothDevice
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -38,7 +41,7 @@ class SignalGeneratorFragment : Fragment(), SubmarineResultListenerInterface {
     private val _logTag = "SignalGeneratorFragment"
     private var _viewModel: SignalGeneratorViewModel? = null
     private var _submarineService:SubMarineService = AppContext.submarineService
-    private lateinit var _collectionAdapter: SignalGeneratorTabCollectionAdapter
+    private var _collectionAdapter: SignalGeneratorTabCollectionAdapter? = null
 
 
     // This property is only valid between onCreateView and
@@ -68,6 +71,7 @@ class SignalGeneratorFragment : Fragment(), SubmarineResultListenerInterface {
             }
         }
 
+        _collectionAdapter = SignalGeneratorTabCollectionAdapter(this, SignalGeneratorDataModel())
         // CALL SETUP UI AFTER _viewModel and _binding are set up
         setupUi()
 
@@ -108,6 +112,15 @@ class SignalGeneratorFragment : Fragment(), SubmarineResultListenerInterface {
         }
     }
 
+    fun updateSignalGeneratorDataModel(){
+        var signalGeneratorDataModel = SignalGeneratorDataModel()
+        signalGeneratorDataModel.signalEntity =  _viewModel!!.signalEntity.value
+        signalGeneratorDataModel.samplesPerSymbol = _viewModel!!.samplesPerSymbol.value!!
+        signalGeneratorDataModel.pauseBetweenLines = _viewModel!!.pausePerLine.value!!
+        if(_collectionAdapter != null){
+            _collectionAdapter!!.updateSignalGeneratorDataModel(signalGeneratorDataModel)
+        }
+    }
 
 
     fun commandSentCallback(command:SubmarineCommand){
@@ -129,7 +142,60 @@ class SignalGeneratorFragment : Fragment(), SubmarineResultListenerInterface {
         val samplesPerSymbolTextView: TextView = binding.textviewSamplePerSymbol
         _viewModel!!.samplesPerSymbol.observe(viewLifecycleOwner) {
             samplesPerSymbolTextView.text = it.toString() + " Samples / Symbol"
+            updateSignalGeneratorDataModel()
         }
+
+        val pausePerLineEditText = binding.editTextPausePerLine
+        _viewModel!!.pausePerLine.observe(viewLifecycleOwner) {
+            pausePerLineEditText.setText(it.toString())
+            updateSignalGeneratorDataModel()
+        }
+
+
+        /*
+        pausePerLineEditText.addTextChangedListener(object : TextWatcher {
+
+            override fun afterTextChanged(s: Editable) {
+                try {
+                    var parsedPause = s.toString().toInt()
+                    if(parsedPause > 0){
+                        parsedPause = parsedPause * -1
+                    }
+                    _viewModel!!.pausePerLine.postValue(parsedPause)
+                    Log.d(_logTag, "New Pause is: " + parsedPause)
+                } catch (e:Exception){
+                    Log.d(_logTag, "NaN")
+                }
+            }
+
+            override fun beforeTextChanged(s: CharSequence, start: Int,
+                                           count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence, start: Int,
+                                       before: Int, count: Int) {
+
+
+            }
+        })*/
+
+        pausePerLineEditText.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
+                //Perform Code
+                try {
+                    var parsedPause = pausePerLineEditText.text.toString().toInt()
+                    if(parsedPause > 0){
+                        parsedPause = parsedPause * -1
+                    }
+                    _viewModel!!.pausePerLine.postValue(parsedPause)
+                    Log.d(_logTag, "New Pause is: " + parsedPause)
+                } catch (e:Exception){
+                    Log.d(_logTag, "NaN")
+                }
+                return@OnKeyListener true
+            }
+            false
+        })
 
         //SEEKBAR
         val seekbarSamplesPerSymbol = binding.seekbarSamplesPerSymbol
@@ -145,18 +211,19 @@ class SignalGeneratorFragment : Fragment(), SubmarineResultListenerInterface {
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 // POST THE NEW VALUE TO THE TAB FRAGMENTS
-                var signalGeneratorDataModel = SignalGeneratorDataModel()
-                signalGeneratorDataModel.signalEntity =  _viewModel!!.signalEntity.value
-                signalGeneratorDataModel.samplesPerSymbol = seekBar!!.progress
-                _collectionAdapter.updateSignalGeneratorDataModel(signalGeneratorDataModel)
-
+                //var signalGeneratorDataModel = SignalGeneratorDataModel()
+                //signalGeneratorDataModel.signalEntity =  _viewModel!!.signalEntity.value
+                _viewModel!!.samplesPerSymbol.postValue(seekBar!!.progress)
+                updateSignalGeneratorDataModel()
+                //signalGeneratorDataModel.samplesPerSymbol = seekBar!!.progress
+                //_collectionAdapter.updateSignalGeneratorDataModel(signalGeneratorDataModel)
             }
         })
 
         // TRANSMIT BUTTON
         val transmitGeneratedSignalButton = binding.transmitGeneratedSignalButton
         transmitGeneratedSignalButton.setOnClickListener{
-            var signalEntity = _collectionAdapter.getGeneratedSignalEntity()
+            var signalEntity = _collectionAdapter!!.getGeneratedSignalEntity()
             if(signalEntity != null){
                 _submarineService.sendCommandToDevice(SubmarineCommand(Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND,Constants.COMMAND_ID_DUMMY,_submarineService.getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData))
             }
@@ -180,11 +247,14 @@ class SignalGeneratorFragment : Fragment(), SubmarineResultListenerInterface {
     fun setupTabs(){
         requireActivity().runOnUiThread{
             // TAB LAYOUT
+            /*
             var signalGeneratorDataModel = SignalGeneratorDataModel()
             signalGeneratorDataModel.signalEntity =  _viewModel!!.signalEntity.value
             signalGeneratorDataModel.samplesPerSymbol = _viewModel!!.samplesPerSymbol.value!!
+            signalGeneratorDataModel.samplesPerSymbol = _viewModel!!.pausePerLine.value!!
 
-            _collectionAdapter = SignalGeneratorTabCollectionAdapter(this, signalGeneratorDataModel)
+            _collectionAdapter = SignalGeneratorTabCollectionAdapter(this, signalGeneratorDataModel)*/
+            updateSignalGeneratorDataModel()
             val tabLayout: TabLayout = binding.tabLayoutSignalGenerator
             var viewPager: ViewPager2 =  binding.viewPagerSignalGenerator
             viewPager.adapter = _collectionAdapter

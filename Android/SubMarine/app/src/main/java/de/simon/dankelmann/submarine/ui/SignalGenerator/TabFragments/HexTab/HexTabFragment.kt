@@ -113,7 +113,7 @@ class HexTabFragment(signalGeneratorDataModel: SignalGeneratorDataModel, tabColl
                 timingsList.add(it)
             }
             // PAUSE BETWEEN THE LINES !
-            timingsList.add("-5700")
+            timingsList.add(_signalGeneratorDataModel!!.pauseBetweenLines.toString())
         }
 
         return timingsList.toList()

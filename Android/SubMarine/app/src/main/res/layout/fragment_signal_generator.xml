@@ -51,6 +51,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="vertical"
+        android:padding="5dp"
         app:layout_constraintTop_toBottomOf="@id/SignalGeneratorButtonRow"
         app:layout_constraintBottom_toTopOf="@id/SignalGeneratorSeekBarRow">
 
@@ -69,13 +70,14 @@
             android:layout_weight="1" />
     </LinearLayout>
 
+
     <LinearLayout
         android:id="@+id/SignalGeneratorSeekBarRow"
         android:layout_width="match_parent"
+        android:layout_weight="1"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@id/SignalGeneratorFooter">
-
+        app:layout_constraintBottom_toTopOf="@id/upperFooterRow">
         <TextView
             android:id="@+id/textviewSamplePerSymbol"
             android:layout_width="match_parent"
@@ -90,8 +92,68 @@
             android:layout_height="wrap_content"
             android:progress="300"
             android:min="10"
-            android:max="1000"></SeekBar>
+            android:max="1000"
+            android:padding="10dp"></SeekBar>
     </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/upperFooterRow"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/SignalGeneratorFooter"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/linePauseRow"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Delay in Microseconds"
+                android:textAlignment="center"
+                android:textColor="@color/fontcolor_component_dark_inactive"></TextView>
+
+            <EditText
+                android:id="@+id/editTextPausePerLine"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:textColor="@color/fontcolor_component_dark_inactive"
+                android:text="-5"
+                android:inputType="number"></EditText>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/RepeatitionsRow"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/textviewRepeat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Repeatitions"
+                android:textAlignment="center"
+                android:textColor="@color/fontcolor_component_dark_inactive"></TextView>
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:textColor="@color/fontcolor_component_dark_inactive"
+                android:text="5"></EditText>
+        </LinearLayout>
+
+
+
+    </LinearLayout>
+
+
+
 
 
 

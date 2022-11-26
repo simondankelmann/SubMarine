@@ -17,6 +17,10 @@ class SignalGeneratorViewModel : ViewModel() {
         value = 300
     }
 
+    var pausePerLine = MutableLiveData<Int>().apply {
+        value = -6000
+    }
+
     val title = MutableLiveData<String>().apply {
         value = "Signal Generator"
     }
