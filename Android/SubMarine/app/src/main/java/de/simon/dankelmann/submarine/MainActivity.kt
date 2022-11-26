@@ -17,10 +17,12 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.Database.AppDatabase
+import de.simon.dankelmann.submarine.Services.SignalAnalyzer
 import de.simon.dankelmann.submarine.databinding.ActivityMainBinding
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import kotlin.math.sign
 
 class MainActivity : AppCompatActivity() {
 
@@ -66,6 +68,15 @@ class MainActivity : AppCompatActivity() {
 
         // CREATE DB BACKUP
         //AppDatabase.exportToFile()
+
+        // TEST CONVERSION
+        var signalAnalyzer = SignalAnalyzer()
+        //var binString = signalAnalyzer.convertHexStringToBinaryString("0xf421084210843d087bd0f7bdef42108")
+        //Log.d(_logTag, "RECEIVED BIN STRING: " + binString)
+        //var timingsList = signalAnalyzer.convertHexStringToTimingsList("0xf421084210843d087bd0f7bdef42108", 300)
+
+
+
 
 
         // FOREGROUND SERVICE

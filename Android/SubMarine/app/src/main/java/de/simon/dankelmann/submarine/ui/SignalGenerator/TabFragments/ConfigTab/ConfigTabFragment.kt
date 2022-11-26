@@ -8,24 +8,30 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import de.simon.dankelmann.submarine.Adapters.SignalGeneratorTabCollectionAdapter
+import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.Entities.SignalEntity
 import de.simon.dankelmann.submarine.Models.CC1101Configuration
 import de.simon.dankelmann.submarine.Models.SignalGeneratorDataModel
 import de.simon.dankelmann.submarine.R
+import de.simon.dankelmann.submarine.Services.SubMarineService
 import de.simon.dankelmann.submarine.databinding.FragmentConfigTabBinding
 import de.simon.dankelmann.submarine.databinding.FragmentTimingsTabBinding
 import de.simon.dankelmann.submarine.ui.SignalGenerator.TabFragments.TimingsTab.TimingsTabFragment
 import de.simon.dankelmann.submarine.ui.SignalGenerator.TabFragments.TimingsTab.TimingsTabViewModel
 
-class ConfigTabFragment(signalGeneratorDataModel: SignalGeneratorDataModel)  : Fragment() {
+class ConfigTabFragment(signalGeneratorDataModel: SignalGeneratorDataModel, tabCollectionAdapter: SignalGeneratorTabCollectionAdapter)  : Fragment() {
 
     private var _logTag = "ConfigTab"
     private var _signalGeneratorDataModel:SignalGeneratorDataModel? = null
     private var _binding: FragmentConfigTabBinding? = null
     private var _viewModel: ConfigTabViewModel? = null
+    private var _tabCollectionAdapter:SignalGeneratorTabCollectionAdapter? = null
+    private var _submarineService: SubMarineService = AppContext.submarineService
 
     init{
         _signalGeneratorDataModel = signalGeneratorDataModel
+        _tabCollectionAdapter = tabCollectionAdapter
     }
 
     override fun onCreateView(
@@ -54,6 +60,13 @@ class ConfigTabFragment(signalGeneratorDataModel: SignalGeneratorDataModel)  : F
         val editTextRxBw = _binding!!.editTextViewRxBw
         val spinnerPktFormat = _binding!!.pktFormatSpinner
         var spinnerAdapterPktFormat: ArrayAdapter<String>? = null
+        val updateSignalEntityButton = _binding!!.updateSignalEntityButtonConfig
+
+        updateSignalEntityButton.setOnClickListener{
+            var configuration = getCC1101ConfigurationFromUi()
+            _submarineService.setConfigurationToSignalEntity(_signalGeneratorDataModel!!.signalEntity!!, configuration)
+            _tabCollectionAdapter!!.updateSignalGeneratorDataModel(_signalGeneratorDataModel!!)
+        }
 
         if (spinnerModulation != null) {
             spinnerAdapter = ArrayAdapter(requireContext(), R.layout.spinner_item_simple, resources.getStringArray(R.array.Modulations))

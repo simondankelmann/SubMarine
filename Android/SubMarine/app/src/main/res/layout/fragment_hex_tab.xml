@@ -1,19 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.SignalGenerator.TabFragments.HexTab.HexTabFragment">
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <EditText
-            android:id="@+id/editTextHexSignal"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".ui.SignalGenerator.TabFragments.HexTab.HexTabFragment"
+    android:id="@+id/layout_hex_tab_fragment">
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:textColor="@color/fontcolor_component_dark_inactive"
-            ></EditText>
-    </ScrollView>
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="@id/layout_hex_tab_fragment"
+            app:layout_constraintBottom_toTopOf="@id/hex_tab_fragment_footer"
+            >
+            <EditText
+                android:id="@+id/editTextHexSignal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textColor="@color/fontcolor_component_dark_inactive"
+                ></EditText>
+        </ScrollView>
 
-</FrameLayout>
+        <LinearLayout
+            android:id="@+id/hex_tab_fragment_footer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="@id/layout_hex_tab_fragment"
+            android:orientation="horizontal">
+            <Button
+                android:id="@+id/update_signal_entity_button_hex"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Update Signal Entity"></Button>
+        </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,12 +6,12 @@ import java.lang.Math.round
 class SignalAnalyzer {
     private var _logTag = "SignalAnalzyer"
 
-    fun ConvertTimingsToBinaryStringList(timings:List<Int>, symbolsPerBit:Int):List<String>{
+    fun ConvertTimingsToBinaryStringList(timings:List<Int>, samplesPerSymbol:Int):List<String>{
 
         var stringList:MutableList<String> = mutableListOf()
 
         var binaryString = ""
-        var samplesPerSymbolHalf:Int = symbolsPerBit / 2
+        var samplesPerSymbolHalf:Int = samplesPerSymbol / 2
 
         timings.map {
             // DETERMINE IF ITS A ONE OR A ZERO
@@ -48,6 +48,9 @@ class SignalAnalyzer {
     }
 
     fun ConvertBinaryStringToHexString(binaryString:String):String{
+        if(binaryString.length == 0){
+            return ""
+        }
         //Log.d(_logTag, "BINARY STRING: " + binaryString)
         var hexString = "0x"
 
@@ -84,57 +87,93 @@ class SignalAnalyzer {
         return hexString
     }
 
-
-    fun convertHexStringToTimingsList(hexString:String, samplesPerSymbol:Int):List<String>{
+    fun convertHexStringToBinaryString(hexString:String, autoComplete:Boolean=true):String{
         var inputString = hexString
-        Log.d(_logTag, "Converting Hex:" + hexString + " to Timings with " + samplesPerSymbol + " Samples/Symbol")
-        var timingsList:MutableList<String> = mutableListOf()
+        var binaryString = ""
 
         if(hexString.startsWith("0x")){
             inputString = hexString.substring(2)
+            Log.d(_logTag, "Removed prepending 0x: " + inputString)
         }
 
-        if(inputString.length % 2 == 1){
-            inputString = "0" + inputString
-        }
+        inputString.chunked(1).map {
+            var current = it
 
-        var bytes = inputString.decodeHex()
-        Log.d(_logTag, "Bytes: " + bytes.size)
-        bytes.map {
-            //Log.d(_logTag, it.toString(2))
-            var byteToInt = it.toInt()
-            if(byteToInt < 0){
-                byteToInt = byteToInt * -1
+            var int16 = current.toInt(16)
+            var binString = int16.toString(2)
+
+            // FILL IN LEADING ZEROS
+            while (binString.length < 4){
+                binString = "0" + binString
             }
 
-            var binString = byteToInt.toString(2)
+            // DEBUG LOG
+            /*
+            Log.d(_logTag, "CHUNK: " + current)
+            Log.d(_logTag, "INT16: " + int16)
+            Log.d(_logTag, "BINSTRING: " + binString)
+            */
 
-            binString.map {
-                var sign = ""
-                if(it == '0'){
-                    sign = "-"
+            binaryString += binString
+        }
+
+        return binaryString
+    }
+
+    fun convertBinaryStringToTimingsList(binaryString:String, samplesPerSymbol:Int):List<Int>{
+        var buffer = mutableListOf<Int>()
+        var timingsList:MutableList<Int> = mutableListOf()
+
+        var currentChar:Char? = null
+        var currentOccurences = 0
+        binaryString.map {
+
+            if(currentChar == null){
+                // FIRST ONE
+                currentChar = it
+                currentOccurences ++
+            } else {
+                if(it == currentChar){
+                    // RAISE OCCURENCES
+                    currentOccurences++
+                } else {
+                    // ADD TO LIST , CHANGE COMPARE CHAR
+                    var addableValue:Int = currentOccurences
+                    if(currentChar == '0'){
+                        addableValue = addableValue * -1
+                    } else {
+                    }
+
+                    buffer.add(addableValue)
+                    currentOccurences = 1
+                    currentChar = it
                 }
-                timingsList.add(sign + samplesPerSymbol / 2)
             }
         }
 
-        Log.d(_logTag, "Timings: " + timingsList.size)
-
-
-
-
+        buffer.map {
+            var timing = it * (samplesPerSymbol / 2)
+            timingsList.add(timing)
+        }
 
         return timingsList
     }
 
-    fun String.decodeHex(): ByteArray {
-        //check(length % 2 == 0) { "Must have an even length" }
 
-        return chunked(2)
-            .map { it.toInt(16).toByte() }
-            .toByteArray()
+    fun convertHexStringToTimingsList(hexString:String, samplesPerSymbol:Int):List<String>{
+        Log.d(_logTag, "Converting Hex:" + hexString + " to Timings with " + samplesPerSymbol + " Samples/Symbol")
+        var timingsList:MutableList<String> = mutableListOf()
+
+        var binString = convertHexStringToBinaryString(hexString)
+
+        var timings = convertBinaryStringToTimingsList(binString, samplesPerSymbol)
+        timings.map {
+            timingsList.add(it.toString())
+        }
+
+        Log.d(_logTag, "Timings: " + timingsList.size)
+        return timingsList
     }
-
 
 
 }

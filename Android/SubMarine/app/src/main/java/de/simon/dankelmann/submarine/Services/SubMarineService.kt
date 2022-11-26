@@ -12,6 +12,7 @@ import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.Constants.Constants
 import de.simon.dankelmann.submarine.Entities.SignalEntity
 import de.simon.dankelmann.submarine.Interfaces.SubmarineResultListenerInterface
+import de.simon.dankelmann.submarine.Models.CC1101Configuration
 import de.simon.dankelmann.submarine.Models.SubmarineCommand
 import de.simon.dankelmann.submarine.PermissionCheck.PermissionCheck
 import kotlinx.coroutines.CoroutineScope
@@ -19,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import kotlin.math.sign
 import kotlin.reflect.KFunction1
 
 class SubMarineService {
@@ -218,6 +220,14 @@ class SubMarineService {
         */
 
         return mhz + tx + modulation + dRate + rxBw + pktFormat + lqi + rssi
+    }
+
+    fun setConfigurationToSignalEntity(signalEntity: SignalEntity, configuration: CC1101Configuration){
+        signalEntity.frequency = configuration.mhz
+        signalEntity.modulation = configuration.modulation
+        signalEntity.dRate = configuration.dRate
+        signalEntity.rxBw = configuration.rxBw
+        signalEntity.pktFormat = configuration.pktFormat
     }
 
 
