@@ -126,6 +126,42 @@ class SubMarineService {
         _bluetoothSerial!!.sendCommand(command)
     }
 
+    fun transmitSignal(signalEntity: SignalEntity, repeatitions: Int = 1, repeatitionDelay:Int = 32000){
+        var reps = repeatitions
+        var repDelay = repeatitionDelay
+        Log.d(_logTag, "Sending Transmissioncommand with : " +repeatitions +" Repeatitions and a Delay of: " + repeatitionDelay)
+
+        if(reps < 0){
+            reps = reps * -1
+        }
+        if(repDelay < 0){
+            repDelay = repDelay * -1
+        }
+
+
+        val stringLengthRepeations = 4
+        val stringLengthRepeationDelay = 6
+
+        var repeatitionsString = reps.toString()
+        while(repeatitionsString.length < stringLengthRepeations){
+            repeatitionsString = "0" + repeatitionsString
+        }
+        Log.d(_logTag, "Repeations: " + repeatitionsString)
+
+        var repeatitionsDelayString = repDelay.toString()
+        while(repeatitionsDelayString.length < stringLengthRepeationDelay){
+            repeatitionsDelayString = "0" + repeatitionsDelayString
+        }
+        Log.d(_logTag, "RepeationsDelay: " + repeatitionsDelayString)
+
+        var commandString = getConfigurationStringFromSignalEntity(signalEntity) + repeatitionsString + repeatitionsDelayString + signalEntity.signalData
+
+        var sumbarineCommand = SubmarineCommand(Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND, Constants.COMMAND_ID_DUMMY, commandString)
+        sendCommandToDevice(sumbarineCommand)
+
+        //_submarineService.sendCommandToDevice(SubmarineCommand(Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND,Constants.COMMAND_ID_DUMMY,_submarineService.getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData))
+    }
+
     fun setOperationMode(operationMode:String, dataString: String? = null){
         var cmdData = operationMode
         if(dataString != null){

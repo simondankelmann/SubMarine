@@ -23,6 +23,7 @@ import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.Constants.Constants
 import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.Entities.LocationEntity
+import de.simon.dankelmann.submarine.Entities.SignalEntity
 import de.simon.dankelmann.submarine.Interfaces.LocationResultListener
 import de.simon.dankelmann.submarine.Interfaces.SubmarineResultListenerInterface
 import de.simon.dankelmann.submarine.Models.SubmarineCommand
@@ -34,6 +35,7 @@ import de.simon.dankelmann.submarine.Services.SubMarineService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.newSingleThreadContext
 import java.time.LocalDateTime
 import kotlin.math.round
 
@@ -47,6 +49,7 @@ class PeriscopeFragment: Fragment(), LocationResultListener, SubmarineResultList
 
     private var _capturedSignals = 0
     private var _lastIncomingSignalData = ""
+    private var _lastIncomingSignalEntity: SignalEntity? = null
     private var _lastIncomingCc1101Config = ""
 
     private var _animationView:LottieAnimationView? = null
@@ -163,7 +166,12 @@ class PeriscopeFragment: Fragment(), LocationResultListener, SubmarineResultList
                 val commandId = Constants.COMMAND_ID_DUMMY
                 val commandString = command + commandId + _lastIncomingCc1101Config + _lastIncomingSignalData
 */
-                _submarineService.sendCommandToDevice(SubmarineCommand(Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND, Constants.COMMAND_ID_DUMMY, _lastIncomingSignalData))
+
+                if(_lastIncomingSignalEntity != null){
+                    _submarineService.transmitSignal(_lastIncomingSignalEntity!!, 1, 0)
+                }
+
+                //_submarineService.sendCommandToDevice(SubmarineCommand(Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND, Constants.COMMAND_ID_DUMMY, _lastIncomingSignalData))
 
                // _bluetoothSerial!!.sendByteString(commandString + "\n", ::replayStatusCallback)
             }
@@ -264,44 +272,51 @@ class PeriscopeFragment: Fragment(), LocationResultListener, SubmarineResultList
         Log.d(_logTag, "Configstring: " + cc1101ConfigString)
         Log.d(_logTag, "Signaldata: " + signalData)
 
-        val locationDao = AppDatabase.getDatabase(requireContext()).locationDao()
-        val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
-        CoroutineScope(Dispatchers.IO).launch {
-            var locationId = 0
-            // SAVE LOCATION ?!
-            if(_lastLocation != null && _lastLocationDateTime != null){
+        if(signalData.split(",").size >= Constants.MIN_TIMINGS_TO_SAVE){
+            val locationDao = AppDatabase.getDatabase(requireContext()).locationDao()
+            val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
+            CoroutineScope(Dispatchers.IO).launch {
+                var locationId = 0
+                // SAVE LOCATION ?!
+                if(_lastLocation != null && _lastLocationDateTime != null){
 
-                var locationEntity: LocationEntity = LocationEntity(0, _lastLocation!!.accuracy,_lastLocation!!.altitude,_lastLocation!!.latitude,_lastLocation!!.longitude,_lastLocation!!.speed)
-                locationId = locationDao.insertItem(locationEntity).toInt()
-                Log.d(_logTag, "Saved Location with ID: " + locationId)
+                    var locationEntity: LocationEntity = LocationEntity(0, _lastLocation!!.accuracy,_lastLocation!!.altitude,_lastLocation!!.latitude,_lastLocation!!.longitude,_lastLocation!!.speed)
+                    locationId = locationDao.insertItem(locationEntity).toInt()
+                    Log.d(_logTag, "Saved Location with ID: " + locationId)
+                }
+
+                var signalEntity = _submarineService.parseSignalEntityFromDataString(data, locationId)
+                var signalId = signalDao.insertItem(signalEntity).toInt()
+
+                _lastIncomingSignalEntity = signalEntity
+                Log.d(_logTag, "Saved Signal with ID: " + signalId)
             }
 
-            var signalEntity = _submarineService.parseSignalEntityFromDataString(data, locationId)
-            var signalId = signalDao.insertItem(signalEntity).toInt()
-            Log.d(_logTag, "Saved Signal with ID: " + signalId)
+            // CLEAR EMPTY FIRST SAMPLES:
+            var samples = signalData.split(",").toMutableList()
+            while(samples.last().toInt() <= 0){
+                samples.removeLast()
+            }
+
+            // CLEAR EMPTY LAST SAMPLES:
+            while(samples.first().toInt() <= 0){
+                samples.removeFirst()
+            }
+
+            signalData = samples.joinToString(",")
+
+            var samplesCount = signalData.split(',').size
+            _viewModel!!.capturedSignalInfo.postValue("Received " + samplesCount + " Samples")
+
+            _lastIncomingSignalData = signalData
+            _lastIncomingCc1101Config = cc1101ConfigString
+            _viewModel!!.capturedSignalData.postValue(signalData)
+            _capturedSignals++;
+            _viewModel!!.infoTextFooter.postValue(_capturedSignals.toString() + " Signals captured");
+        } else {
+            Log.d(_logTag, "Skipping Signal because its too small")
         }
 
-        // CLEAR EMPTY FIRST SAMPLES:
-        var samples = signalData.split(",").toMutableList()
-        while(samples.last().toInt() <= 0){
-            samples.removeLast()
-        }
-
-        // CLEAR EMPTY LAST SAMPLES:
-        while(samples.first().toInt() <= 0){
-            samples.removeFirst()
-        }
-
-        signalData = samples.joinToString(",")
-
-        var samplesCount = signalData.split(',').size
-        _viewModel!!.capturedSignalInfo.postValue("Received " + samplesCount + " Samples")
-
-        _lastIncomingSignalData = signalData
-        _lastIncomingCc1101Config = cc1101ConfigString
-        _viewModel!!.capturedSignalData.postValue(signalData)
-        _capturedSignals++;
-        _viewModel!!.infoTextFooter.postValue(_capturedSignals.toString() + " Signals captured");
 
         setOperationMode(Constants.OPERATIONMODE_PERISCOPE)
     }

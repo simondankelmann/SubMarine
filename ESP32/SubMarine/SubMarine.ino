@@ -16,6 +16,8 @@ int incomingCommandLength = 0;
 bool receivingBluetoothCommand = false;
 int incomingCommandStartTime = 0;
 int incomingCommandEndTime = 0;
+#define INCOMING_REPEATIONS_STRING_LENGTH 4
+#define INCOMING_REPEATIONS_DELAY_STRING_LENGTH 6
 
 // CONNECTION STATES
 #define CONNECTION_STATE_DISCONNECTED "0000" 
@@ -445,6 +447,12 @@ void replaySignalFromIncomingCommand(){
 
   String CC1101_ConfigurationString = "";
 
+  String repeatitionsString = ""; // LENGTH 4
+  String repeatitionDelayString = ""; // LENGTH 6
+
+  //#define INCOMING_REPEATIONS_STRING_LENGTH 4
+  //#define INCOMING_REPEATIONS_DELAY_STRING_LENGTH 6
+
   File file = SPIFFS.open(SPIFFS_FILENAME_INCOMING_COMMAND, FILE_READ);
   while (file.available()) {
     char c = file.read();
@@ -452,8 +460,20 @@ void replaySignalFromIncomingCommand(){
     if(fileIndex >= INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH && fileIndex < INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH + CC1101_ADAPTER_CONGIRURATION_LENGTH){
       CC1101_ConfigurationString += c;      
     }
+
+    int repeatitionsStartIndex = INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH + CC1101_ADAPTER_CONGIRURATION_LENGTH;
+    int repeatitionsEndIndex = repeatitionsStartIndex + INCOMING_REPEATIONS_STRING_LENGTH;
+    if(fileIndex >= repeatitionsStartIndex && fileIndex < repeatitionsEndIndex){
+      repeatitionsString += c;      
+    }
+
+    int repeatitionDelayStartIndex = repeatitionsEndIndex;
+    int repeatitionDelayEndIndex = repeatitionDelayStartIndex + INCOMING_REPEATIONS_DELAY_STRING_LENGTH;
+    if(fileIndex >= repeatitionDelayStartIndex && fileIndex < repeatitionDelayEndIndex){
+      repeatitionDelayString += c;      
+    }
     
-    if(fileIndex >= INCOMING_BLUETOOTH_COMMAND_HEADER_LENGTH + CC1101_ADAPTER_CONGIRURATION_LENGTH){
+    if(fileIndex >= repeatitionDelayEndIndex){
       // START PARSING THE SIGNAL FROM THE DATA PORTION OF THE COMMAND
       if(c == '\n' || c == ','){
         int sample = currentSample.toInt();
@@ -478,11 +498,22 @@ void replaySignalFromIncomingCommand(){
   }
   file.close();
 
+  int repeatitions = repeatitionsString.toInt();
+  int repeatitionDelay = repeatitionDelayString.toInt();
+
+  Serial.print("Repeatitions: ");
+  Serial.print(repeatitions);
+  Serial.print(" Repeatition Delay: ");
+  Serial.println(repeatitionDelay);
+
   if(parsedSamples > 0){
     // SET CC1101 CONFIG
     setCC1101Configuration(CC1101_ConfigurationString);
     // REPLAY THE SIGNAL
-    sendSamples(incomingBluetoothSignal, parsedSamples);
+    for (int i = 0; i < repeatitions; i++) {  
+      sendSamples(incomingBluetoothSignal, parsedSamples); 
+      delay(repeatitionDelay);     
+    }
   }
 }
 

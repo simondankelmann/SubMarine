@@ -25,5 +25,8 @@ class Constants {
         var OPERATIONMODE_RECORD_SIGNAL = "0003"
         var OPERATIONMODE_DETECT_SIGNAL = "0004"
 
+        // OTHER
+        var MIN_TIMINGS_TO_SAVE = 50
+
     }
 }

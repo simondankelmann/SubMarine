@@ -234,8 +234,9 @@ class RecordSignalFragment: Fragment(), LocationResultListener, SubmarineResultL
         val commandId = Constants.COMMAND_ID_DUMMY
         val commandString = command + commandId + _submarineService.getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData*/
 
+        _submarineService.transmitSignal(signalEntity, 1, 0)
 
-        _submarineService.sendCommandToDevice(SubmarineCommand(Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND,Constants.COMMAND_ID_DUMMY,_submarineService.getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData))
+        //_submarineService.sendCommandToDevice(SubmarineCommand(Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND,Constants.COMMAND_ID_DUMMY,_submarineService.getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData))
         //_bluetoothSerial!!.sendByteString(commandString + "\n", ::replayStatusCallback)
     }
 

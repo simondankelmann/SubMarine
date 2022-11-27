@@ -112,7 +112,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Delay in Microseconds"
+                android:text="Line Delay µs"
                 android:textAlignment="center"
                 android:textColor="@color/fontcolor_component_dark_inactive"></TextView>
 
@@ -141,14 +141,38 @@
                 android:textColor="@color/fontcolor_component_dark_inactive"></TextView>
 
             <EditText
+                android:id="@+id/editTextRepeatitions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAlignment="center"
                 android:textColor="@color/fontcolor_component_dark_inactive"
-                android:text="5"></EditText>
+                android:text="5"
+                android:inputType="number"></EditText>
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/RepeatitionsDelayRow"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/textviewRepeatitionDelay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Rep. Delay Ms"
+                android:textAlignment="center"
+                android:textColor="@color/fontcolor_component_dark_inactive"></TextView>
 
+            <EditText
+                android:id="@+id/editTextRepeatitionDelay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:textColor="@color/fontcolor_component_dark_inactive"
+                android:text="1000"
+                android:inputType="number"></EditText>
+        </LinearLayout>
 
     </LinearLayout>
 

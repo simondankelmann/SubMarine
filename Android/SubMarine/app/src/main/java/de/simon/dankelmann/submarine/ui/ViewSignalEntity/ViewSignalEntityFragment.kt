@@ -380,7 +380,8 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
     fun replaySignalEntity(signalEntity: SignalEntity){
         _viewModel!!.animationResourceId.postValue(R.raw.wave2)
         _viewModel!!.signalDetailDescription.postValue("Transmitting Signal to Sub Marine...")
-        _submarineService.sendCommandToDevice(SubmarineCommand(Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND,Constants.COMMAND_ID_DUMMY, getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData))
+        _submarineService.transmitSignal(signalEntity, 1, 0)
+        //_submarineService.sendCommandToDevice(SubmarineCommand(Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND,Constants.COMMAND_ID_DUMMY, getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData))
     }
 
     @RequiresApi(Build.VERSION_CODES.M)

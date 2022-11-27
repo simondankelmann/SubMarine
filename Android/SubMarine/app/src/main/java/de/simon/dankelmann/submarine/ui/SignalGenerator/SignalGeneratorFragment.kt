@@ -66,6 +66,7 @@ class SignalGeneratorFragment : Fragment(), SubmarineResultListenerInterface {
                 val signalEntity = signalDao.getById(signalEntityId)
                 if(signalEntity != null){
                     _viewModel!!.signalEntity.postValue(signalEntity)
+                    _viewModel!!.description.postValue(signalEntity.name)
                     setupTabs()
                 }
             }
@@ -220,12 +221,17 @@ class SignalGeneratorFragment : Fragment(), SubmarineResultListenerInterface {
             }
         })
 
+        val editTextRepeatitions = binding.editTextRepeatitions
+        val editTextRepeatitionDelay = binding.editTextRepeatitionDelay
+
         // TRANSMIT BUTTON
         val transmitGeneratedSignalButton = binding.transmitGeneratedSignalButton
         transmitGeneratedSignalButton.setOnClickListener{
             var signalEntity = _collectionAdapter!!.getGeneratedSignalEntity()
             if(signalEntity != null){
-                _submarineService.sendCommandToDevice(SubmarineCommand(Constants.COMMAND_REPLAY_SIGNAL_FROM_BLUETOOTH_COMMAND,Constants.COMMAND_ID_DUMMY,_submarineService.getConfigurationStringFromSignalEntity(signalEntity) + signalEntity.signalData))
+                var repeatitions = editTextRepeatitions.text.toString().toInt()
+                var repeatitionDelay = editTextRepeatitionDelay.text.toString().toInt()
+                _submarineService.transmitSignal(signalEntity, repeatitions, repeatitionDelay)
             }
         }
 
