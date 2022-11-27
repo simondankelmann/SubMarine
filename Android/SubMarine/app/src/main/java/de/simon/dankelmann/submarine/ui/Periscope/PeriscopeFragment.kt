@@ -168,6 +168,7 @@ class PeriscopeFragment: Fragment(), LocationResultListener, SubmarineResultList
 */
 
                 if(_lastIncomingSignalEntity != null){
+                    _submarineService.setOperationMode(Constants.OPERATIONMODE_IDLE)
                     _submarineService.transmitSignal(_lastIncomingSignalEntity!!, 1, 0)
                 }
 
@@ -224,22 +225,9 @@ class PeriscopeFragment: Fragment(), LocationResultListener, SubmarineResultList
         }*/
     }
 
-    private fun setOperationModeCallback(message: String){
-        Log.d(_logTag, "OP MODE CB: " + message)
-    }
 
     private fun setOperationMode(operationMode:String){
-        val command = Constants.COMMAND_SET_OPERATION_MODE
-        val commandId = Constants.COMMAND_ID_DUMMY
-
-        val commandString = command + commandId + operationMode
-
         _submarineService.setOperationMode(operationMode)
-
-        //Handler(Looper.getMainLooper()).post(Runnable {
-            //_bluetoothSerial!!.sendByteString(commandString + "\n", ::setOperationModeCallback)
-        //})
-
     }
 
     private fun receivedDataCallback(message: String){
@@ -272,7 +260,19 @@ class PeriscopeFragment: Fragment(), LocationResultListener, SubmarineResultList
         Log.d(_logTag, "Configstring: " + cc1101ConfigString)
         Log.d(_logTag, "Signaldata: " + signalData)
 
-        if(signalData.split(",").size >= Constants.MIN_TIMINGS_TO_SAVE){
+        // CLEAR EMPTY FIRST SAMPLES:
+        var samples = signalData.split(",").toMutableList()
+        while(samples.last().toInt() <= 0){
+            samples.removeLast()
+        }
+
+        // CLEAR EMPTY LAST SAMPLES:
+        while(samples.first().toInt() <= 0){
+            samples.removeFirst()
+        }
+
+        if(samples.size >= Constants.MIN_TIMINGS_TO_SAVE){
+
             val locationDao = AppDatabase.getDatabase(requireContext()).locationDao()
             val signalDao = AppDatabase.getDatabase(requireContext()).signalDao()
             CoroutineScope(Dispatchers.IO).launch {
@@ -292,17 +292,6 @@ class PeriscopeFragment: Fragment(), LocationResultListener, SubmarineResultList
                 Log.d(_logTag, "Saved Signal with ID: " + signalId)
             }
 
-            // CLEAR EMPTY FIRST SAMPLES:
-            var samples = signalData.split(",").toMutableList()
-            while(samples.last().toInt() <= 0){
-                samples.removeLast()
-            }
-
-            // CLEAR EMPTY LAST SAMPLES:
-            while(samples.first().toInt() <= 0){
-                samples.removeFirst()
-            }
-
             signalData = samples.joinToString(",")
 
             var samplesCount = signalData.split(',').size
@@ -312,13 +301,11 @@ class PeriscopeFragment: Fragment(), LocationResultListener, SubmarineResultList
             _lastIncomingCc1101Config = cc1101ConfigString
             _viewModel!!.capturedSignalData.postValue(signalData)
             _capturedSignals++;
-            _viewModel!!.infoTextFooter.postValue(_capturedSignals.toString() + " Signals captured");
+            _viewModel!!.infoTextFooter.postValue(_capturedSignals.toString() + " Signals captured")
         } else {
             Log.d(_logTag, "Skipping Signal because its too small")
         }
 
-
-        setOperationMode(Constants.OPERATIONMODE_PERISCOPE)
     }
 
     private fun connectionStateChangedCallback(connectionState: Int){
@@ -384,7 +371,7 @@ class PeriscopeFragment: Fragment(), LocationResultListener, SubmarineResultList
     }
 
     override fun onOperationModeSet(timeElapsed: Int, command: SubmarineCommand) {
-        setOperationModeCallback("OPERATION MODE SET")
+        // NOT IN USE
     }
 
     override fun onSignalReplayed(timeElapsed: Int, command: SubmarineCommand) {

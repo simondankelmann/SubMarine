@@ -69,6 +69,7 @@ float signalDetectionFrequencies[SIGNAL_DETECTION_FREQUENCIES_LENGTH] = {300.00,
 int detectedRssi = -100;
 float detectedFrequency = 0.0;
 int signalDetectionMinRssi = -65;
+bool RECORDING_SIGNAL = false;
 
 // CC1101
 #include <ELECHOUSE_CC1101_SRC_DRV.h>
@@ -231,6 +232,9 @@ void commandReceivedCallback(){
       Remaining Bytes => Data      
   */
 
+  RECORDING_SIGNAL = false;
+  goIdle();
+
   String parsedCommand = "";
   String parsedCommandId = "";
   String parsedDataString = "";
@@ -262,7 +266,7 @@ void commandReceivedCallback(){
 
   // SET THE CURRENT COMMAND HEADER INFORMATION FOR MAIN THREAD
   incomingCommand = parsedCommand;
-  incomingCommandId = parsedCommand;
+  incomingCommandId = parsedCommandId;
   incomingCommandDataString = parsedDataString;
 
   setOperationMode(OPERATIONMODE_HANDLE_INCOMING_COMMAND); 
@@ -274,7 +278,7 @@ void setOperationMode(String opMode){
 }
 
 void goIdle(){
-  _operationMode = OPERATIONMODE_IDLE;
+  setOperationMode(OPERATIONMODE_IDLE);
 }
 
 String getOperationMode(){
@@ -511,9 +515,13 @@ void replaySignalFromIncomingCommand(){
     setCC1101Configuration(CC1101_ConfigurationString);
     // REPLAY THE SIGNAL
     for (int i = 0; i < repeatitions; i++) {  
+      Serial.println("Transmitting Signal for the " + String(i) + " Time");
       sendSamples(incomingBluetoothSignal, parsedSamples); 
+      Serial.println("Delaying: " + String(repeatitionDelay));
       delay(repeatitionDelay);     
     }
+  } else {
+    Serial.println("No Samples were parsed");
   }
 }
 
@@ -590,7 +598,6 @@ void sendSignalFromFile(String fileName){
 }
 
 void loop() {
-
   // HANDLE OPERATION MODE
   if(getOperationMode() == OPERATIONMODE_IDLE){
     delay(100);
@@ -638,8 +645,9 @@ void recordSignal(){
   lastRecordDuration = 0;
  
   // RECORD TO BUFFER AND THEN WRITE TO SPIFFS
-  while(transitions < MINIMUM_RECORDED_TRANSITIONS && lastRecordDuration < MINIMUM_RECORDTIME_MICROSECONDS && CC1101_TX == false){ /*&& (getOperationMode() == OPERATIONMODE_PERISCOPE  || getOperationMode() == OPERATIONMODE_RECORD_SIGNAL))*/
-    transitions = tryRecordSignalToBuffer();          
+  while(transitions < MINIMUM_RECORDED_TRANSITIONS && lastRecordDuration < MINIMUM_RECORDTIME_MICROSECONDS && CC1101_TX == false && RECORDING_SIGNAL == true){ /*&& (getOperationMode() == OPERATIONMODE_PERISCOPE  || getOperationMode() == OPERATIONMODE_RECORD_SIGNAL))*/
+    transitions = tryRecordSignalToBuffer();     
+    delay(10);     
   }
 
   bool isSuccess = false;
@@ -748,14 +756,17 @@ void writeSignalBufferToFile(File file, int signalBuffer[], int signalLength){
 
 void periscope(){
   Serial.println("Looking around...");
+  RECORDING_SIGNAL = true;
   if(getLastExecutedOperationMode() != OPERATIONMODE_PERISCOPE || CC1101_TX == true){
     CC1101_TX = false;
     initCC1101();
   }
   digitalWrite(PIN_LED_ONBOARD, HIGH);  
-  while(getOperationMode() == OPERATIONMODE_PERISCOPE && CC1101_TX == false){
+  while(getOperationMode() == OPERATIONMODE_PERISCOPE && CC1101_TX == false && RECORDING_SIGNAL == true){
+    delay(10);    
     recordSignal();
     Serial.println("Looking for more Signals");
+    delay(10);    
   }
   
   Serial.println("Periscope closed.");
@@ -803,9 +814,10 @@ void operationModeDetectSignal(){
   
 }
 
+/*
 void replaySignal(){
   sendSamples(recordedSignal, MAX_LENGHT_RECORDED_SIGNAL);
-}
+}*/
 
 void sendSamples(int samples[], int samplesLenght) {
   if(CC1101_TX == false){
