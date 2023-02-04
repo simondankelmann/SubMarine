@@ -64,8 +64,8 @@ int recordedSamples = 0;
 long lastRecordDuration = 0;
 
 // SINGAL DETECTION
-#define SIGNAL_DETECTION_FREQUENCIES_LENGTH 16
-float signalDetectionFrequencies[SIGNAL_DETECTION_FREQUENCIES_LENGTH] = {300.00, 303.87, 304.25, 310.00, 315.00, 318.00, 390.00, 418.00, 433.07, 433.92, 434.42, 434.77, 438.90, 868.35, 915.00, 925.00};
+#define SIGNAL_DETECTION_FREQUENCIES_LENGTH 19
+float signalDetectionFrequencies[SIGNAL_DETECTION_FREQUENCIES_LENGTH] = {300.00, 303.87, 304.25, 310.00, 315.00, 318.00, 390.00, 418.00, 433.07, 433.92, 434.42, 434.77, 438.90, 868.3, 868.35, 868.865, 868.95, 915.00, 925.00};
 int detectedRssi = -100;
 float detectedFrequency = 0.0;
 int signalDetectionMinRssi = -65;
