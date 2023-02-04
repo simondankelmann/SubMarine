@@ -28,6 +28,11 @@
             android:title="@string/menu_recordSignal" />
 
         <item
+            android:id="@+id/nav_import_signal"
+            android:icon="@drawable/ic_baseline_file_upload"
+            android:title="@string/menu_importSignal" />
+
+        <item
             android:id="@+id/nav_detect_signal"
             android:icon="@drawable/ic_search"
             android:title="@string/menu_detectSignal" />

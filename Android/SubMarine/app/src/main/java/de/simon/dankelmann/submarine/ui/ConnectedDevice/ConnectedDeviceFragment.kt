@@ -97,6 +97,12 @@ class ConnectedDeviceFragment: Fragment(), SubmarineResultListenerInterface {
             requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_connected_device_to_nav_record_signal)
         }
 
+        // IMPORT SIGNALBUTTON
+        val importSignalButton: Button = binding.importSignalButton
+        importSignalButton.setOnClickListener { view ->
+            requireActivity().findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_nav_connected_device_to_nav_import_signal)
+        }
+
         // DETECT SIGNALBUTTON
         val detectSignalButton: Button = binding.detectSignalButton
         detectSignalButton.setOnClickListener { view ->
