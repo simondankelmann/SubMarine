@@ -113,7 +113,7 @@ class ImportSignalFragment: Fragment(), SubmarineResultListenerInterface {
 
                             when(flipperCmd){
                                 "Frequency" -> {
-                                    frequency = (flipperVal.toInt() / 1000000).toFloat()
+                                    frequency = (flipperVal.toFloat() / 1000000)
                                     Log.d(_logTag, "Parsed Frequency: " + frequency)
                                 }
 
