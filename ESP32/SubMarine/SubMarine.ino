@@ -775,6 +775,7 @@ void periscope(){
 
 void operationModeRecordSignal(){
   Serial.println("Recording a Signal");
+  RECORDING_SIGNAL = true;
   if(getLastExecutedOperationMode() != OPERATIONMODE_RECORD_SIGNAL || CC1101_TX == true){
     CC1101_TX = false;
     initCC1101();
