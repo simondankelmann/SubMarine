@@ -152,7 +152,7 @@ class ForegroundService : Service() {
         notifyIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 
 
-        val pendingIntent = PendingIntent.getActivity(context, 0, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent = PendingIntent.getActivity(context, 0, notifyIntent, PendingIntent.FLAG_IMMUTABLE)
 
         //var mNotification = null
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
