@@ -56,9 +56,47 @@ For this Project i used a ESP32 D1 Mini NodeMCU connected to a TI-CC1101 Transce
 | ------ | ------ |
 | ![Wiring Diagramm](./Fritzing/SubMarine_bb.png) | ![Wiring Diagramm](./Fritzing/SubMarineBasic_bb.png) |
 
+
+| CC1101 Pin | ESP32 Pin |
+|------------|-----------|
+| Gnd        | Gnd       |
+| Vcc        | 3.3v      |
+| Gdo0       | gpio2     |
+| Csn        | gpio5     |
+| Sck        | gpio18    |
+| Mosi       | gpio23    |
+| Miso       | gpio19    |
+| Gdo2       | gpio4     |
+
+
+ebyte E07 (M1101D) CC1101 8 pin pinout 
+
+| Pin | Function |
+| --- | --- |
+| 1   | GND      |
+| 2   | VCC      |
+| 3   | GDO0     |
+| 4   | CSN      |
+| 5   | SCK      |
+| 6   | MOSI     |
+| 7   | MISO/GDO1|
+| 8   | GDO2     |
+
+##software
+
+Uncomment line 163 if u like
+Line 113 serial. Begin from(1000000 to 115200)
+Line 76 #define PIN_GDO0 from12 to 2 haven't tried 12 but 2 to be safe
+Give all permissions manually to the phone app from apps settings
+Open app and press bt button and choose sub marine
+
 ## Android App
 
-The Android app will let you Search for Bluetooth Devices nearby. By default the advertised Bluetooth Devicename is: SubMarine. After you click on the Item in the List of found Devices within the App it will connect to the ESP32. Once connected you can start using the Tool.
+1-download the the apk from the respitory and unzip it on your phone.
+2-open the app and go to your phone apps settings (apps>manage apps>submarine>premissions) and grant it all premissions.
+3-open the app then press on bluetooth logo The Android app will let you Search for Bluetooth Devices nearby so choose device name (submarine) By default the advertised Bluetooth Devicename is: SubMarine.
+4-After you click on the Item in the List of found Devices within the App it will connect to the ESP32.
+5- Once connected you can start using the Tool.
 
 ## Screenshots
 
