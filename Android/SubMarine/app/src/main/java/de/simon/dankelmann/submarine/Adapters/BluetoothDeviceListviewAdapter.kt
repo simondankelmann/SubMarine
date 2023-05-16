@@ -1,6 +1,7 @@
 package de.simon.dankelmann.esp32_subghz.Adapters
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -11,7 +12,7 @@ import de.simon.dankelmann.submarine.Models.BluetoothDeviceModel
 import de.simon.dankelmann.submarine.PermissionCheck.PermissionCheck
 import de.simon.dankelmann.submarine.R
 
-class BluetoothDeviceListviewAdapter(private val context: Context, private var deviceList: MutableList<BluetoothDeviceModel>) : BaseAdapter() {
+class BluetoothDeviceListviewAdapter(private val context: Context, private var deviceList: MutableList<BluetoothDeviceModel>, private val activity: Activity) : BaseAdapter() {
     private lateinit var bluetoothName: TextView
     private lateinit var bluetoothAddress: TextView
     private lateinit var bluetoothRssi: TextView
@@ -48,7 +49,7 @@ class BluetoothDeviceListviewAdapter(private val context: Context, private var d
         bluetoothAddress = convertView.findViewById(R.id.bluetoothAddress)
         bluetoothRssi = convertView.findViewById(R.id.bluetoothRssi)
 
-        if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
+        if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT,activity)){
             bluetoothName.text = deviceList[position].device!!.name
             bluetoothAddress.text = deviceList[position].device!!.address
             bluetoothRssi.text = deviceList[position].rssi.toString() + " dB"

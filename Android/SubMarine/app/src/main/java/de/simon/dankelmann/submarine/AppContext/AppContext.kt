@@ -1,5 +1,6 @@
 package de.simon.dankelmann.submarine.AppContext
 
+import android.app.Activity
 import android.content.Context
 import de.simon.dankelmann.submarine.Services.SubMarineService
 
@@ -31,7 +32,9 @@ abstract class AppContext {
     companion object {
 
         private lateinit var context: Context
-        var submarineService: SubMarineService = SubMarineService()
+        private lateinit var activity: Activity
+
+        lateinit var submarineService: SubMarineService
 
 
         fun setContext(con: Context) {
@@ -40,6 +43,24 @@ abstract class AppContext {
 
         fun getContext():Context {
             return context
+        }
+
+        fun setActivity(act: Activity) {
+            activity=act
+        }
+
+        fun getActivity():Activity {
+            return activity
+        }
+
+        fun initializeSubmarineService(){
+            if(activity != null){
+                submarineService = SubMarineService(activity)
+            }
+        }
+
+        fun registerPermissionCallback(requestCode: Int, callback:Runnable){
+
         }
 
     }

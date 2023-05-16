@@ -68,7 +68,7 @@ class ScanBtFragment : Fragment(), AdapterView.OnItemClickListener {
         val listview: ListView = binding.bluetoothDeviceList
         listview.onItemClickListener = this
         _viewModel.bluetoothDevices.observe(viewLifecycleOwner) {
-            _listItemAdapter = BluetoothDeviceListviewAdapter(root.context, it) //ArrayAdapter(root.context, android.R.layout.simple_list_item_1, it)
+            _listItemAdapter = BluetoothDeviceListviewAdapter(root.context, it, requireActivity()) //ArrayAdapter(root.context, android.R.layout.simple_list_item_1, it)
             listview.adapter = _listItemAdapter
         }
 
@@ -78,7 +78,7 @@ class ScanBtFragment : Fragment(), AdapterView.OnItemClickListener {
         requireContext().registerReceiver(mReceiver, intentFilter)
 
         // START SCANNING:
-        _bluetoothService = BluetoothService(requireContext())
+        _bluetoothService = BluetoothService(requireContext(), requireActivity())
         _bluetoothService?.startDiscovery()
 
         //startListItemRemovalTimer()
@@ -130,7 +130,7 @@ class ScanBtFragment : Fragment(), AdapterView.OnItemClickListener {
                     var foundDevice: BluetoothDevice? =
                         intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
                     if (foundDevice != null) {
-                        if (PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
+                        if (PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT, requireActivity())) {
                             // HANDLE THE FOUND DEVICE
                             val rssi: Short = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE)
                             Log.d(_logTag, foundDevice?.name + " - " + foundDevice?.address + " - " + rssi)

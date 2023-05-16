@@ -1,6 +1,7 @@
 package de.simon.dankelmann.submarine.Services
 
 import android.Manifest
+import android.app.Activity
 import android.app.Application
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
@@ -23,7 +24,7 @@ import java.time.ZoneOffset
 import kotlin.math.sign
 import kotlin.reflect.KFunction1
 
-class SubMarineService {
+class SubMarineService (activity: Activity) {
     enum class ConnectionStates(val value: Int)  {
         Disconnected(0), Connecting(1), Connected(2)
     }
@@ -37,6 +38,7 @@ class SubMarineService {
     private var _bluetoothSerial:BluetoothSerial? = null
     private var _isListening = false
     private var _bluetoothDevice:BluetoothDevice? = null
+    private val _activity:Activity = activity
     //var deviceAddress:String = ""
 
     //var connectionStateChangedCallback: KFunction1<Int, Unit>? = null
@@ -54,7 +56,7 @@ class SubMarineService {
             if(_bluetoothDevice != null && _bluetoothDevice!!.address != null && _bluetoothDevice!!.address != ""){
                 var macAddress = _bluetoothDevice!!.address
                 Log.d(_logTag, "Connecting Bluetooth Serial on " + macAddress)
-                _bluetoothSerial = BluetoothSerial(AppContext.getContext(), this)
+                _bluetoothSerial = BluetoothSerial(AppContext.getContext(), this, _activity)
                 CoroutineScope(Dispatchers.IO).launch {
                     _bluetoothSerial?.connect(macAddress, 1)
                 }

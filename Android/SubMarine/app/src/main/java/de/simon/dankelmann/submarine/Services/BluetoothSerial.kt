@@ -1,6 +1,7 @@
 package de.simon.dankelmann.submarine.Services
 
 import android.Manifest
+import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
@@ -28,7 +29,7 @@ import java.io.OutputStream
 import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.M)
-class BluetoothSerial (context: Context, submarineService:SubMarineService){
+class BluetoothSerial (context: Context, submarineService:SubMarineService, activity: Activity){
     // PUBLIC
     /*
     val connectionState_Disconnected = 0
@@ -52,6 +53,7 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
     private var _maxReconnectionAttemptsSocket = 3
     private var _connectionTimeoutSocket:Long = 1000
     private var _connectionState = SubMarineService.ConnectionStates.Disconnected.value
+    private val _activity = activity
     //private var _callback: KFunction1<String, Unit>? = null
     //private var _connectionChangedCallback: KFunction1<Int, Unit>? = null
     // PUBLIC VAR
@@ -80,7 +82,7 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
             if(_bluetoothAdapter != null ){
                 _bluetoothDevice = _bluetoothAdapter?.getRemoteDevice(macAddress)
                 if(_bluetoothDevice != null){
-                    if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
+                    if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT, _activity)){
                         Log.d(_logTag, "Connecting to Socket")
                         connectSocket()
                     }
@@ -147,7 +149,7 @@ class BluetoothSerial (context: Context, submarineService:SubMarineService){
         // EXECUTE CALLBACKS
         connectionStateChanged(SubMarineService.ConnectionStates.Connecting.value)
 
-        if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
+        if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT,_activity)){
             _bluetoothSocket = _bluetoothDevice?.createInsecureRfcommSocketToServiceRecord(_bluetoothSerialUuid)
             if(_bluetoothSocket != null) {
                     CoroutineScope(Dispatchers.IO).launch {

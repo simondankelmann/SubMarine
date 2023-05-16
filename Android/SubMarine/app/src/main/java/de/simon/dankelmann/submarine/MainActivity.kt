@@ -1,6 +1,8 @@
 package de.simon.dankelmann.submarine
 
+import android.app.AlertDialog
 import android.app.Application
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -17,11 +19,13 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.Database.AppDatabase
+import de.simon.dankelmann.submarine.PermissionCheck.PermissionCheck
 import de.simon.dankelmann.submarine.Services.SignalAnalyzer
 import de.simon.dankelmann.submarine.databinding.ActivityMainBinding
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.util.jar.Manifest
 import kotlin.math.sign
 
 class MainActivity : AppCompatActivity() {
@@ -37,6 +41,12 @@ class MainActivity : AppCompatActivity() {
 
         // INITIALIZE THE APP CONTEXT
         AppContext.setContext(this)
+        AppContext.setActivity(this)
+
+        // REQUIRE ALL PERMISSIONS
+       this.requestAllPermissions()
+
+        AppContext.initializeSubmarineService()
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -102,6 +112,32 @@ class MainActivity : AppCompatActivity() {
         navView.setupWithNavController(navController)
     }
 
+    fun requestAllPermissions(){
+
+        val allPermissions = arrayOf(
+            android.Manifest.permission.BLUETOOTH,
+            android.Manifest.permission.BLUETOOTH_ADMIN,
+            android.Manifest.permission.BLUETOOTH_SCAN,
+            android.Manifest.permission.BLUETOOTH_ADVERTISE,
+            android.Manifest.permission.BLUETOOTH_CONNECT,
+
+            android.Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+
+            android.Manifest.permission.INTERNET,
+            android.Manifest.permission.ACCESS_NETWORK_STATE,
+
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.MANAGE_EXTERNAL_STORAGE,
+
+            android.Manifest.permission.FOREGROUND_SERVICE
+        )
+
+        PermissionCheck.requireAllPermissions(this, allPermissions)
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main, menu)
@@ -111,5 +147,23 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        PermissionCheck.processPermissionsResult(requestCode, permissions, grantResults)
+
+        /*
+        when (requestCode) {
+
+            RECORD_REQUEST_CODE -> {
+                if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    Log.i(_logTag, "Permission has been denied by user")
+                } else {
+                    Log.i(_logTag, "Permission has been granted by user")
+                }
+            }
+        }*/
     }
 }

@@ -46,7 +46,7 @@ class ConnectedDeviceFragment: Fragment(), SubmarineResultListenerInterface {
         _binding = FragmentConnectedDeviceBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT)){
+        if(PermissionCheck.checkPermission(Manifest.permission.BLUETOOTH_CONNECT, requireActivity())){
             var bluetoothDevice = _submarineService.getBluetoothDevice()
             if(bluetoothDevice != null){
                 _viewModel!!.updateTitle(bluetoothDevice!!.name);
