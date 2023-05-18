@@ -9,7 +9,7 @@ import de.simon.dankelmann.submarine.Entities.SignalEntity
 
 @Dao
 interface SignalDao {
-    @Query("SELECT * FROM signalentity")
+    @Query("SELECT * FROM signalentity ORDER BY uid DESC")
     fun getAll(): List<SignalEntity>
 
     @Query("SELECT * FROM signalentity WHERE uid IN (:singalIds)")
