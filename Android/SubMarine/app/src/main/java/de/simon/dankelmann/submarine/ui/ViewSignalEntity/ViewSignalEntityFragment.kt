@@ -34,6 +34,7 @@ import de.simon.dankelmann.submarine.Models.SubmarineCommand
 import de.simon.dankelmann.submarine.R
 import de.simon.dankelmann.submarine.databinding.FragmentViewSignalEntityBinding
 import de.simon.dankelmann.submarine.Services.SubMarineService
+import de.simon.dankelmann.submarine.SubGhzDecoders.SubGhzDecoderRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -164,6 +165,13 @@ class ViewSignalEntityFragment : Fragment(), SubmarineResultListenerInterface{
                 //dataText.setText( _viewModel!!.signalEntity.value!!.signalData)
                 footerText1.text = getModulationString(_viewModel!!.signalEntity.value!!.modulation!!) + " | " + _viewModel!!.signalEntity.value!!.type!!
                 footerText2.text = "RX-BW: " + _viewModel!!.signalEntity.value!!.rxBw.toString()+" Khz"
+
+                var validDecoders = SubGhzDecoderRegistry().validateSignal(it)
+                if(validDecoders.isNotEmpty() && !it.proofOfWork){
+                    validDecoders.forEach { subGhzDecoder ->
+                        footerText3.text = subGhzDecoder.getInfoText()
+                    }
+                }
 
                 if(_viewModel!!.signalEntity.value!!.proofOfWork){
                     powButton.background.setTint(resources.getColor(R.color.backgroundcolor_component_dark_active))

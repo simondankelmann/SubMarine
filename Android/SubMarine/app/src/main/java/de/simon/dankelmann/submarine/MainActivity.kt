@@ -21,7 +21,11 @@ import de.simon.dankelmann.submarine.AppContext.AppContext
 import de.simon.dankelmann.submarine.Database.AppDatabase
 import de.simon.dankelmann.submarine.PermissionCheck.PermissionCheck
 import de.simon.dankelmann.submarine.Services.SignalAnalyzer
+import de.simon.dankelmann.submarine.SubGhzDecoders.SubGhzDecoderRegistry
 import de.simon.dankelmann.submarine.databinding.ActivityMainBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -80,10 +84,28 @@ class MainActivity : AppCompatActivity() {
         //AppDatabase.exportToFile()
 
         // TEST CONVERSION
-        var signalAnalyzer = SignalAnalyzer()
+        //var signalAnalyzer = SignalAnalyzer()
         //var binString = signalAnalyzer.convertHexStringToBinaryString("0xf421084210843d087bd0f7bdef42108")
         //Log.d(_logTag, "RECEIVED BIN STRING: " + binString)
         //var timingsList = signalAnalyzer.convertHexStringToTimingsList("0xf421084210843d087bd0f7bdef42108", 300)
+
+        // TEST DECODER
+        /*
+        var decoderRegistry: SubGhzDecoderRegistry = SubGhzDecoderRegistry()
+        val signalDao = AppDatabase.getDatabase(applicationContext).signalDao()
+        CoroutineScope(Dispatchers.IO).launch {
+            val data = signalDao.search("SOME SIGNAL NAME")
+            Log.d("TAG__", "Signal found: " + data.size.toString())
+            if(data.size > 0){
+                var signalEntity = data[0]
+                var validDecoders = decoderRegistry.validateSignal(signalEntity)
+                Log.d("TAG__", "Signal valid for: " + validDecoders.size.toString() + " Protocols")
+                validDecoders.forEach {
+                    Log.d("TAG__","Decoded Data: " + it.getInfoText())
+                }
+            }
+        }*/
+
 
 
 

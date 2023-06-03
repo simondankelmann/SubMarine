@@ -32,6 +32,7 @@ import de.simon.dankelmann.submarine.databinding.FragmentRecordSignalBinding
 import de.simon.dankelmann.submarine.Services.ForegroundService
 import de.simon.dankelmann.submarine.Services.LocationService
 import de.simon.dankelmann.submarine.Services.SubMarineService
+import de.simon.dankelmann.submarine.SubGhzDecoders.SubGhzDecoderRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -327,6 +328,20 @@ class RecordSignalFragment: Fragment(), LocationResultListener, SubmarineResultL
         var samplesCount = signalData.split(',').size
         _viewModel!!.capturedSignalInfo.postValue("Received " + samplesCount + " Samples")
         _viewModel!!.capturedSignalData.postValue(signalData)
+
+        // check if the signal can be decoded
+        var decodeInfoText = ""
+        var validDecoders = SubGhzDecoderRegistry().validateSignal(signalEntity)
+        if(validDecoders.isNotEmpty()){
+            validDecoders.forEach { subGhzDecoder ->
+                decodeInfoText += subGhzDecoder.getInfoText()
+            }
+        }
+        if(decodeInfoText.isNotEmpty()){
+            _viewModel!!.footerText1.postValue(decodeInfoText)
+        } else {
+            _viewModel!!.footerText1.postValue("Unknown Protocol")
+        }
 
         _lastIncomingSignalData = signalData
         _lastIncomingCc1101Config = cc1101ConfigString

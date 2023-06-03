@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import de.simon.dankelmann.submarine.Entities.SignalEntity
 import de.simon.dankelmann.submarine.R
+import de.simon.dankelmann.submarine.SubGhzDecoders.SubGhzDecoderRegistry
 
 class SignalDatabaseListviewAdapter(private val context: Context, private var signalEntityList: MutableList<SignalEntity>) : BaseAdapter() {
     private lateinit var signalName: TextView
@@ -55,8 +56,26 @@ class SignalDatabaseListviewAdapter(private val context: Context, private var si
             iconColorId = R.color.accent_color_darkmode
         }
 
+        // CHECK IF THE SIGNALS PROTOCOL CAN BE DETECTED
+        var decodedProtocols = ""
+        var pre = ""
+        var validDecoders = SubGhzDecoderRegistry().validateSignal(signalEntityList[position])
+        if(validDecoders.isNotEmpty() && !signalEntityList[position].proofOfWork){
+            iconColorId = R.color.decoded_signal_color_darkmode
+
+            validDecoders.forEach {
+                decodedProtocols += pre + it.getProtocolName()
+                pre = ","
+            }
+        }
+
+        var signalType = signalEntityList[position].type
+        if(decodedProtocols.isNotEmpty()){
+            signalType = decodedProtocols
+        }
+
         signalName.text = signalEntityList[position].name
-        signalInfo.text = signalEntityList[position].frequency.toString() + " Mhz" + " | " + signalEntityList[position].type + " | " + signalEntityList[position].signalDataLength.toString() + " Samples"
+        signalInfo.text = signalEntityList[position].frequency.toString() + " Mhz" + " | " + signalType + " | " + signalEntityList[position].signalDataLength.toString() + " Samples"
         //signalFrequency.text = signalEntityList[position].frequency.toString() + " Mhz"
         signalIcon.setColorFilter(ContextCompat.getColor(convertView.context,iconColorId))
 

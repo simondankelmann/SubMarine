@@ -7,19 +7,22 @@ import android.widget.TextView
 import androidx.navigation.findNavController
 import de.simon.dankelmann.submarine.Entities.SignalEntity
 import de.simon.dankelmann.submarine.R
+import de.simon.dankelmann.submarine.SubGhzDecoders.SubGhzDecoder
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.infowindow.InfoWindow
 
-class SignalMarkerInfoWindow(mapView: MapView, activity: Activity, signalEntity: SignalEntity) : InfoWindow(R.layout.info_window_marker, mapView) {
+class SignalMarkerInfoWindow(mapView: MapView, activity: Activity, signalEntity: SignalEntity, validDecoders : List<SubGhzDecoder>) : InfoWindow(R.layout.info_window_marker, mapView) {
 
     var _activity:Activity? = null
     var _mapView:MapView? = null
     var _signalEntity:SignalEntity? = null
+    var _validDecoders:List<SubGhzDecoder> = mutableListOf()
 
     init{
         _activity = activity
         _mapView = mapView
         _signalEntity = signalEntity
+        _validDecoders = validDecoders
     }
 
     override fun onOpen(item: Any?) {
@@ -38,6 +41,13 @@ class SignalMarkerInfoWindow(mapView: MapView, activity: Activity, signalEntity:
         desriptionText += "Samples: " + _signalEntity!!.signalDataLength.toString() + "" + "\n"
         desriptionText += "Frequency: " + _signalEntity!!.frequency.toString() + " Mhz" + "\n"
         desriptionText += "Type: " + _signalEntity!!.type.toString() + "" + "\n"
+
+        if(_validDecoders.isNotEmpty()){
+            _validDecoders.forEach {
+                desriptionText += "Decoded: " + it.getInfoText() + "" + "\n"
+            }
+        }
+
         desriptionText += "Modulation: " + _signalEntity!!.modulation.toString() + "" + "\n"
         desriptionText += "Rx Bandwith: " + _signalEntity!!.rxBw.toString() + "" + "\n"
 

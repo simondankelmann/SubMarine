@@ -15,6 +15,7 @@ import de.simon.dankelmann.submarine.Interfaces.LocationResultListener
 import de.simon.dankelmann.submarine.R
 import de.simon.dankelmann.submarine.databinding.FragmentSignalMapBinding
 import de.simon.dankelmann.submarine.Services.LocationService
+import de.simon.dankelmann.submarine.SubGhzDecoders.SubGhzDecoderRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -204,6 +205,13 @@ class SignalMapFragment : Fragment(), LocationResultListener {
                         if(it.proofOfWork){
                             markerColor = resources.getColor(R.color.accent_color_darkmode)
                         }
+
+                        // CHECK IF THE SIGNALS PROTOCOL CAN BE DETECTED
+                        var validDecoders = SubGhzDecoderRegistry().validateSignal(it)
+                        if(validDecoders.isNotEmpty() && !it.proofOfWork){
+                            markerColor = resources.getColor(R.color.decoded_signal_color_darkmode)
+                        }
+
                         markerIcon!!.setTint(markerColor)
 
                         signalMarker.icon = markerIcon
@@ -211,7 +219,7 @@ class SignalMapFragment : Fragment(), LocationResultListener {
                         signalMarker.title = it.name
 
 
-                        val infoWindow = SignalMarkerInfoWindow(_map!!, requireActivity(), it)
+                        val infoWindow = SignalMarkerInfoWindow(_map!!, requireActivity(), it, validDecoders)
                         signalMarker.infoWindow = infoWindow
 
                         _signalMarkerList.add(signalMarker)
