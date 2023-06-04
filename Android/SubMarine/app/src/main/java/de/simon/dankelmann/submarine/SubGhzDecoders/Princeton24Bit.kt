@@ -4,6 +4,7 @@ import android.util.Log
 import de.simon.dankelmann.submarine.Entities.SignalEntity
 import de.simon.dankelmann.submarine.Models.BinHex
 import de.simon.dankelmann.submarine.Models.ToneSilencePair
+import de.simon.dankelmann.submarine.R
 import kotlin.math.sign
 
 class Princeton24Bit:SubGhzDecoder {
@@ -47,6 +48,10 @@ class Princeton24Bit:SubGhzDecoder {
 
     override fun getInfoText(): String {
         return getProtocolName() + ", Hex: " + this._decodedHex
+    }
+
+    override fun getColorId(): Int {
+        return R.color.decoded_signal_color_princeton_24_bit
     }
 
     fun getToneSilencePairs(signalEntity: SignalEntity):List<ToneSilencePair>{

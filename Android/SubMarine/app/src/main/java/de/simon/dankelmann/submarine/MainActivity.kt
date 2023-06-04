@@ -106,11 +106,6 @@ class MainActivity : AppCompatActivity() {
             }
         }*/
 
-
-
-
-
-
         // FOREGROUND SERVICE
         /*
         var serviceIntent = Intent(applicationContext.applicationContext, ForegroundService::class.java)

@@ -11,7 +11,11 @@
     <!-- DARK MODE -->
     <color name="background_dark">#141418</color>
     <color name="accent_color_darkmode">#2873ff</color>
-    <color name="decoded_signal_color_darkmode">#ff7900</color>
+
+
+    <color name="decoded_signal_color_princeton_24_bit">#ff7900</color>
+    <color name="decoded_signal_color_bett_18_bit">#00f200</color>
+
 
     <!-- DARK COMPONENT -->
     <color name="backgroundcolor_component_dark_active">@color/accent_color_darkmode</color>

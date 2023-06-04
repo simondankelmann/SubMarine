@@ -6,6 +6,7 @@ class SubGhzDecoderRegistry {
     private var _decoders: MutableList<SubGhzDecoder> = mutableListOf()
 
     constructor(){
+        _decoders.add(Bett18Bit())
         _decoders.add(Princeton24Bit())
     }
 

@@ -61,7 +61,7 @@ class SignalDatabaseListviewAdapter(private val context: Context, private var si
         var pre = ""
         var validDecoders = SubGhzDecoderRegistry().validateSignal(signalEntityList[position])
         if(validDecoders.isNotEmpty() && !signalEntityList[position].proofOfWork){
-            iconColorId = R.color.decoded_signal_color_darkmode
+            iconColorId = validDecoders.first().getColorId()
 
             validDecoders.forEach {
                 decodedProtocols += pre + it.getProtocolName()

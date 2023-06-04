@@ -209,7 +209,7 @@ class SignalMapFragment : Fragment(), LocationResultListener {
                         // CHECK IF THE SIGNALS PROTOCOL CAN BE DETECTED
                         var validDecoders = SubGhzDecoderRegistry().validateSignal(it)
                         if(validDecoders.isNotEmpty() && !it.proofOfWork){
-                            markerColor = resources.getColor(R.color.decoded_signal_color_darkmode)
+                            markerColor = resources.getColor(validDecoders.first().getColorId())
                         }
 
                         markerIcon!!.setTint(markerColor)
