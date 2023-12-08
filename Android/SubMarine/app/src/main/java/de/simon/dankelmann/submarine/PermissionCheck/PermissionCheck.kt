@@ -29,6 +29,12 @@ class PermissionCheck (){
                 return true
             }
 
+            if (permission == "android.permission.BLUETOOTH_SCAN" && Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+            {
+                // android.permission.BLUETOOTH_SCAN was first introduced in api level 31
+                return true
+            }
+
             if (permission == "android.permission.BLUETOOTH_CONNECT" && Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
             {
                 // android.permission.BLUETOOTH_CONNECT was first introduced in api level 31
