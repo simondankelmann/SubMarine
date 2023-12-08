@@ -6,6 +6,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.provider.Settings
 import android.util.Log
@@ -21,6 +22,19 @@ class PermissionCheck (){
     companion object {
         private val _logTag = "PermissionCheck"
         fun checkPermission(permission:String, activity: Activity):Boolean{
+
+            if (permission == "android.permission.BLUETOOTH_ADVERTISE" && Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+            {
+                // android.permission.BLUETOOTH_ADVERTISE was first introduced in api level 31
+                return true
+            }
+
+            if (permission == "android.permission.BLUETOOTH_CONNECT" && Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+            {
+                // android.permission.BLUETOOTH_CONNECT was first introduced in api level 31
+                return true
+            }
+
             //return true
             if(checkSelfPermission(AppContext.getContext(), permission) == PackageManager.PERMISSION_GRANTED){
                 Log.d(_logTag, "Permission granted: $permission")
