@@ -124,7 +124,7 @@ class ScanBtFragment : Fragment(), AdapterView.OnItemClickListener {
 
     inner class FoundDeviceBroadCastReceiver: BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
-            if(ctx != null && intent != null) {
+            if(ctx != null && intent != null && activity != null) {
                 var action = intent.action
                 if (action.equals(BluetoothDevice.ACTION_FOUND)) {
                     var foundDevice: BluetoothDevice? =
@@ -134,11 +134,13 @@ class ScanBtFragment : Fragment(), AdapterView.OnItemClickListener {
                             // HANDLE THE FOUND DEVICE
                             val rssi: Short = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE)
                             Log.d(_logTag, foundDevice?.name + " - " + foundDevice?.address + " - " + rssi)
-                            _viewModel.addFoundBluetoothDevice(
-                                foundDevice,
-                                rssi.toInt(),
-                                System.currentTimeMillis()
-                            )
+                            if(foundDevice?.name == "Sub Marine"){
+                                _viewModel.addFoundBluetoothDevice(
+                                    foundDevice,
+                                    rssi.toInt(),
+                                    System.currentTimeMillis()
+                                )
+                            }
                         }
                     }
                 }
